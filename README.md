@@ -17,11 +17,13 @@ You need two things installed on your computer:
 ### 2. Prepare and Start the Project
 
 **Quick Start (Copy & Paste):**
-If you have Git and Node.js installed, just copy and paste this single line into your terminal (Mac) or Command Prompt (Windows):
+Copy and paste this single line to clone the project, create the necessary environment file, install everything, and start the portal:
 
 ```bash
-git clone https://github.com/Danncode10/Marriage-License-System.git && cd Marriage-License-System && npm run install-all && npm run start-portal
+git clone https://github.com/Danncode10/Marriage-License-System.git && cd Marriage-License-System && echo NEXT_PUBLIC_SUPABASE_URL=https://dummy.supabase.co > ui/.env.local && echo NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy >> ui/.env.local && npm run install-all && npm run start-portal
 ```
+
+*(Note: The command above creates a `.env.local` file with dummy Supabase keys to allow the website to run locally without a database setup.)*
 
 ---
 
@@ -35,11 +37,16 @@ git clone https://github.com/Danncode10/Marriage-License-System.git && cd Marria
     ```bash
     cd Marriage-License-System
     ```
-4. Install everything:
+4. Create the environment file (`.env.local`) inside the `ui` folder and add these lines:
+    ```text
+    NEXT_PUBLIC_SUPABASE_URL=https://dummy.supabase.co
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy
+    ```
+5. Install everything:
     ```bash
     npm run install-all
     ```
-5. Start the portal:
+6. Start the portal:
     ```bash
     npm run start-portal
     ```
