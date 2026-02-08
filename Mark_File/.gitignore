@@ -1,0 +1,20 @@
+# Ignore the Excel folder
+Excel/
+# Python bytecode files
+__pycache__/
+*.pyc
+
+# Virtual environment directories
+venv/
+ENV/
+env/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore macOS system files
+.DS_Store
+
+# Temporary files
+*.tmp
+*.log
