@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, FileText, ArrowRight, User, Heart, Home, GraduationCap, MapPin } from 'lucide-react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function MarriageForm() {
     const [formData, setFormData] = useState({
@@ -64,6 +65,7 @@ export default function MarriageForm() {
             a.download = `MARRIAGE_APPLICATION_${applicationCode}.xlsx`;
             document.body.appendChild(a);
             a.click();
+            a.remove();
             window.URL.revokeObjectURL(url);
         } catch (e) {
             alert("Error generating excel.");
@@ -74,146 +76,227 @@ export default function MarriageForm() {
     };
 
     return (
-        <div className="min-h-screen bg-zinc-50 p-4 md:p-8 text-zinc-900">
-            <div className="max-w-6xl mx-auto">
-                <div className="mb-6 flex items-center justify-between">
-                    <Link href="/dashboard" className="inline-flex items-center gap-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
-                        <ChevronLeft className="h-4 w-4" />
-                        Back to Dashboard
+        <div className="min-h-screen bg-slate-50/50 pb-20">
+            {/* Top Navigation Bar */}
+            <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-slate-200">
+                <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+                    <Link href="/dashboard" className="flex items-center gap-2 text-slate-600 hover:text-primary transition-colors font-medium">
+                        <ChevronLeft className="w-4 h-4" />
+                        <span>Back</span>
                     </Link>
-                </div>
-
-                <Card className="shadow-2xl rounded-2xl border border-zinc-200 bg-white overflow-hidden">
-                    <header className="bg-primary p-6 text-white text-center border-b-4 border-secondary">
-                        <h1 className="text-2xl font-black italic tracking-tight">LGU SOLANO MARRIAGE PORTAL</h1>
-                    </header>
-
-                    {!isSubmitted ? (
-                        <form onSubmit={(e) => { e.preventDefault(); setApplicationCode(`${Math.floor(1000 + Math.random() * 9000)}`); setIsSubmitted(true); }} className="p-6 md:p-10 space-y-12">
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                                <Section title="GROOM" color="blue">
-                                    <div className="grid grid-cols-3 gap-3">
-                                        <Field label="First"><Input value={formData.gFirst} onChange={e => setFormData({ ...formData, gFirst: e.target.value })} /></Field>
-                                        <Field label="Middle"><Input value={formData.gMiddle} onChange={e => setFormData({ ...formData, gMiddle: e.target.value })} /></Field>
-                                        <Field label="Last"><Input value={formData.gLast} onChange={e => setFormData({ ...formData, gLast: e.target.value })} /></Field>
-                                    </div>
-                                    <div className="grid grid-cols-3 gap-3">
-                                        <Field label="Birthday"><Input type="date" value={formData.gBday} onChange={e => { const b = e.target.value; setFormData({ ...formData, gBday: b, gAge: calculateAge(b) }); }} /></Field>
-                                        <Field label="Age"><Input type="number" value={formData.gAge || ""} onChange={e => setFormData({ ...formData, gAge: parseInt(e.target.value) || 0 })} className="bg-zinc-50/50" /></Field>
-                                        <Field label="Religion"><Input value={formData.gReligion} onChange={e => setFormData({ ...formData, gReligion: e.target.value })} /></Field>
-                                    </div>
-                                    <div className="grid grid-cols-1 gap-3">
-                                        <Field label="Birth Place"><Input value={formData.gBirthPlace} onChange={e => setFormData({ ...formData, gBirthPlace: e.target.value })} /></Field>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <Field label="Barangay"><Input value={formData.gBrgy} onChange={e => setFormData({ ...formData, gBrgy: e.target.value })} /></Field>
-                                        <Field label="Town"><Input value={formData.gTown} onChange={e => setFormData({ ...formData, gTown: e.target.value })} /></Field>
-                                    </div>
-                                    <ParentSubSection person="Groom" data={formData} setData={setFormData} prefix="g" />
-                                    <GiverSection person="Groom" age={formData.gAge} data={formData} setData={setFormData} prefix="g" />
-                                </Section>
-
-                                <Section title="BRIDE" color="pink">
-                                    <div className="grid grid-cols-3 gap-3">
-                                        <Field label="First"><Input value={formData.bFirst} onChange={e => setFormData({ ...formData, bFirst: e.target.value })} /></Field>
-                                        <Field label="Middle"><Input value={formData.bMiddle} onChange={e => setFormData({ ...formData, bMiddle: e.target.value })} /></Field>
-                                        <Field label="Last"><Input value={formData.bLast} onChange={e => setFormData({ ...formData, bLast: e.target.value })} /></Field>
-                                    </div>
-                                    <div className="grid grid-cols-3 gap-3">
-                                        <Field label="Birthday"><Input type="date" value={formData.bBday} onChange={e => { const b = e.target.value; setFormData({ ...formData, bBday: b, bAge: calculateAge(b) }); }} /></Field>
-                                        <Field label="Age"><Input type="number" value={formData.bAge || ""} onChange={e => setFormData({ ...formData, bAge: parseInt(e.target.value) || 0 })} className="bg-zinc-50/50" /></Field>
-                                        <Field label="Religion"><Input value={formData.bReligion} onChange={e => setFormData({ ...formData, bReligion: e.target.value })} /></Field>
-                                    </div>
-                                    <div className="grid grid-cols-1 gap-3">
-                                        <Field label="Birth Place"><Input value={formData.bBirthPlace} onChange={e => setFormData({ ...formData, bBirthPlace: e.target.value })} /></Field>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <Field label="Barangay"><Input value={formData.bBrgy} onChange={e => setFormData({ ...formData, bBrgy: e.target.value })} /></Field>
-                                        <Field label="Town"><Input value={formData.bTown} onChange={e => setFormData({ ...formData, bTown: e.target.value })} /></Field>
-                                    </div>
-                                    <ParentSubSection person="Bride" data={formData} setData={setFormData} prefix="b" />
-                                    <GiverSection person="Bride" age={formData.bAge} data={formData} setData={setFormData} prefix="b" />
-                                </Section>
-                            </div>
-                            <Button type="submit" size="lg" className="w-full h-16 text-xl uppercase tracking-widest font-bold">Generate Marriage Pack</Button>
-                        </form>
-                    ) : (
-                        <div className="p-20 text-center space-y-8">
-                            <h2 className="text-8xl font-black text-blue-600">{applicationCode}</h2>
-                            <p className="text-zinc-500 dark:text-zinc-400">Application Code Generated</p>
-                            <div className="flex flex-col items-center gap-4">
-                                <Button onClick={generateExcel} disabled={loading} size="lg" className="w-full max-w-md h-16 text-2xl bg-secondary hover:bg-secondary/90 text-primary-foreground font-bold shadow-xl border-b-4 border-primary/20">
-                                    {loading ? "GENERATING..." : "DOWNLOAD EXCEL"}
-                                </Button>
-                                <button onClick={() => setIsSubmitted(false)} className="text-zinc-500 underline font-bold hover:text-zinc-800 transition-colors">
-                                    Back to Edit
-                                </button>
-                            </div>
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                            <Heart className="w-5 h-5 fill-current" />
                         </div>
+                        <span className="font-bold tracking-tight">Marriage Portal</span>
+                    </div>
+                    <div className="w-20"></div> {/* Spacer */}
+                </div>
+            </nav>
+
+            <main className="max-w-6xl mx-auto px-4 mt-12">
+                <AnimatePresence mode="wait">
+                    {!isSubmitted ? (
+                        <motion.div
+                            key="form"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.4 }}
+                        >
+                            <div className="text-center mb-12">
+                                <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Marriage License Application</h1>
+                                <p className="text-slate-500 mt-3 text-lg">Please fill out the form carefully. All fields will be exported to the official document.</p>
+                            </div>
+
+                            <form onSubmit={(e) => {
+                                e.preventDefault();
+                                setApplicationCode(`${Math.floor(1000 + Math.random() * 9000)}`);
+                                setIsSubmitted(true);
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }} className="space-y-8">
+
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                    {/* GROOM SECTION */}
+                                    <SectionCard
+                                        title="Groom's Information"
+                                        icon={<User className="w-5 h-5" />}
+                                        color="blue"
+                                    >
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <Field label="First Name"><Input placeholder="Juan" value={formData.gFirst} onChange={e => setFormData({ ...formData, gFirst: e.target.value })} /></Field>
+                                            <Field label="Middle Name"><Input placeholder="Dela" value={formData.gMiddle} onChange={e => setFormData({ ...formData, gMiddle: e.target.value })} /></Field>
+                                            <Field label="Last Name"><Input placeholder="Cruz" value={formData.gLast} onChange={e => setFormData({ ...formData, gLast: e.target.value })} /></Field>
+                                        </div>
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                            <Field label="Birthday"><Input type="date" value={formData.gBday} onChange={e => { const b = e.target.value; setFormData({ ...formData, gBday: b, gAge: calculateAge(b) }); }} /></Field>
+                                            <Field label="Age"><Input type="number" value={formData.gAge || ""} onChange={e => setFormData({ ...formData, gAge: parseInt(e.target.value) || 0 })} /></Field>
+                                            <Field label="Religion" className="col-span-2 md:col-span-1"><Input placeholder="Catholic" value={formData.gReligion} onChange={e => setFormData({ ...formData, gReligion: e.target.value })} /></Field>
+                                        </div>
+                                        <Field label="Place of Birth"><Input placeholder="Solano, Nueva Vizcaya" value={formData.gBirthPlace} onChange={e => setFormData({ ...formData, gBirthPlace: e.target.value })} /></Field>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <Field label="Barangay"><Input placeholder="Poblacion" value={formData.gBrgy} onChange={e => setFormData({ ...formData, gBrgy: e.target.value })} /></Field>
+                                            <Field label="Town/Municipality"><Input placeholder="Solano" value={formData.gTown} onChange={e => setFormData({ ...formData, gTown: e.target.value })} /></Field>
+                                        </div>
+
+                                        <FamilySubSection prefix="g" person="Groom" data={formData} setData={setFormData} />
+                                        <GiverSubSection prefix="g" age={formData.gAge} data={formData} setData={setFormData} />
+                                    </SectionCard>
+
+                                    {/* BRIDE SECTION */}
+                                    <SectionCard
+                                        title="Bride's Information"
+                                        icon={<User className="w-5 h-5 text-zinc-900" />}
+                                        color="yellow"
+                                    >
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <Field label="First Name"><Input placeholder="Maria" value={formData.bFirst} onChange={e => setFormData({ ...formData, bFirst: e.target.value })} /></Field>
+                                            <Field label="Middle Name"><Input placeholder="Clara" value={formData.bMiddle} onChange={e => setFormData({ ...formData, bMiddle: e.target.value })} /></Field>
+                                            <Field label="Last Name"><Input placeholder="Santos" value={formData.bLast} onChange={e => setFormData({ ...formData, bLast: e.target.value })} /></Field>
+                                        </div>
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                            <Field label="Birthday"><Input type="date" value={formData.bBday} onChange={e => { const b = e.target.value; setFormData({ ...formData, bBday: b, bAge: calculateAge(b) }); }} /></Field>
+                                            <Field label="Age"><Input type="number" value={formData.bAge || ""} onChange={e => setFormData({ ...formData, bAge: parseInt(e.target.value) || 0 })} /></Field>
+                                            <Field label="Religion" className="col-span-2 md:col-span-1"><Input placeholder="Catholic" value={formData.bReligion} onChange={e => setFormData({ ...formData, bReligion: e.target.value })} /></Field>
+                                        </div>
+                                        <Field label="Place of Birth"><Input placeholder="Solano, Nueva Vizcaya" value={formData.bBirthPlace} onChange={e => setFormData({ ...formData, bBirthPlace: e.target.value })} /></Field>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <Field label="Barangay"><Input placeholder="Quirino" value={formData.bBrgy} onChange={e => setFormData({ ...formData, bBrgy: e.target.value })} /></Field>
+                                            <Field label="Town/Municipality"><Input placeholder="Bagabag" value={formData.bTown} onChange={e => setFormData({ ...formData, bTown: e.target.value })} /></Field>
+                                        </div>
+
+                                        <FamilySubSection prefix="b" person="Bride" data={formData} setData={setFormData} />
+                                        <GiverSubSection prefix="b" age={formData.bAge} data={formData} setData={setFormData} />
+                                    </SectionCard>
+                                </div>
+
+                                <div className="flex justify-center pt-8">
+                                    <Button type="submit" size="lg" className="h-16 px-12 text-lg font-bold group">
+                                        Confirm Details
+                                        <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                    </Button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="success"
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ type: "spring", damping: 20 }}
+                            className="max-w-2xl mx-auto"
+                        >
+                            <Card className="p-12 text-center shadow-2xl border-none">
+                                <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-8">
+                                    <FileText className="w-10 h-10 text-green-600" />
+                                </div>
+                                <h2 className="text-3xl font-black text-slate-900 mb-2">Ready for Export</h2>
+                                <p className="text-slate-500 mb-8 font-medium">Your application has been validated and assigned a temporary code:</p>
+
+                                <div className="bg-slate-50 px-8 py-6 rounded-2xl mb-10 border border-slate-100">
+                                    <span className="text-6xl font-black text-primary tracking-tighter">{applicationCode}</span>
+                                </div>
+
+                                <div className="flex flex-col gap-4">
+                                    <Button onClick={generateExcel} disabled={loading} size="lg" variant="secondary" className="h-16 w-full text-xl shadow-xl">
+                                        {loading ? "Processing..." : "Download Excel Pack"}
+                                    </Button>
+                                    <Button variant="ghost" onClick={() => setIsSubmitted(false)} className="h-12 hover:bg-slate-50">
+                                        Back to editor
+                                    </Button>
+                                </div>
+                            </Card>
+                        </motion.div>
                     )}
-                </Card>
+                </AnimatePresence>
+            </main>
+        </div>
+    );
+}
+
+// Helper Components
+function SectionCard({ title, icon, color, children }: { title: string, icon: React.ReactNode, color: 'blue' | 'yellow', children: React.ReactNode }) {
+    const isBlue = color === 'blue';
+    const accentBg = isBlue ? 'bg-primary/5' : 'bg-secondary/10';
+    const accentBorder = isBlue ? 'border-primary/20' : 'border-secondary/30';
+
+    return (
+        <Card className="p-0 overflow-hidden border-none shadow-xl shadow-slate-200/50 flex flex-col h-full bg-white">
+            <div className={`p-6 flex items-center gap-3 border-b-2 ${accentBorder} ${accentBg}`}>
+                <div className="p-2 bg-white rounded-xl shadow-sm">
+                    {icon}
+                </div>
+                <h2 className="text-xl font-bold text-slate-900 tracking-tight italic">{title}</h2>
+            </div>
+            <div className="p-8 space-y-8 flex-1">
+                {children}
+            </div>
+        </Card>
+    );
+}
+
+function FamilySubSection({ prefix, person, data, setData }: any) {
+    return (
+        <div className="space-y-6 pt-6 border-t border-slate-100">
+            <div>
+                <LabelWithIcon icon={<GraduationCap className="w-3 h-3" />} text={`${person}'s Father`} />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+                    <Input placeholder="First" value={data[`${prefix}FathF`]} onChange={e => setData({ ...data, [`${prefix}FathF`]: e.target.value })} />
+                    <Input placeholder="Middle" value={data[`${prefix}FathM`]} onChange={e => setData({ ...data, [`${prefix}FathM`]: e.target.value })} />
+                    <Input placeholder="Last" value={data[`${prefix}FathL`]} onChange={e => setData({ ...data, [`${prefix}FathL`]: e.target.value })} />
+                </div>
+            </div>
+            <div>
+                <LabelWithIcon icon={<GraduationCap className="w-3 h-3" />} text={`${person}'s Mother`} />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+                    <Input placeholder="First" value={data[`${prefix}MothF`]} onChange={e => setData({ ...data, [`${prefix}MothF`]: e.target.value })} />
+                    <Input placeholder="Middle" value={data[`${prefix}MothM`]} onChange={e => setData({ ...data, [`${prefix}MothM`]: e.target.value })} />
+                    <Input placeholder="Last" value={data[`${prefix}MothL`]} onChange={e => setData({ ...data, [`${prefix}MothL`]: e.target.value })} />
+                </div>
             </div>
         </div>
     );
 }
 
-// STYLING COMPONENTS
-function Section({ title, color, children }: { title: string, color: 'blue' | 'pink', children: React.ReactNode }) {
-    const borderColor = color === 'blue' ? 'border-primary/20' : 'border-secondary/20';
-    const textColor = color === 'blue' ? 'text-primary' : 'text-zinc-800';
+function GiverSubSection({ prefix, age, data, setData }: any) {
+    if (!age || age < 18 || age > 24) return null;
+    const label = age <= 20 ? "CONSENT" : "ADVICE";
+
     return (
-        <div className="space-y-6">
-            <h2 className={`${textColor} font-black text-xl border-b-4 ${borderColor} pb-1 flex items-center gap-2`}>
-                <span className={`w-2 h-6 ${color === 'blue' ? 'bg-primary' : 'bg-secondary'}`}></span>
-                {title}
-            </h2>
+        <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="pt-6 border-t border-slate-100"
+        >
+            <div className="p-6 bg-secondary/10 rounded-2xl border border-secondary/30 space-y-4">
+                <LabelWithIcon icon={<FileText className="w-3 h-3 text-primary" />} text={`PERSON GIVING ${label}`} />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <Input placeholder="First Name" value={data[`${prefix}GiverF`]} onChange={e => setData({ ...data, [`${prefix}GiverF`]: e.target.value })} />
+                    <Input placeholder="Middle Name" value={data[`${prefix}GiverM`]} onChange={e => setData({ ...data, [`${prefix}GiverM`]: e.target.value })} />
+                    <Input placeholder="Last Name" value={data[`${prefix}GiverL`]} onChange={e => setData({ ...data, [`${prefix}GiverL`]: e.target.value })} />
+                </div>
+                <Field label="Relationship (e.g. Father)">
+                    <Input placeholder="Father" value={data[`${prefix}GiverRelation`]} onChange={e => setData({ ...data, [`${prefix}GiverRelation`]: e.target.value })} />
+                </Field>
+            </div>
+        </motion.div>
+    );
+}
+
+function LabelWithIcon({ icon, text }: { icon: React.ReactNode, text: string }) {
+    return (
+        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+            {icon}
+            {text}
+        </div>
+    );
+}
+
+function Field({ label, children, className }: { label: string, children: React.ReactNode, className?: string }) {
+    return (
+        <div className={`space-y-1.5 ${className}`}>
+            <label className="text-xs font-bold text-slate-600 ml-1">{label}</label>
             {children}
         </div>
     );
-}
-
-function GiverSection({ person, age, data, setData, prefix }: any) {
-    if (!age || age < 18 || age > 24) return null;
-    const isG = prefix === 'g';
-    const label = age <= 20 ? "CONSENT" : "ADVICE";
-    const bgColor = isG ? 'bg-primary/5' : 'bg-secondary/10';
-    const borderColor = isG ? 'border-primary/20' : 'border-secondary/20';
-
-    return (
-        <div className={`p-5 rounded-2xl border-2 border-dashed ${borderColor} ${bgColor} space-y-4 shadow-inner`}>
-            <p className="text-xs font-black uppercase tracking-widest text-zinc-600">Person Giving {label} ({person})</p>
-            <div className="grid grid-cols-3 gap-2">
-                <Input placeholder="First Name" value={data[`${prefix}GiverF`]} onChange={e => setData({ ...data, [`${prefix}GiverF`]: e.target.value })} />
-                <Input placeholder="Middle Name" value={data[`${prefix}GiverM`]} onChange={e => setData({ ...data, [`${prefix}GiverM`]: e.target.value })} />
-                <Input placeholder="Last Name" value={data[`${prefix}GiverL`]} onChange={e => setData({ ...data, [`${prefix}GiverL`]: e.target.value })} />
-            </div>
-            <Field label="Relationship (e.g. Father)"><Input value={data[`${prefix}GiverRelation`]} onChange={e => setData({ ...data, [`${prefix}GiverRelation`]: e.target.value })} /></Field>
-        </div>
-    );
-}
-
-function ParentSubSection({ person, data, setData, prefix }: any) {
-    const isG = prefix === 'g';
-    const bgColor = isG ? 'bg-primary/5' : 'bg-secondary/5';
-    const borderColor = isG ? 'border-primary/10' : 'border-secondary/10';
-
-    return (
-        <div className={`p-5 rounded-2xl border ${bgColor} ${borderColor} space-y-4`}>
-            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">{person}'s Parents</p>
-            <div className="grid grid-cols-3 gap-2">
-                <Input placeholder="Father First" value={data[`${prefix}FathF`]} onChange={e => setData({ ...data, [`${prefix}FathF`]: e.target.value })} />
-                <Input placeholder="Father Mid" value={data[`${prefix}FathM`]} onChange={e => setData({ ...data, [`${prefix}FathM`]: e.target.value })} />
-                <Input placeholder="Father Last" value={data[`${prefix}FathL`]} onChange={e => setData({ ...data, [`${prefix}FathL`]: e.target.value })} />
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-                <Input placeholder="Mother First" value={data[`${prefix}MothF`]} onChange={e => setData({ ...data, [`${prefix}MothF`]: e.target.value })} />
-                <Input placeholder="Mother Mid" value={data[`${prefix}MothM`]} onChange={e => setData({ ...data, [`${prefix}MothM`]: e.target.value })} />
-                <Input placeholder="Mother Last" value={data[`${prefix}MothL`]} onChange={e => setData({ ...data, [`${prefix}MothL`]: e.target.value })} />
-            </div>
-        </div>
-    );
-}
-
-function Field({ label, children }: { label: string, children: React.ReactNode }) {
-    return <div className="space-y-1"><label className="text-[10px] font-bold text-zinc-500 uppercase ml-1">{label}</label>{children}</div>;
 }
