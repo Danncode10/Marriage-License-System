@@ -12,9 +12,25 @@ import { barangays, cities } from "select-philippines-address";
 
 const NUEVA_VIZCAYA_CODE = "0250";
 
+// Common religions in the Philippines for the quick-select list
+const RELIGIONS = [
+    "Roman Catholic",
+    "Islam",
+    "Iglesia ni Cristo",
+    "Seventh-day Adventist",
+    "Bible Baptist Church",
+    "Jehovah's Witnesses",
+    "United Church of Christ in the Philippines",
+    "Pentecostal",
+    "Evangelical",
+    "Aglipayan",
+    "Latter-day Saints",
+    "None",
+];
+
 export default function MarriageForm() {
     const [formData, setFormData] = useState({
-        // GROOM
+        // GROOM variables
         gFirst: "", gMiddle: "", gLast: "", gBday: "", gAge: 0,
         gBirthPlace: "",
         gBrgy: "", gTown: "", gProv: "NUEVA VIZCAYA", gCountry: "PHILIPPINES",
@@ -23,17 +39,16 @@ export default function MarriageForm() {
         gMothF: "", gMothM: "", gMothL: "",
         gGiverF: "", gGiverM: "", gGiverL: "", gGiverRelation: "",
 
-        // BRIDE
+        // BRIDE variables
         bFirst: "", bMiddle: "", bLast: "", bBday: "", bAge: 0,
         bBirthPlace: "",
         bBrgy: "", bTown: "", bProv: "NUEVA VIZCAYA", bCountry: "PHILIPPINES",
         bCitizen: "FILIPINO", bStatus: "SINGLE", bReligion: "",
         bFathF: "", bFathM: "", bFathL: "",
-        bMothF: "", bMothM: "", bMothL: " ",
+        bMothF: "", bMothM: "", bMothL: "",
         bGiverF: "", bGiverM: "", bGiverL: "", bGiverRelation: "",
     });
 
-    // Address Options State
     const [townOptions, setTownOptions] = useState<any[]>([]);
     const [gBrgyOptions, setGBrgyOptions] = useState<any[]>([]);
     const [bBrgyOptions, setBBrgyOptions] = useState<any[]>([]);
@@ -42,7 +57,6 @@ export default function MarriageForm() {
     const [applicationCode, setApplicationCode] = useState("");
     const [loading, setLoading] = useState(false);
 
-    // Initial Load: Fetch Towns of Nueva Vizcaya
     useEffect(() => {
         cities(NUEVA_VIZCAYA_CODE).then((res: any) => setTownOptions(res));
     }, []);
@@ -96,6 +110,13 @@ export default function MarriageForm() {
 
     return (
         <div className="min-h-screen bg-slate-50/50 pb-20">
+            {/* Global Datalist for Religion - Put it once here so both inputs can use it */}
+            <datalist id="religion-list">
+                {RELIGIONS.map((rel) => (
+                    <option key={rel} value={rel} />
+                ))}
+            </datalist>
+
             <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-slate-200">
                 <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
                     <Link href="/dashboard" className="flex items-center gap-2 text-slate-600 hover:text-primary transition-colors font-medium">
@@ -145,15 +166,21 @@ export default function MarriageForm() {
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                             <Field label="Birthday"><Input type="date" value={formData.gBday} onChange={e => { const b = e.target.value; setFormData({ ...formData, gBday: b, gAge: calculateAge(b) }); }} /></Field>
                                             <Field label="Age"><Input type="number" value={formData.gAge || ""} onChange={e => setFormData({ ...formData, gAge: parseInt(e.target.value) || 0 })} /></Field>
-                                            <Field label="Religion" className="col-span-2 md:col-span-1"><Input placeholder="Catholic" value={formData.gReligion} onChange={e => setFormData({ ...formData, gReligion: e.target.value })} /></Field>
+                                            <Field label="Religion" className="col-span-2 md:col-span-1">
+                                                <Input 
+                                                    list="religion-list" 
+                                                    placeholder="Select or type..." 
+                                                    value={formData.gReligion} 
+                                                    onChange={e => setFormData({ ...formData, gReligion: e.target.value })} 
+                                                />
+                                            </Field>
                                         </div>
                                         <Field label="Place of Birth"><Input placeholder="Solano, Nueva Vizcaya" value={formData.gBirthPlace} onChange={e => setFormData({ ...formData, gBirthPlace: e.target.value })} /></Field>
                                         
-                                        {/* CASCADING DROPDOWN FOR GROOM */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <Field label="Town/Municipality">
                                                 <select 
-                                                    className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                                    className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                                     onChange={(e) => {
                                                         const town = townOptions.find(t => t.city_code === e.target.value);
                                                         handleTownChange('g', e.target.value, town?.city_name || "");
@@ -190,15 +217,21 @@ export default function MarriageForm() {
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                             <Field label="Birthday"><Input type="date" value={formData.bBday} onChange={e => { const b = e.target.value; setFormData({ ...formData, bBday: b, bAge: calculateAge(b) }); }} /></Field>
                                             <Field label="Age"><Input type="number" value={formData.bAge || ""} onChange={e => setFormData({ ...formData, bAge: parseInt(e.target.value) || 0 })} /></Field>
-                                            <Field label="Religion" className="col-span-2 md:col-span-1"><Input placeholder="Catholic" value={formData.bReligion} onChange={e => setFormData({ ...formData, bReligion: e.target.value })} /></Field>
+                                            <Field label="Religion" className="col-span-2 md:col-span-1">
+                                                <Input 
+                                                    list="religion-list" 
+                                                    placeholder="Select or type..." 
+                                                    value={formData.bReligion} 
+                                                    onChange={e => setFormData({ ...formData, bReligion: e.target.value })} 
+                                                />
+                                            </Field>
                                         </div>
                                         <Field label="Place of Birth"><Input placeholder="Solano, Nueva Vizcaya" value={formData.bBirthPlace} onChange={e => setFormData({ ...formData, bBirthPlace: e.target.value })} /></Field>
                                         
-                                        {/* CASCADING DROPDOWN FOR BRIDE */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <Field label="Town/Municipality">
                                                 <select 
-                                                    className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                                                    className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                                     onChange={(e) => {
                                                         const town = townOptions.find(t => t.city_code === e.target.value);
                                                         handleTownChange('b', e.target.value, town?.city_name || "");
