@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowRight, ChevronLeft, FileText, GraduationCap, Heart, User } from 'lucide-react';
+import { ArrowRight, ChevronLeft, Copy, FileText, GraduationCap, Heart, User } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 // @ts-ignore
@@ -21,14 +21,14 @@ const RELIGIONS = [
 export default function MarriageForm() {
     const [formData, setFormData] = useState({
         gFirst: "", gMiddle: "", gLast: "", gBday: "", gAge: 0,
-        gBirthPlace: "", gBrgy: "", gTown: "", gProv: "NUEVA VIZCAYA", gCountry: "PHILIPPINES",
+        gBirthPlace: "", gBrgy: "", gTown: "", gProv: "Nueva Vizcaya", gCountry: "Philippines",
         gCitizen: "FILIPINO", gStatus: "SINGLE", gReligion: "",
         gFathF: "", gFathM: "", gFathL: "",
         gMothF: "", gMothM: "", gMothL: "",
         gGiverF: "", gGiverM: "", gGiverL: "", gGiverRelation: "",
 
         bFirst: "", bMiddle: "", bLast: "", bBday: "", bAge: 0,
-        bBirthPlace: "", bBrgy: "", bTown: "", bProv: "NUEVA VIZCAYA", bCountry: "PHILIPPINES",
+        bBirthPlace: "", bBrgy: "", bTown: "", bProv: "Nueva Vizcaya", bCountry: "Philippines",
         bCitizen: "FILIPINO", bStatus: "SINGLE", bReligion: "",
         bFathF: "", bFathM: "", bFathL: "",
         bMothF: "", bMothM: "", bMothL: "",
@@ -77,6 +77,20 @@ export default function MarriageForm() {
         else setBBrgyOptions(res);
     };
 
+    const handleCopyAddressToBirthplace = (prefix: 'g' | 'b') => {
+        const town = formData[prefix === 'g' ? 'gTown' : 'bTown'];
+        const brgy = formData[prefix === 'g' ? 'gBrgy' : 'bBrgy'];
+        const prov = formData[prefix === 'g' ? 'gProv' : 'bProv'];
+
+        if (!town || !brgy) {
+            alert("Please select Town and Barangay first!");
+            return;
+        }
+        
+        const fullAddress = `${brgy}, ${town}, ${prov}`;
+        setFormData(prev => ({ ...prev, [`${prefix}BirthPlace`]: fullAddress }));
+    };
+
     const generateExcel = async () => {
         setLoading(true);
         try {
@@ -98,8 +112,7 @@ export default function MarriageForm() {
 
     return (
         <div className="min-h-screen bg-slate-50/50 pb-20">
-            {/* white background */}
-            <datalist id="religion-list" className="bg-white">
+            <datalist id="religion-list">
                 {RELIGIONS.map((rel) => <option key={rel} value={rel} />)}
             </datalist>
 
@@ -123,7 +136,7 @@ export default function MarriageForm() {
                         <motion.div key="form" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}>
                             <div className="text-center mb-12">
                                 <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight italic">Marriage License Application</h1>
-                                <p className="text-slate-500 mt-3 text-lg"> Make sure that all data you entered is correct!</p>
+                                <p className="text-slate-500 mt-3 text-lg">Make sure that all data you entered is correct!</p>
                             </div>
 
                             <form onSubmit={(e) => {
@@ -141,6 +154,7 @@ export default function MarriageForm() {
                                             <Field label="Middle Name"><Input placeholder="Dela" className="bg-white" value={formData.gMiddle} onChange={e => setFormData({ ...formData, gMiddle: e.target.value })} /></Field>
                                             <Field label="Last Name"><Input placeholder="Cruz" className="bg-white" value={formData.gLast} onChange={e => setFormData({ ...formData, gLast: e.target.value })} /></Field>
                                         </div>
+                                        
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                             <Field label="Birthday">
                                                 <Input type="date" className="bg-white" value={formData.gBday} onChange={e => {
@@ -152,39 +166,36 @@ export default function MarriageForm() {
                                                 <Input type="number" className="bg-white font-bold text-primary" value={formData.gAge || ""} onChange={e => handleAgeChange('g', e.target.value)} />
                                             </Field>
                                             <Field label="Religion" className="col-span-2 md:col-span-1">
-                                            <Input 
-                                                list="religion-list" 
-                                                placeholder="Select..." 
-                                                style={{ colorScheme: 'light' }}
-                                                className="bg-white border-slate-300 text-slate-900 focus:bg-white" 
-                                                value={formData.gReligion} // Change to bReligion for the Bride section
-                                                onChange={e => setFormData({ ...formData, gReligion: e.target.value })} 
-                                                onFocus={(e) => {
-                                                }}
-                                                onBlur={(e) => {
-                                                // If they click away without typing, put the value back
-                                                if (!e.target.value) {
-                                                    setFormData({ ...formData, gReligion: formData.gReligion });
-                                                }
-                                                }}
-                                            />
+                                                <Input list="religion-list" placeholder="Select..." className="bg-white" value={formData.gReligion} onChange={e => setFormData({ ...formData, gReligion: e.target.value })} />
                                             </Field>
                                         </div>
-                                        <Field label="Place of Birth"><Input placeholder="Solano, NV" className="bg-white" value={formData.gBirthPlace} onChange={e => setFormData({ ...formData, gBirthPlace: e.target.value })} /></Field>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <Field label="Town">
+
+                                        {/* ADDRESS FIRST */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+                                            <Field label="Current Town">
                                                 <select className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" value={townOptions.find(t => t.city_name === formData.gTown)?.city_code || ""} onChange={(e) => { const town = townOptions.find(t => t.city_code === e.target.value); handleTownChange('g', e.target.value, town?.city_name || ""); }}>
                                                     <option value="" disabled hidden>Select Town</option>
                                                     {townOptions.map(t => <option key={t.city_code} value={t.city_code}>{t.city_name}</option>)}
                                                 </select>
                                             </Field>
-                                            <Field label="Barangay">
+                                            <Field label="Current Barangay">
                                                 <select className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm disabled:opacity-50 focus:ring-2 focus:ring-primary outline-none" value={formData.gBrgy} disabled={!gBrgyOptions.length} onChange={(e) => setFormData({ ...formData, gBrgy: e.target.value })}>
                                                     <option value="" disabled hidden>Select Barangay</option>
                                                     {gBrgyOptions.map(b => <option key={b.brgy_code} value={b.brgy_name}>{b.brgy_name}</option>)}
                                                 </select>
                                             </Field>
                                         </div>
+
+                                        {/* PLACE OF BIRTH WITH COPY OPTION */}
+                                        <Field label="Place of Birth">
+                                            <div className="flex gap-2">
+                                                <Input placeholder="Enter birth place..." className="bg-white" value={formData.gBirthPlace} onChange={e => setFormData({ ...formData, gBirthPlace: e.target.value })} />
+                                                <Button type="button" variant="outline" size="sm" onClick={() => handleCopyAddressToBirthplace('g')} className="shrink-0 gap-1 border-blue-200 text-blue-600 hover:bg-blue-50">
+                                                    <Copy className="w-3 h-3" /> Copy Address
+                                                </Button>
+                                            </div>
+                                        </Field>
+
                                         <FamilySubSection prefix="g" person="Groom" data={formData} setData={setFormData} />
                                         <GiverSubSection prefix="g" age={formData.gAge} data={formData} setData={setFormData} />
                                     </SectionCard>
@@ -196,6 +207,7 @@ export default function MarriageForm() {
                                             <Field label="Middle Name"><Input placeholder="Clara" className="bg-white" value={formData.bMiddle} onChange={e => setFormData({ ...formData, bMiddle: e.target.value })} /></Field>
                                             <Field label="Last Name"><Input placeholder="Santos" className="bg-white" value={formData.bLast} onChange={e => setFormData({ ...formData, bLast: e.target.value })} /></Field>
                                         </div>
+                                        
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                             <Field label="Birthday">
                                                 <Input type="date" className="bg-white" value={formData.bBday} onChange={e => {
@@ -207,40 +219,36 @@ export default function MarriageForm() {
                                                 <Input type="number" className="bg-white font-bold text-primary" value={formData.bAge || ""} onChange={e => handleAgeChange('b', e.target.value)} />
                                             </Field>
                                             <Field label="Religion" className="col-span-2 md:col-span-1">
-                                        <Input 
-                                            list="religion-list" 
-                                            placeholder="Select..." 
-                                            style={{ colorScheme: 'light' }}
-                                            className="bg-white border-slate-300 text-slate-900 focus:bg-white" 
-                                            value={formData.gReligion} // Change to bReligion for the Bride section
-                                            onChange={e => setFormData({ ...formData, gReligion: e.target.value })} 
-                                            onFocus={(e) => {
-                                            e.target.value = ''; // Temporarily clear to force dropdown
-                                            }}
-                                            onBlur={(e) => {
-                                            // If they click away without typing, put the value back
-                                            if (!e.target.value) {
-                                                setFormData({ ...formData, gReligion: formData.gReligion });
-                                            }
-                                            }}
-                                        />
-                                        </Field>
+                                                <Input list="religion-list" placeholder="Select..." className="bg-white" value={formData.bReligion} onChange={e => setFormData({ ...formData, bReligion: e.target.value })} />
+                                            </Field>
                                         </div>
-                                        <Field label="Place of Birth"><Input placeholder="Solano, NV" className="bg-white" value={formData.bBirthPlace} onChange={e => setFormData({ ...formData, bBirthPlace: e.target.value })} /></Field>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <Field label="Town">
+
+                                        {/* ADDRESS FIRST */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+                                            <Field label="Current Town">
                                                 <select className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" value={townOptions.find(t => t.city_name === formData.bTown)?.city_code || ""} onChange={(e) => { const town = townOptions.find(t => t.city_code === e.target.value); handleTownChange('b', e.target.value, town?.city_name || ""); }}>
                                                     <option value="" disabled hidden>Select Town</option>
                                                     {townOptions.map(t => <option key={t.city_code} value={t.city_code}>{t.city_name}</option>)}
                                                 </select>
                                             </Field>
-                                            <Field label="Barangay">
+                                            <Field label="Current Barangay">
                                                 <select className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm disabled:opacity-50 focus:ring-2 focus:ring-primary outline-none" value={formData.bBrgy} disabled={!bBrgyOptions.length} onChange={(e) => setFormData({ ...formData, bBrgy: e.target.value })}>
                                                     <option value="" disabled hidden>Select Barangay</option>
                                                     {bBrgyOptions.map(b => <option key={b.brgy_code} value={b.brgy_name}>{b.brgy_name}</option>)}
                                                 </select>
                                             </Field>
                                         </div>
+
+                                        {/* PLACE OF BIRTH WITH COPY OPTION */}
+                                        <Field label="Place of Birth">
+                                            <div className="flex gap-2">
+                                                <Input placeholder="Enter birth place..." className="bg-white" value={formData.bBirthPlace} onChange={e => setFormData({ ...formData, bBirthPlace: e.target.value })} />
+                                                <Button type="button" variant="outline" size="sm" onClick={() => handleCopyAddressToBirthplace('b')} className="shrink-0 gap-1 border-rose-200 text-rose-600 hover:bg-rose-50">
+                                                    <Copy className="w-3 h-3" /> Copy Address
+                                                </Button>
+                                            </div>
+                                        </Field>
+
                                         <FamilySubSection prefix="b" person="Bride" data={formData} setData={setFormData} />
                                         <GiverSubSection prefix="b" age={formData.bAge} data={formData} setData={setFormData} />
                                     </SectionCard>
@@ -279,8 +287,6 @@ export default function MarriageForm() {
     );
 }
 
-// card design
-
 function SectionCard({ title, icon, color, children }: any) {
     const isBlue = color === 'blue';
     return (
@@ -289,7 +295,7 @@ function SectionCard({ title, icon, color, children }: any) {
                 <div className="p-3 bg-white rounded-2xl shadow-sm ring-1 ring-slate-100">{icon}</div>
                 <h2 className="text-xl font-bold text-slate-800 tracking-tight italic uppercase">{title}</h2>
             </div>
-            <div className="p-8 space-y-8 flex-1">{children}</div>
+            <div className="p-8 space-y-6 flex-1">{children}</div>
         </Card>
     );
 }
