@@ -42,6 +42,11 @@ export default function MarriageForm() {
     const [applicationCode, setApplicationCode] = useState("");
     const [loading, setLoading] = useState(false);
 
+    // --- CAPITALIZATION HELPER ---
+    const toTitleCase = (str: string) => {
+        return str.replace(/\b\w/g, (char) => char.toUpperCase());
+    };
+
     useEffect(() => {
         cities(NUEVA_VIZCAYA_CODE).then((res: any) => setTownOptions(res));
     }, []);
@@ -150,9 +155,9 @@ export default function MarriageForm() {
                                     {/* GROOM SECTION */}
                                     <SectionCard title="Groom's Information" icon={<User className="w-5 h-5 text-blue-600" />} color="blue">
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <Field label="First Name"><Input placeholder="Juan" className="bg-white" value={formData.gFirst} onChange={e => setFormData({ ...formData, gFirst: e.target.value })} /></Field>
-                                            <Field label="Middle Name"><Input placeholder="Dela" className="bg-white" value={formData.gMiddle} onChange={e => setFormData({ ...formData, gMiddle: e.target.value })} /></Field>
-                                            <Field label="Last Name"><Input placeholder="Cruz" className="bg-white" value={formData.gLast} onChange={e => setFormData({ ...formData, gLast: e.target.value })} /></Field>
+                                            <Field label="First Name"><Input placeholder="Juan" className="bg-white" value={formData.gFirst} onChange={e => setFormData({ ...formData, gFirst: toTitleCase(e.target.value) })} /></Field>
+                                            <Field label="Middle Name"><Input placeholder="Dela" className="bg-white" value={formData.gMiddle} onChange={e => setFormData({ ...formData, gMiddle: toTitleCase(e.target.value) })} /></Field>
+                                            <Field label="Last Name"><Input placeholder="Cruz" className="bg-white" value={formData.gLast} onChange={e => setFormData({ ...formData, gLast: toTitleCase(e.target.value) })} /></Field>
                                         </div>
                                         
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -170,7 +175,6 @@ export default function MarriageForm() {
                                             </Field>
                                         </div>
 
-                                        {/* ADDRESS FIRST */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
                                             <Field label="Current Town">
                                                 <select className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" value={townOptions.find(t => t.city_name === formData.gTown)?.city_code || ""} onChange={(e) => { const town = townOptions.find(t => t.city_code === e.target.value); handleTownChange('g', e.target.value, town?.city_name || ""); }}>
@@ -186,26 +190,25 @@ export default function MarriageForm() {
                                             </Field>
                                         </div>
 
-                                        {/* PLACE OF BIRTH WITH COPY OPTION */}
                                         <Field label="Place of Birth">
                                             <div className="flex gap-2">
-                                                <Input placeholder="Enter birth place..." className="bg-white" value={formData.gBirthPlace} onChange={e => setFormData({ ...formData, gBirthPlace: e.target.value })} />
+                                                <Input placeholder="Enter birth place..." className="bg-white" value={formData.gBirthPlace} onChange={e => setFormData({ ...formData, gBirthPlace: toTitleCase(e.target.value) })} />
                                                 <Button type="button" variant="outline" size="sm" onClick={() => handleCopyAddressToBirthplace('g')} className="shrink-0 gap-1 border-blue-200 text-blue-600 hover:bg-blue-50">
                                                     <Copy className="w-3 h-3" /> Copy Address
                                                 </Button>
                                             </div>
                                         </Field>
 
-                                        <FamilySubSection prefix="g" person="Groom" data={formData} setData={setFormData} />
-                                        <GiverSubSection prefix="g" age={formData.gAge} data={formData} setData={setFormData} />
+                                        <FamilySubSection prefix="g" person="Groom" data={formData} setData={setFormData} toTitleCase={toTitleCase} />
+                                        <GiverSubSection prefix="g" age={formData.gAge} data={formData} setData={setFormData} toTitleCase={toTitleCase} />
                                     </SectionCard>
 
                                     {/* BRIDE SECTION */}
                                     <SectionCard title="Bride's Information" icon={<User className="w-5 h-5 text-rose-600" />} color="yellow">
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <Field label="First Name"><Input placeholder="Maria" className="bg-white" value={formData.bFirst} onChange={e => setFormData({ ...formData, bFirst: e.target.value })} /></Field>
-                                            <Field label="Middle Name"><Input placeholder="Clara" className="bg-white" value={formData.bMiddle} onChange={e => setFormData({ ...formData, bMiddle: e.target.value })} /></Field>
-                                            <Field label="Last Name"><Input placeholder="Santos" className="bg-white" value={formData.bLast} onChange={e => setFormData({ ...formData, bLast: e.target.value })} /></Field>
+                                            <Field label="First Name"><Input placeholder="Maria" className="bg-white" value={formData.bFirst} onChange={e => setFormData({ ...formData, bFirst: toTitleCase(e.target.value) })} /></Field>
+                                            <Field label="Middle Name"><Input placeholder="Clara" className="bg-white" value={formData.bMiddle} onChange={e => setFormData({ ...formData, bMiddle: toTitleCase(e.target.value) })} /></Field>
+                                            <Field label="Last Name"><Input placeholder="Santos" className="bg-white" value={formData.bLast} onChange={e => setFormData({ ...formData, bLast: toTitleCase(e.target.value) })} /></Field>
                                         </div>
                                         
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -223,7 +226,6 @@ export default function MarriageForm() {
                                             </Field>
                                         </div>
 
-                                        {/* ADDRESS FIRST */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
                                             <Field label="Current Town">
                                                 <select className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" value={townOptions.find(t => t.city_name === formData.bTown)?.city_code || ""} onChange={(e) => { const town = townOptions.find(t => t.city_code === e.target.value); handleTownChange('b', e.target.value, town?.city_name || ""); }}>
@@ -239,18 +241,17 @@ export default function MarriageForm() {
                                             </Field>
                                         </div>
 
-                                        {/* PLACE OF BIRTH WITH COPY OPTION */}
                                         <Field label="Place of Birth">
                                             <div className="flex gap-2">
-                                                <Input placeholder="Enter birth place..." className="bg-white" value={formData.bBirthPlace} onChange={e => setFormData({ ...formData, bBirthPlace: e.target.value })} />
+                                                <Input placeholder="Enter birth place..." className="bg-white" value={formData.bBirthPlace} onChange={e => setFormData({ ...formData, bBirthPlace: toTitleCase(e.target.value) })} />
                                                 <Button type="button" variant="outline" size="sm" onClick={() => handleCopyAddressToBirthplace('b')} className="shrink-0 gap-1 border-rose-200 text-rose-600 hover:bg-rose-50">
                                                     <Copy className="w-3 h-3" /> Copy Address
                                                 </Button>
                                             </div>
                                         </Field>
 
-                                        <FamilySubSection prefix="b" person="Bride" data={formData} setData={setFormData} />
-                                        <GiverSubSection prefix="b" age={formData.bAge} data={formData} setData={setFormData} />
+                                        <FamilySubSection prefix="b" person="Bride" data={formData} setData={setFormData} toTitleCase={toTitleCase} />
+                                        <GiverSubSection prefix="b" age={formData.bAge} data={formData} setData={setFormData} toTitleCase={toTitleCase} />
                                     </SectionCard>
                                 </div>
 
@@ -300,30 +301,30 @@ function SectionCard({ title, icon, color, children }: any) {
     );
 }
 
-function FamilySubSection({ prefix, person, data, setData }: any) {
+function FamilySubSection({ prefix, person, data, setData, toTitleCase }: any) {
     return (
         <div className="space-y-6 pt-6 border-t border-slate-100">
             <div>
                 <LabelWithIcon icon={<GraduationCap className="w-3 h-3" />} text={`${person}'s Father`} />
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
-                    <Input placeholder="First Name" className="bg-white" value={data[`${prefix}FathF`]} onChange={e => setData({ ...data, [`${prefix}FathF`]: e.target.value })} />
-                    <Input placeholder="Middle Name" className="bg-white" value={data[`${prefix}FathM`]} onChange={e => setData({ ...data, [`${prefix}FathM`]: e.target.value })} />
-                    <Input placeholder="Last Name" className="bg-white" value={data[`${prefix}FathL`]} onChange={e => setData({ ...data, [`${prefix}FathL`]: e.target.value })} />
+                    <Input placeholder="First Name" className="bg-white" value={data[`${prefix}FathF`]} onChange={e => setData({ ...data, [`${prefix}FathF`]: toTitleCase(e.target.value) })} />
+                    <Input placeholder="Middle Name" className="bg-white" value={data[`${prefix}FathM`]} onChange={e => setData({ ...data, [`${prefix}FathM`]: toTitleCase(e.target.value) })} />
+                    <Input placeholder="Last Name" className="bg-white" value={data[`${prefix}FathL`]} onChange={e => setData({ ...data, [`${prefix}FathL`]: toTitleCase(e.target.value) })} />
                 </div>
             </div>
             <div>
                 <LabelWithIcon icon={<GraduationCap className="w-3 h-3" />} text={`${person}'s Mother`} />
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
-                    <Input placeholder="First Name" className="bg-white" value={data[`${prefix}MothF`]} onChange={e => setData({ ...data, [`${prefix}MothF`]: e.target.value })} />
-                    <Input placeholder="Middle Name" className="bg-white" value={data[`${prefix}MothM`]} onChange={e => setData({ ...data, [`${prefix}MothM`]: e.target.value })} />
-                    <Input placeholder="Last Name" className="bg-white" value={data[`${prefix}MothL`]} onChange={e => setData({ ...data, [`${prefix}MothL`]: e.target.value })} />
+                    <Input placeholder="First Name" className="bg-white" value={data[`${prefix}MothF`]} onChange={e => setData({ ...data, [`${prefix}MothF`]: toTitleCase(e.target.value) })} />
+                    <Input placeholder="Middle Name" className="bg-white" value={data[`${prefix}MothM`]} onChange={e => setData({ ...data, [`${prefix}MothM`]: toTitleCase(e.target.value) })} />
+                    <Input placeholder="Last Name" className="bg-white" value={data[`${prefix}MothL`]} onChange={e => setData({ ...data, [`${prefix}MothL`]: toTitleCase(e.target.value) })} />
                 </div>
             </div>
         </div>
     );
 }
 
-function GiverSubSection({ prefix, age, data, setData }: any) {
+function GiverSubSection({ prefix, age, data, setData, toTitleCase }: any) {
     if (!age || age < 18 || age > 24) return null;
     const label = age <= 20 ? "CONSENT" : "ADVICE";
 
@@ -346,11 +347,11 @@ function GiverSubSection({ prefix, age, data, setData }: any) {
                     </select>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <Input placeholder="First Name" className="bg-white" value={data[`${prefix}GiverF`]} onChange={e => setData({ ...data, [`${prefix}GiverF`]: e.target.value })} />
-                    <Input placeholder="Middle Name" className="bg-white" value={data[`${prefix}GiverM`]} onChange={e => setData({ ...data, [`${prefix}GiverM`]: e.target.value })} />
-                    <Input placeholder="Last Name" className="bg-white" value={data[`${prefix}GiverL`]} onChange={e => setData({ ...data, [`${prefix}GiverL`]: e.target.value })} />
+                    <Input placeholder="First Name" className="bg-white" value={data[`${prefix}GiverF`]} onChange={e => setData({ ...data, [`${prefix}GiverF`]: toTitleCase(e.target.value) })} />
+                    <Input placeholder="Middle Name" className="bg-white" value={data[`${prefix}GiverM`]} onChange={e => setData({ ...data, [`${prefix}GiverM`]: toTitleCase(e.target.value) })} />
+                    <Input placeholder="Last Name" className="bg-white" value={data[`${prefix}GiverL`]} onChange={e => setData({ ...data, [`${prefix}GiverL`]: toTitleCase(e.target.value) })} />
                 </div>
-                <Input placeholder="Relationship (Guardian, Aunt, etc.)" className="bg-white" value={data[`${prefix}GiverRelation`]} onChange={e => setData({ ...data, [`${prefix}GiverRelation`]: e.target.value })} />
+                <Input placeholder="Relationship (Guardian, Aunt, etc.)" className="bg-white" value={data[`${prefix}GiverRelation`]} onChange={e => setData({ ...data, [`${prefix}GiverRelation`]: toTitleCase(e.target.value) })} />
             </div>
         </motion.div>
     );
