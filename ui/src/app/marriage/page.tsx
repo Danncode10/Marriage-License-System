@@ -13,18 +13,9 @@ import { barangays, cities } from "select-philippines-address";
 const NUEVA_VIZCAYA_CODE = "0250";
 
 const RELIGIONS = [
-    "Roman Catholic",
-    "Islam",
-    "Iglesia ni Cristo",
-    "Seventh-day Adventist",
-    "Bible Baptist Church",
-    "Jehovah's Witnesses",
-    "United Church of Christ in the Philippines",
-    "Pentecostal",
-    "Evangelical",
-    "Aglipayan",
-    "Latter-day Saints",
-    "None",
+    "Roman Catholic", "Islam", "Iglesia ni Cristo", "Seventh-day Adventist",
+    "Bible Baptist Church", "Jehovah's Witnesses", "United Church of Christ in the Philippines",
+    "Pentecostal", "Evangelical", "Aglipayan", "Latter-day Saints", "None",
 ];
 
 export default function MarriageForm() {
@@ -51,7 +42,6 @@ export default function MarriageForm() {
     const [townOptions, setTownOptions] = useState<any[]>([]);
     const [gBrgyOptions, setGBrgyOptions] = useState<any[]>([]);
     const [bBrgyOptions, setBBrgyOptions] = useState<any[]>([]);
-
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [applicationCode, setApplicationCode] = useState("");
     const [loading, setLoading] = useState(false);
@@ -60,18 +50,32 @@ export default function MarriageForm() {
         cities(NUEVA_VIZCAYA_CODE).then((res: any) => setTownOptions(res));
     }, []);
 
+    // Logic 1: Date -> Age
     const calculateAge = (birthDateString: string): number => {
         if (!birthDateString) return 0;
         const today = new Date();
         const birthDate = new Date(birthDateString);
         if (isNaN(birthDate.getTime())) return 0;
-
         let age = today.getFullYear() - birthDate.getFullYear();
         const m = today.getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
-        }
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
         return age >= 0 ? age : 0;
+    };
+
+    // Logic 2: Age -> Date (Estimated)
+    const handleAgeChange = (prefix: 'g' | 'b', ageValue: string) => {
+        const age = parseInt(ageValue) || 0;
+        const currentYear = new Date().getFullYear();
+        const estimatedYear = currentYear - age;
+        
+        // Construct YYYY-MM-DD (defaults to January 1st of that year)
+        const estimatedDate = `${estimatedYear}-01-01`;
+
+        setFormData(prev => ({
+            ...prev,
+            [`${prefix}Age`]: age,
+            [`${prefix}Bday`]: age > 0 ? estimatedDate : ""
+        }));
     };
 
     const handleTownChange = async (prefix: 'g' | 'b', cityCode: string, cityName: string) => {
@@ -89,30 +93,21 @@ export default function MarriageForm() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
             });
-            if (!response.ok) throw new Error('Failed to generate excel');
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = `MARRIAGE_APPLICATION_${applicationCode}.xlsx`;
             document.body.appendChild(a);
-            a.click();
-            a.remove();
-            window.URL.revokeObjectURL(url);
-        } catch (e) {
-            alert("Error generating excel.");
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
+            a.click(); a.remove();
+        } catch (e) { alert("Error generating excel."); }
+        finally { setLoading(false); }
     };
 
     return (
         <div className="min-h-screen bg-slate-50/50 pb-20">
             <datalist id="religion-list">
-                {RELIGIONS.map((rel) => (
-                    <option key={rel} value={rel} />
-                ))}
+                {RELIGIONS.map((rel) => <option key={rel} value={rel} />)}
             </datalist>
 
             <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-slate-200">
@@ -122,9 +117,7 @@ export default function MarriageForm() {
                         <span>Back</span>
                     </Link>
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                            <Heart className="w-5 h-5 fill-current" />
-                        </div>
+                        <div className="p-2 bg-primary/10 rounded-lg text-primary"><Heart className="w-5 h-5 fill-current" /></div>
                         <span className="font-bold tracking-tight">Marriage Portal</span>
                     </div>
                     <div className="w-20"></div>
@@ -134,13 +127,7 @@ export default function MarriageForm() {
             <main className="max-w-6xl mx-auto px-4 mt-12">
                 <AnimatePresence mode="wait">
                     {!isSubmitted ? (
-                        <motion.div
-                            key="form"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            transition={{ duration: 0.4 }}
-                        >
+                        <motion.div key="form" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}>
                             <div className="text-center mb-12">
                                 <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Marriage License Application</h1>
                                 <p className="text-slate-500 mt-3 text-lg">Please fill out the form carefully.</p>
@@ -162,46 +149,34 @@ export default function MarriageForm() {
                                             <Field label="Last Name"><Input placeholder="Cruz" value={formData.gLast} onChange={e => setFormData({ ...formData, gLast: e.target.value })} /></Field>
                                         </div>
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                            <Field label="Birthday"><Input type="date" value={formData.gBday} onChange={e => { const b = e.target.value; setFormData({ ...formData, gBday: b, gAge: calculateAge(b) }); }} /></Field>
-                                            <Field label="Age"><Input type="number" value={formData.gAge || ""} onChange={e => setFormData({ ...formData, gAge: parseInt(e.target.value) || 0 })} /></Field>
+                                            <Field label="Birthday">
+                                                <Input type="date" value={formData.gBday} onChange={e => {
+                                                    const b = e.target.value;
+                                                    setFormData({ ...formData, gBday: b, gAge: calculateAge(b) });
+                                                }} />
+                                            </Field>
+                                            <Field label="Age">
+                                                <Input type="number" value={formData.gAge || ""} onChange={e => handleAgeChange('g', e.target.value)} />
+                                            </Field>
                                             <Field label="Religion" className="col-span-2 md:col-span-1">
-                                                <Input 
-                                                    list="religion-list" 
-                                                    placeholder="Select or type..." 
-                                                    value={formData.gReligion} 
-                                                    onChange={e => setFormData({ ...formData, gReligion: e.target.value })} 
-                                                />
+                                                <Input list="religion-list" placeholder="Select..." value={formData.gReligion} onChange={e => setFormData({ ...formData, gReligion: e.target.value })} />
                                             </Field>
                                         </div>
-                                        <Field label="Place of Birth"><Input placeholder="Solano, Nueva Vizcaya" value={formData.gBirthPlace} onChange={e => setFormData({ ...formData, gBirthPlace: e.target.value })} /></Field>
-                                        
+                                        <Field label="Place of Birth"><Input placeholder="Solano, NV" value={formData.gBirthPlace} onChange={e => setFormData({ ...formData, gBirthPlace: e.target.value })} /></Field>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <Field label="Town/Municipality">
-                                                <select 
-                                                    className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                                    value={townOptions.find(t => t.city_name === formData.gTown)?.city_code || ""}
-                                                    onChange={(e) => {
-                                                        const town = townOptions.find(t => t.city_code === e.target.value);
-                                                        handleTownChange('g', e.target.value, town?.city_name || "");
-                                                    }}
-                                                >
+                                            <Field label="Town">
+                                                <select className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm" value={townOptions.find(t => t.city_name === formData.gTown)?.city_code || ""} onChange={(e) => { const town = townOptions.find(t => t.city_code === e.target.value); handleTownChange('g', e.target.value, town?.city_name || ""); }}>
                                                     <option value="" disabled hidden>Select Town</option>
                                                     {townOptions.map(t => <option key={t.city_code} value={t.city_code}>{t.city_name}</option>)}
                                                 </select>
                                             </Field>
                                             <Field label="Barangay">
-                                                <select 
-                                                    className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-                                                    value={formData.gBrgy}
-                                                    disabled={!gBrgyOptions.length}
-                                                    onChange={(e) => setFormData({ ...formData, gBrgy: e.target.value })}
-                                                >
+                                                <select className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm disabled:opacity-50" value={formData.gBrgy} disabled={!gBrgyOptions.length} onChange={(e) => setFormData({ ...formData, gBrgy: e.target.value })}>
                                                     <option value="" disabled hidden>Select Barangay</option>
                                                     {gBrgyOptions.map(b => <option key={b.brgy_code} value={b.brgy_name}>{b.brgy_name}</option>)}
                                                 </select>
                                             </Field>
                                         </div>
-
                                         <FamilySubSection prefix="g" person="Groom" data={formData} setData={setFormData} />
                                         <GiverSubSection prefix="g" age={formData.gAge} data={formData} setData={setFormData} />
                                     </SectionCard>
@@ -214,46 +189,34 @@ export default function MarriageForm() {
                                             <Field label="Last Name"><Input placeholder="Santos" value={formData.bLast} onChange={e => setFormData({ ...formData, bLast: e.target.value })} /></Field>
                                         </div>
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                            <Field label="Birthday"><Input type="date" value={formData.bBday} onChange={e => { const b = e.target.value; setFormData({ ...formData, bBday: b, bAge: calculateAge(b) }); }} /></Field>
-                                            <Field label="Age"><Input type="number" value={formData.bAge || ""} onChange={e => setFormData({ ...formData, bAge: parseInt(e.target.value) || 0 })} /></Field>
+                                            <Field label="Birthday">
+                                                <Input type="date" value={formData.bBday} onChange={e => {
+                                                    const b = e.target.value;
+                                                    setFormData({ ...formData, bBday: b, bAge: calculateAge(b) });
+                                                }} />
+                                            </Field>
+                                            <Field label="Age">
+                                                <Input type="number" value={formData.bAge || ""} onChange={e => handleAgeChange('b', e.target.value)} />
+                                            </Field>
                                             <Field label="Religion" className="col-span-2 md:col-span-1">
-                                                <Input 
-                                                    list="religion-list" 
-                                                    placeholder="Select or type..." 
-                                                    value={formData.bReligion} 
-                                                    onChange={e => setFormData({ ...formData, bReligion: e.target.value })} 
-                                                />
+                                                <Input list="religion-list" placeholder="Select..." value={formData.bReligion} onChange={e => setFormData({ ...formData, bReligion: e.target.value })} />
                                             </Field>
                                         </div>
-                                        <Field label="Place of Birth"><Input placeholder="Solano, Nueva Vizcaya" value={formData.bBirthPlace} onChange={e => setFormData({ ...formData, bBirthPlace: e.target.value })} /></Field>
-                                        
+                                        <Field label="Place of Birth"><Input placeholder="Solano, NV" value={formData.bBirthPlace} onChange={e => setFormData({ ...formData, bBirthPlace: e.target.value })} /></Field>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <Field label="Town/Municipality">
-                                                <select 
-                                                    className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                                    value={townOptions.find(t => t.city_name === formData.bTown)?.city_code || ""}
-                                                    onChange={(e) => {
-                                                        const town = townOptions.find(t => t.city_code === e.target.value);
-                                                        handleTownChange('b', e.target.value, town?.city_name || "");
-                                                    }}
-                                                >
+                                            <Field label="Town">
+                                                <select className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm" value={townOptions.find(t => t.city_name === formData.bTown)?.city_code || ""} onChange={(e) => { const town = townOptions.find(t => t.city_code === e.target.value); handleTownChange('b', e.target.value, town?.city_name || ""); }}>
                                                     <option value="" disabled hidden>Select Town</option>
                                                     {townOptions.map(t => <option key={t.city_code} value={t.city_code}>{t.city_name}</option>)}
                                                 </select>
                                             </Field>
                                             <Field label="Barangay">
-                                                <select 
-                                                    className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-                                                    value={formData.bBrgy}
-                                                    disabled={!bBrgyOptions.length}
-                                                    onChange={(e) => setFormData({ ...formData, bBrgy: e.target.value })}
-                                                >
+                                                <select className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm disabled:opacity-50" value={formData.bBrgy} disabled={!bBrgyOptions.length} onChange={(e) => setFormData({ ...formData, bBrgy: e.target.value })}>
                                                     <option value="" disabled hidden>Select Barangay</option>
                                                     {bBrgyOptions.map(b => <option key={b.brgy_code} value={b.brgy_name}>{b.brgy_name}</option>)}
                                                 </select>
                                             </Field>
                                         </div>
-
                                         <FamilySubSection prefix="b" person="Bride" data={formData} setData={setFormData} />
                                         <GiverSubSection prefix="b" age={formData.bAge} data={formData} setData={setFormData} />
                                     </SectionCard>
@@ -261,19 +224,13 @@ export default function MarriageForm() {
 
                                 <div className="flex justify-center pt-8">
                                     <Button type="submit" size="lg" className="h-16 px-12 text-lg font-bold group">
-                                        Confirm Details
-                                        <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                        Confirm Details <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                     </Button>
                                 </div>
                             </form>
                         </motion.div>
                     ) : (
-                        <motion.div
-                            key="success"
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="max-w-2xl mx-auto"
-                        >
+                        <motion.div key="success" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="max-w-2xl mx-auto">
                             <Card className="p-12 text-center shadow-2xl border-none">
                                 <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-8">
                                     <FileText className="w-10 h-10 text-green-600" />
@@ -297,14 +254,13 @@ export default function MarriageForm() {
     );
 }
 
-// Helper Components
-function SectionCard({ title, icon, color, children }: { title: string, icon: React.ReactNode, color: 'blue' | 'yellow', children: React.ReactNode }) {
+// --- Helper Components (SectionCard, FamilySubSection, etc. remain the same) ---
+
+function SectionCard({ title, icon, color, children }: any) {
     const isBlue = color === 'blue';
-    const accentBg = isBlue ? 'bg-primary/5' : 'bg-secondary/10';
-    const accentBorder = isBlue ? 'border-primary/20' : 'border-secondary/30';
     return (
         <Card className="p-0 overflow-hidden border-none shadow-xl shadow-slate-200/50 flex flex-col h-full bg-white">
-            <div className={`p-6 flex items-center gap-3 border-b-2 ${accentBorder} ${accentBg}`}>
+            <div className={`p-6 flex items-center gap-3 border-b-2 ${isBlue ? 'border-primary/20 bg-primary/5' : 'border-secondary/30 bg-secondary/10'}`}>
                 <div className="p-2 bg-white rounded-xl shadow-sm">{icon}</div>
                 <h2 className="text-xl font-bold text-slate-900 tracking-tight italic">{title}</h2>
             </div>
@@ -335,97 +291,44 @@ function FamilySubSection({ prefix, person, data, setData }: any) {
         </div>
     );
 }
+
 function GiverSubSection({ prefix, age, data, setData }: any) {
     if (!age || age < 18 || age > 24) return null;
     const label = age <= 20 ? "CONSENT" : "ADVICE";
 
     const handleSelection = (val: string) => {
-        if (val === "Father") {
-            setData({
-                ...data,
-                [`${prefix}GiverF`]: data[`${prefix}FathF`],
-                [`${prefix}GiverM`]: data[`${prefix}FathM`],
-                [`${prefix}GiverL`]: data[`${prefix}FathL`],
-                [`${prefix}GiverRelation`]: "Father"
-            });
-        } else if (val === "Mother") {
-            setData({
-                ...data,
-                [`${prefix}GiverF`]: data[`${prefix}MothF`],
-                [`${prefix}GiverM`]: data[`${prefix}MothM`],
-                [`${prefix}GiverL`]: data[`${prefix}MothL`],
-                [`${prefix}GiverRelation`]: "Mother"
-            });
-        } else if (val === "Others") {
-            setData({
-                ...data,
-                [`${prefix}GiverF`]: "",
-                [`${prefix}GiverM`]: "",
-                [`${prefix}GiverL`]: "",
-                [`${prefix}GiverRelation`]: ""
-            });
-        }
+        const p = val === "Father" ? "Fath" : "Moth";
+        if (val === "Others") setData({ ...data, [`${prefix}GiverF`]: "", [`${prefix}GiverM`]: "", [`${prefix}GiverL`]: "", [`${prefix}GiverRelation`]: "" });
+        else setData({ ...data, [`${prefix}GiverF`]: data[`${prefix}${p}F`], [`${prefix}GiverM`]: data[`${prefix}${p}M`], [`${prefix}GiverL`]: data[`${prefix}${p}L`], [`${prefix}GiverRelation`]: val });
     };
 
     return (
         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="pt-6 border-t border-slate-100">
             <div className="p-6 bg-secondary/10 rounded-2xl border border-secondary/30 space-y-4">
-                {/* Header with Dropdown */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <LabelWithIcon icon={<FileText className="w-3 h-3 text-primary" />} text={`PERSON GIVING ${label}`} />
-                    
-                    <div className="flex items-center gap-2">
-                        <select 
-                            className="text-xs border border-slate-300 rounded-md px-3 py-1.5 bg-white font-medium focus:ring-2 focus:ring-primary outline-none"
-                            onChange={(e) => handleSelection(e.target.value)}
-                            defaultValue=""
-                        >
-                            <option value="" disabled hidden>Select Parent...</option>
-                            <option value="Father">Father</option>
-                            <option value="Mother">Mother</option>
-                            <option value="Others">Others (Manual Type)</option>
-                        </select>
-                    </div>
+                    <select className="text-xs border border-slate-300 rounded-md px-3 py-1.5 bg-white font-medium" onChange={(e) => handleSelection(e.target.value)} defaultValue="">
+                        <option value="" disabled hidden>Select Parent...</option>
+                        <option value="Father">Father</option>
+                        <option value="Mother">Mother</option>
+                        <option value="Others">Others</option>
+                    </select>
                 </div>
-
-
-                 {/* person giving advice/consent dropdown */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <Field label="First Name">
-                        <Input placeholder="First Name" value={data[`${prefix}GiverF`]} onChange={e => setData({ ...data, [`${prefix}GiverF`]: e.target.value })} />
-                    </Field>
-                    <Field label="Middle Name">
-                        <Input placeholder="Middle Name" value={data[`${prefix}GiverM`]} onChange={e => setData({ ...data, [`${prefix}GiverM`]: e.target.value })} />
-                    </Field>
-                    <Field label="Last Name">
-                        <Input placeholder="Last Name" value={data[`${prefix}GiverL`]} onChange={e => setData({ ...data, [`${prefix}GiverL`]: e.target.value })} />
-                    </Field>
+                    <Input placeholder="First" value={data[`${prefix}GiverF`]} onChange={e => setData({ ...data, [`${prefix}GiverF`]: e.target.value })} />
+                    <Input placeholder="Middle" value={data[`${prefix}GiverM`]} onChange={e => setData({ ...data, [`${prefix}GiverM`]: e.target.value })} />
+                    <Input placeholder="Last" value={data[`${prefix}GiverL`]} onChange={e => setData({ ...data, [`${prefix}GiverL`]: e.target.value })} />
                 </div>
-                
-                <Field label="Relationship (e.g. Guardian / Aunt / Grandparent)">
-                    <Input 
-                        placeholder="Type relationship here..." 
-                        value={data[`${prefix}GiverRelation`]} 
-                        onChange={e => setData({ ...data, [`${prefix}GiverRelation`]: e.target.value })} 
-                    />
-                </Field>
+                <Input placeholder="Relationship..." value={data[`${prefix}GiverRelation`]} onChange={e => setData({ ...data, [`${prefix}GiverRelation`]: e.target.value })} />
             </div>
         </motion.div>
     );
 }
-function LabelWithIcon({ icon, text }: { icon: React.ReactNode, text: string }) {
-    return (
-        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-            {icon} {text}
-        </div>
-    );
+
+function LabelWithIcon({ icon, text }: any) {
+    return <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">{icon} {text}</div>;
 }
 
-function Field({ label, children, className }: { label: string, children: React.ReactNode, className?: string }) {
-    return (
-        <div className={`space-y-1.5 ${className}`}>
-            <label className="text-xs font-bold text-slate-600 ml-1">{label}</label>
-            {children}
-        </div>
-    );
-}
+function Field({ label, children, className }: any) {
+    return <div className={`space-y-1.5 ${className}`}><label className="text-xs font-bold text-slate-600 ml-1">{label}</label>{children}</div>;
+}   
