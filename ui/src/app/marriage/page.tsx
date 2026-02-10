@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowRight, ChevronLeft, Copy, FileText, GraduationCap, Heart, User } from 'lucide-react';
+import { ArrowRight, ChevronLeft, Copy, FileText, GraduationCap, Heart, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 // @ts-ignore
@@ -18,31 +18,34 @@ const RELIGIONS = [
     "Pentecostal", "Evangelical", "Aglipayan", "Latter-day Saints", "None",
 ];
 
+const INITIAL_FORM_STATE = {
+    gFirst: "", gMiddle: "", gLast: "", gBday: "", gAge: 0,
+    gBirthPlace: "", gBrgy: "", gTown: "", gProv: "Nueva Vizcaya", gCountry: "Philippines",
+    gCitizen: "FILIPINO", gStatus: "SINGLE", gReligion: "",
+    gFathF: "", gFathM: "", gFathL: "",
+    gMothF: "", gMothM: "", gMothL: "",
+    gGiverF: "", gGiverM: "", gGiverL: "", gGiverRelation: "",
+
+    bFirst: "", bMiddle: "", bLast: "", bBday: "", bAge: 0,
+    bBirthPlace: "", bBrgy: "", bTown: "", bProv: "Nueva Vizcaya", bCountry: "Philippines",
+    bCitizen: "FILIPINO", bStatus: "SINGLE", bReligion: "",
+    bFathF: "", bFathM: "", bFathL: "",
+    bMothF: "", bMothM: "", bMothL: "",
+    bGiverF: "", bGiverM: "", bGiverL: "", bGiverRelation: "",
+};
+
 export default function MarriageForm() {
-    const [formData, setFormData] = useState({
-        gFirst: "", gMiddle: "", gLast: "", gBday: "", gAge: 0,
-        gBirthPlace: "", gBrgy: "", gTown: "", gProv: "Nueva Vizcaya", gCountry: "Philippines",
-        gCitizen: "FILIPINO", gStatus: "SINGLE", gReligion: "",
-        gFathF: "", gFathM: "", gFathL: "",
-        gMothF: "", gMothM: "", gMothL: "",
-        gGiverF: "", gGiverM: "", gGiverL: "", gGiverRelation: "",
-
-        bFirst: "", bMiddle: "", bLast: "", bBday: "", bAge: 0,
-        bBirthPlace: "", bBrgy: "", bTown: "", bProv: "Nueva Vizcaya", bCountry: "Philippines",
-        bCitizen: "FILIPINO", bStatus: "SINGLE", bReligion: "",
-        bFathF: "", bFathM: "", bFathL: "",
-        bMothF: "", bMothM: "", bMothL: "",
-        bGiverF: "", bGiverM: "", bGiverL: "", bGiverRelation: "",
-    });
-
+    const [formData, setFormData] = useState(INITIAL_FORM_STATE);
     const [townOptions, setTownOptions] = useState<any[]>([]);
     const [gBrgyOptions, setGBrgyOptions] = useState<any[]>([]);
     const [bBrgyOptions, setBBrgyOptions] = useState<any[]>([]);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [applicationCode, setApplicationCode] = useState("");
     const [loading, setLoading] = useState(false);
+    
+    // State for Clear Form Warning
+    const [showClearAlert, setShowClearAlert] = useState(false);
 
-    // --- CAPITALIZATION HELPER ---
     const toTitleCase = (str: string) => {
         return str.replace(/\b\w/g, (char) => char.toUpperCase());
     };
@@ -94,6 +97,12 @@ export default function MarriageForm() {
         
         const fullAddress = `${brgy}, ${town}, ${prov}`;
         setFormData(prev => ({ ...prev, [`${prefix}BirthPlace`]: fullAddress }));
+    };
+
+    const handleReset = () => {
+        setFormData(INITIAL_FORM_STATE);
+        setShowClearAlert(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const generateExcel = async () => {
@@ -153,7 +162,7 @@ export default function MarriageForm() {
 
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                     {/* GROOM SECTION */}
-                                    <SectionCard title="Groom's Information" icon={<User className="w-5 h-5 text-blue-600" />} color="blue">
+                                    <SectionCard title="Groom's Information" color="blue">
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             <Field label="First Name"><Input placeholder="Juan" className="bg-white" value={formData.gFirst} onChange={e => setFormData({ ...formData, gFirst: toTitleCase(e.target.value) })} /></Field>
                                             <Field label="Middle Name"><Input placeholder="Dela" className="bg-white" value={formData.gMiddle} onChange={e => setFormData({ ...formData, gMiddle: toTitleCase(e.target.value) })} /></Field>
@@ -204,7 +213,7 @@ export default function MarriageForm() {
                                     </SectionCard>
 
                                     {/* BRIDE SECTION */}
-                                    <SectionCard title="Bride's Information" icon={<User className="w-5 h-5 text-rose-600" />} color="yellow">
+                                    <SectionCard title="Bride's Information" color="yellow">
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             <Field label="First Name"><Input placeholder="Maria" className="bg-white" value={formData.bFirst} onChange={e => setFormData({ ...formData, bFirst: toTitleCase(e.target.value) })} /></Field>
                                             <Field label="Middle Name"><Input placeholder="Clara" className="bg-white" value={formData.bMiddle} onChange={e => setFormData({ ...formData, bMiddle: toTitleCase(e.target.value) })} /></Field>
@@ -255,10 +264,19 @@ export default function MarriageForm() {
                                     </SectionCard>
                                 </div>
 
-                                <div className="flex justify-center pt-8">
+                                {/* Form Action Footer */}
+                                <div className="flex flex-col items-center gap-6 pt-8">
                                     <Button type="submit" size="lg" className="h-16 px-12 text-lg font-bold group rounded-2xl shadow-xl shadow-primary/20">
                                         Review Application <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                     </Button>
+
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setShowClearAlert(true)}
+                                        className="flex items-center gap-2 text-slate-400 hover:text-red-500 transition-colors text-sm font-bold uppercase tracking-widest"
+                                    >
+                                        <Trash2 className="w-4 h-4" /> Clear Form
+                                    </button>
                                 </div>
                             </form>
                         </motion.div>
@@ -284,11 +302,55 @@ export default function MarriageForm() {
                     )}
                 </AnimatePresence>
             </main>
+
+            {/* Clear Form Confirmation Modal */}
+            <AnimatePresence>
+                {showClearAlert && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div 
+                            initial={{ opacity: 0 }} 
+                            animate={{ opacity: 1 }} 
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowClearAlert(false)}
+                            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                        />
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="relative bg-white p-8 rounded-[2.5rem] max-w-sm w-full shadow-2xl text-center border border-slate-100"
+                        >
+                            <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <Trash2 className="w-10 h-10" />
+                            </div>
+                            <h3 className="text-2xl font-black text-slate-900 mb-2">Clear Form?</h3>
+                            <p className="text-slate-500 mb-8 leading-relaxed">Are you sure? This will permanently delete all the information you have entered.</p>
+                            
+                            <div className="flex flex-col gap-3">
+                            <Button 
+                            variant="primary" 
+                            onClick={handleReset}
+                            className="h-14 rounded-2xl font-bold text-lg shadow-lg bg-red-600 hover:bg-red-700 text-white shadow-red-200"
+                             >
+                            Yes, Clear Everything
+                            </Button>
+                                <Button 
+                                    variant="ghost" 
+                                    onClick={() => setShowClearAlert(false)}
+                                    className="h-12 rounded-xl text-slate-500 font-medium hover:bg-slate-50"
+                                >
+                                    No, Keep My Data
+                                </Button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
 
-function SectionCard({ title, icon, color, children }: any) {
+function SectionCard({ title, color, children }: any) {
     const isBlue = color === 'blue';
     return (
         <Card className="p-0 overflow-hidden border-none shadow-2xl shadow-slate-200/60 flex flex-col h-full bg-white rounded-[1.5rem]">    
