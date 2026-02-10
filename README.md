@@ -20,7 +20,7 @@ You need two things installed on your computer:
 Copy and paste this single line to clone the project, create the necessary environment file, install everything, and start the portal:
 
 ```bash
-git clone https://github.com/Danncode10/Marriage-License-System.git && cd Marriage-License-System && echo NEXT_PUBLIC_SUPABASE_URL=https://dummy.supabase.co > ui/.env.local && echo NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy >> ui/.env.local && npm run install-all && npm run start-portal
+git clone https://github.com/iHoshiii/Marriage-License-System.git && cd Marriage-License-System && echo NEXT_PUBLIC_SUPABASE_URL=https://dummy.supabase.co > ui/.env.local && echo NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy >> ui/.env.local && npm run install-all && npm run start-portal
 ```
 
 *(Note: The command above creates a `.env.local` file with dummy Supabase keys to allow the website to run locally without a database setup.)*
