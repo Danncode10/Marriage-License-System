@@ -4,6 +4,11 @@ from datetime import datetime
 import sys
 import json
 import os
+import io
+import warnings
+
+# Suppress potential library warnings that can corrupt the binary stream
+warnings.filterwarnings("ignore", category=UserWarning)
 
 def cm_to_pixels(cm):
     return int((cm / 2.54) * 96)
@@ -12,238 +17,140 @@ def to_up(val):
     return str(val).upper().strip() if val else ""
 
 def process_excel(data):
-    # Load template from the same directory as the script
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    template_path = os.path.join(script_dir, "data/APPLICATION-for-MARRIAGE-LICENSE.xlsx")
-    img_path = os.path.join(script_dir, "data/couple_img.png")
-    
-    wb = openpyxl.load_workbook(template_path)
-    
-    # Date/Misc
-    now = datetime.now()
-    day_now = str(now.day)
-    month_now = now.strftime("%B").upper()
-    year_now = str(now.year)
+    try:
+        # Load paths relative to script location
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        template_path = os.path.join(script_dir, "data", "APPLICATION-for-MARRIAGE-LICENSE.xlsx")
+        img_path = os.path.join(script_dir, "data", "couple_img.png")
+        
+        if not os.path.exists(template_path):
+            sys.stderr.write(f"Error: Template not found at {template_path}\n")
+            os._exit(1)
 
-    # GROOM DATA
-    g_first = data.get("gFirst", "")
-    g_middle = data.get("gMiddle", "")
-    g_last = data.get("gLast", "")
-    g_bday = data.get("gBday", "")
-    g_age = data.get("gAge", 0)
-    g_birth_place = data.get("gBirthPlace", "")
-    g_brgy = data.get("gBrgy", "")
-    g_town = data.get("gTown", "")
-    g_prov = data.get("gProv", "NUEVA VIZCAYA")
-    g_country = data.get("gCountry", "PHILIPPINES")
-    g_citizen = data.get("gCitizen", "FILIPINO")
-    g_status = data.get("gStatus", "SINGLE")
-    g_religion = data.get("gReligion", "")
-    
-    # BRIDE DATA
-    b_first = data.get("bFirst", "")
-    b_middle = data.get("bMiddle", "")
-    b_last = data.get("bLast", "")
-    b_bday = data.get("bBday", "")
-    b_age = data.get("bAge", 0)
-    b_birth_place = data.get("bBirthPlace", "")
-    b_brgy = data.get("bBrgy", "")
-    b_town = data.get("bTown", "")
-    b_prov = data.get("bProv", "NUEVA VIZCAYA")
-    b_country = data.get("bCountry", "PHILIPPINES")
-    b_citizen = data.get("bCitizen", "FILIPINO")
-    b_status = data.get("bStatus", "SINGLE")
-    b_religion = data.get("bReligion", "")
+        wb = openpyxl.load_workbook(template_path)
+        
+        # Date Calculations
+        now = datetime.now()
+        day_now = str(now.day)
+        month_now = now.strftime("%B").upper()
+        year_now = str(now.year)
 
-    # PARENTS
-    g_fath_f = data.get("gFathF", "")
-    g_fath_m = data.get("gFathM", "")
-    g_fath_l = data.get("gFathL", "")
-    g_moth_f = data.get("gMothF", "")
-    g_moth_m = data.get("gMothM", "")
-    g_moth_l = data.get("gMothL", "")
-    
-    b_fath_f = data.get("bFathF", "")
-    b_fath_m = data.get("bFathM", "")
-    b_fath_l = data.get("bFathL", "")
-    b_moth_f = data.get("bMothF", "")
-    b_moth_m = data.get("bMothM", "")
-    b_moth_l = data.get("bMothL", "")
+        # Helper to safely get integers
+        def get_int(key):
+            val = data.get(key, 0)
+            try:
+                return int(val) if val else 0
+            except:
+                return 0
 
-    # GIVERS
-    g_giver_f = data.get("gGiverF", "")
-    g_giver_m = data.get("gGiverM", "")
-    g_giver_l = data.get("gGiverL", "")
-    g_giver_relation = data.get("gGiverRelation", "")
-    
-    b_giver_f = data.get("bGiverF", "")
-    b_giver_m = data.get("bGiverM", "")
-    b_giver_l = data.get("bGiverL", "")
-    b_giver_relation = data.get("bGiverRelation", "")
+        # DATA EXTRACTION
+        g_age = get_int("gAge")
+        b_age = get_int("bAge")
+        
+        g_town_prov = to_up(f"{data.get('gTown', '')}, {data.get('gProv', 'NUEVA VIZCAYA')}")
+        b_town_prov = to_up(f"{data.get('bTown', '')}, {data.get('bProv', 'NUEVA VIZCAYA')}")
+        g_full_addr = to_up(f"{data.get('gBrgy', '')}, {g_town_prov}")
+        b_full_addr = to_up(f"{data.get('bBrgy', '')}, {b_town_prov}")
 
-    # Addresses
-    g_full_addr = to_up(f"{g_brgy}, {g_town}, {g_prov}")
-    b_full_addr = to_up(f"{b_brgy}, {b_town}, {b_prov}")
-    g_town_prov = to_up(f"{g_town}, {g_prov}")
-    b_town_prov = to_up(f"{b_town}, {b_prov}")
+        # Image Logic
+        if os.path.exists(img_path) and "Notice" in wb.sheetnames:
+            try:
+                couple_img = Image(img_path)
+                couple_img.height = cm_to_pixels(3.75)
+                couple_img.width = cm_to_pixels(5.73)
+                wb["Notice"].add_image(couple_img, "T11")
+            except Exception as e:
+                sys.stderr.write(f"Warning: Image overlay failed: {e}\n")
 
-    is_groom_external = g_town_prov != "SOLANO, NUEVA VIZCAYA"
-    is_bride_external = b_town_prov != "SOLANO, NUEVA VIZCAYA"
-    needs_back_sheets = is_groom_external or is_bride_external
+        # MAIN APPLICATION SHEET MAPPING
+        if "APPLICATION" not in wb.sheetnames:
+            sys.stderr.write("Error: 'APPLICATION' sheet missing in template\n")
+            os._exit(1)
+            
+        app = wb["APPLICATION"]
+        
+        # Groom
+        app['B8'], app['B9'], app['B10'] = to_up(data.get("gFirst")), to_up(data.get("gMiddle")), to_up(data.get("gLast"))
+        app['B11'], app['N11'] = to_up(data.get("gBday")), g_age
+        app['B12'], app['L12'] = to_up(data.get("gBirthPlace") or g_town_prov), to_up(data.get("gCountry", "PHILIPPINES"))
+        app['B13'], app['H13'] = "MALE", to_up(data.get("gCitizen", "FILIPINO"))
+        app['B15'], app['M15'] = g_full_addr, to_up(data.get("gCountry", "PHILIPPINES"))
+        app['B16'], app['B17'] = to_up(data.get("gReligion")), to_up(data.get("gStatus", "SINGLE"))
+        
+        # Parents & Givers (Groom)
+        app['B22'], app['H22'], app['L22'] = to_up(data.get("gFathF")), to_up(data.get("gFathM")), to_up(data.get("gFathL"))
+        app['B26'], app['G26'], app['K26'] = to_up(data.get("gMothF")), to_up(data.get("gMothM")), to_up(data.get("gMothL"))
+        if 18 <= g_age <= 24:
+            app['B30'], app['H30'], app['L30'] = to_up(data.get("gGiverF")), to_up(data.get("gGiverM")), to_up(data.get("gGiverL"))
+            app['B31'], app['B32'] = to_up(data.get("gGiverRelation")), to_up(data.get("gCitizen", "FILIPINO"))
 
-    # Fill notice sheet image
-    if os.path.exists(img_path):
-        try:
-            couple_img = Image(img_path)
-            couple_img.height = cm_to_pixels(3.75)
-            couple_img.width = cm_to_pixels(5.73)
-            if "Notice" in wb.sheetnames:
-                notice_sheet = wb["Notice"]
-                notice_sheet.add_image(couple_img, "T11")
-        except:
-            pass
+        # Bride
+        app['U8'], app['U9'], app['U10'] = to_up(data.get("bFirst")), to_up(data.get("bMiddle")), to_up(data.get("bLast"))
+        app['U11'], app['AF11'] = to_up(data.get("bBday")), b_age
+        app['U12'], app['AE12'] = to_up(data.get("bBirthPlace") or b_town_prov), to_up(data.get("bCountry", "PHILIPPINES"))
+        app['U13'], app['Z13'] = "FEMALE", to_up(data.get("bCitizen", "FILIPINO"))
+        app['U15'], app['AF15'] = b_full_addr, to_up(data.get("bCountry", "PHILIPPINES"))
+        app['U16'], app['U17'] = to_up(data.get("bReligion")), to_up(data.get("bStatus", "SINGLE"))
 
-    app_sheet = wb["APPLICATION"]
-    
-    # GROOM mapping (APPLICATION)
-    app_sheet['B8'] = to_up(g_first)
-    app_sheet['B9'] = to_up(g_middle)
-    app_sheet['B10'] = to_up(g_last)
-    app_sheet['B11'] = to_up(g_bday)
-    app_sheet['N11'] = g_age
-    app_sheet['B12'] = to_up(g_birth_place) if g_birth_place else g_town_prov
-    app_sheet['L12'] = to_up(g_country)
-    app_sheet['B13'] = "MALE"
-    app_sheet['H13'] = to_up(g_citizen)
-    app_sheet['B15'] = g_full_addr
-    app_sheet['M15'] = to_up(g_country)
-    app_sheet['B16'] = to_up(g_religion)
-    app_sheet['B17'] = to_up(g_status)
-    app_sheet['B22'] = to_up(g_fath_f)
-    app_sheet['H22'] = to_up(g_fath_m)
-    app_sheet['L22'] = to_up(g_fath_l)
-    app_sheet['B23'] = to_up(g_citizen)
-    app_sheet['B25'] = g_full_addr
-    app_sheet['M25'] = to_up(g_country)
-    app_sheet['B26'] = to_up(g_moth_f)
-    app_sheet['G26'] = to_up(g_moth_m)
-    app_sheet['K26'] = to_up(g_moth_l)
-    app_sheet['B27'] = to_up(g_citizen)
-    app_sheet['B29'] = g_full_addr
-    app_sheet['M29'] = to_up(g_country)
-    app_sheet['B34'] = g_full_addr
-    app_sheet['M34'] = to_up(g_country)
+        # Parents & Givers (Bride)
+        app['U22'], app['Y22'], app['AC22'] = to_up(data.get("bFathF")), to_up(data.get("bFathM")), to_up(data.get("bFathL"))
+        app['U26'], app['Y26'], app['AD26'] = to_up(data.get("bMothF")), to_up(data.get("bMothM")), to_up(data.get("bMothL"))
+        if 18 <= b_age <= 24:
+            app['U30'], app['Y30'], app['AD30'] = to_up(data.get("bGiverF")), to_up(data.get("bGiverM")), to_up(data.get("bGiverL"))
+            app['U31'], app['U32'] = to_up(data.get("bGiverRelation")), to_up(data.get("bCitizen", "FILIPINO"))
 
-    if 18 <= g_age <= 24:
-        app_sheet['B30'] = to_up(g_giver_f)
-        app_sheet['H30'] = to_up(g_giver_m)
-        app_sheet['L30'] = to_up(g_giver_l)
-        app_sheet['B31'] = to_up(g_giver_relation)
-        app_sheet['B32'] = to_up(g_citizen)
+        # Common Footer Info
+        app['B37'], app['U37'], app['E37'], app['W37'], app['L37'], app['AD37'] = day_now, day_now, month_now, month_now, year_now, year_now
+        app['B38'] = app['U38'] = "SOLANO, NUEVA VIZCAYA"
 
-    # FEMALE mapping (APPLICATION)
-    app_sheet['U8'] = to_up(b_first)
-    app_sheet['U9'] = to_up(b_middle)
-    app_sheet['U10'] = to_up(b_last)
-    app_sheet['U11'] = to_up(b_bday)
-    app_sheet['AF11'] = b_age
-    app_sheet['U12'] = to_up(b_birth_place) if b_birth_place else b_town_prov
-    app_sheet['AE12'] = to_up(b_country)
-    app_sheet['U13'] = "FEMALE"
-    app_sheet['Z13'] = to_up(b_citizen)
-    app_sheet['U15'] = b_full_addr
-    app_sheet['AF15'] = to_up(b_country)
-    app_sheet['U16'] = to_up(b_religion)
-    app_sheet['U17'] = to_up(b_status)
-    app_sheet['U22'] = to_up(b_fath_f)
-    app_sheet['Y22'] = to_up(b_fath_m)
-    app_sheet['AC22'] = to_up(b_fath_l)
-    app_sheet['U23'] = to_up(b_citizen)
-    app_sheet['U25'] = b_full_addr
-    app_sheet['AF25'] = to_up(b_country)
-    app_sheet['U26'] = to_up(b_moth_f)
-    app_sheet['Y26'] = to_up(b_moth_m)
-    app_sheet['AD26'] = to_up(b_moth_l)
-    app_sheet['U27'] = to_up(b_citizen)
-    app_sheet['U29'] = b_full_addr
-    app_sheet['AF29'] = to_up(b_country)
-    app_sheet['U34'] = b_full_addr
-    app_sheet['AF34'] = to_up(b_country)
+        # Sheet Visibility Logic
+        is_groom_ext = g_town_prov != "SOLANO, NUEVA VIZCAYA"
+        is_bride_ext = b_town_prov != "SOLANO, NUEVA VIZCAYA"
+        
+        sheets_to_keep = ["APPLICATION", "Notice"]
+        
+        # Age-based Consent/Advice Sheets
+        extra_sheet = None
+        if 18 <= b_age <= 20 and g_age >= 25: extra_sheet = "CONSENT F"
+        elif 18 <= g_age <= 20 and b_age >= 25: extra_sheet = "CONSENT M"
+        elif 18 <= b_age <= 20 and 18 <= g_age <= 20: extra_sheet = "CONSENT M&F"
+        elif 21 <= b_age <= 24 and g_age >= 25: extra_sheet = "ADVICE F"
+        elif 21 <= g_age <= 24 and b_age >= 25: extra_sheet = "ADVICE M"
+        elif 21 <= b_age <= 24 and 21 <= g_age <= 24: extra_sheet = "ADVICE M&F"
+        elif 21 <= g_age <= 24 and 18 <= b_age <= 20: extra_sheet = "ADVICE M-CONSENT F"
+        elif 21 <= b_age <= 24 and 18 <= g_age <= 20: extra_sheet = "ADVICE F-CONSENT M"
+        
+        if extra_sheet: sheets_to_keep.append(extra_sheet)
+        if is_groom_ext or is_bride_ext: sheets_to_keep.extend(["AddressBACKnotice", "EnvelopeAddress"])
 
-    if 18 <= b_age <= 24:
-        app_sheet['U30'] = to_up(b_giver_f)
-        app_sheet['Y30'] = to_up(b_giver_m)
-        app_sheet['AD30'] = to_up(b_giver_l)
-        app_sheet['U31'] = to_up(b_giver_relation)
-        app_sheet['U32'] = to_up(b_citizen)
+        # Delete unwanted sheets
+        for s in wb.sheetnames:
+            if s not in sheets_to_keep:
+                del wb[s]
 
-    # Date and Location (APPLICATION)
-    app_sheet['B37'] = day_now
-    app_sheet['U37'] = day_now
-    app_sheet['E37'] = month_now
-    app_sheet['W37'] = month_now
-    app_sheet['L37'] = year_now
-    app_sheet['AD37'] = year_now
-    app_sheet['B38'] = "SOLANO, NUEVA VIZCAYA"
-    app_sheet['U38'] = "SOLANO, NUEVA VIZCAYA"
+        # OUTPUT STREAMS
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        sys.stdout.buffer.write(output.read())
+        sys.stdout.buffer.flush()
+        os._exit(0)
 
-    # Logic for sheet visibility based on age (Consent/Advice)
-    sheet_name = None
-    if (18 <= b_age <= 20 and g_age >= 25):
-        sheet_name = "CONSENT F"
-    elif (18 <= g_age <= 20 and b_age >= 25):
-        sheet_name = "CONSENT M"
-    elif (18 <= b_age <= 20 and 18 <= g_age <= 20):
-        sheet_name = "CONSENT M&F"
-    elif (21 <= b_age <= 24 and g_age >= 25):
-        sheet_name = "ADVICE F"
-    elif (21 <= g_age <= 24 and b_age >= 25):
-        sheet_name = "ADVICE M"
-    elif (21 <= b_age <= 24 and 21 <= g_age <= 24):
-        sheet_name = "ADVICE M&F"
-    elif (21 <= g_age <= 24 and 18 <= b_age <= 20):
-        sheet_name = "ADVICE M-CONSENT F"
-    elif (21 <= b_age <= 24 and 18 <= g_age <= 20):
-        sheet_name = "ADVICE F-CONSENT M"
-
-    # Handle NOTICE tab logic
-    if "Notice" in wb.sheetnames:
-        notice_sheet = wb["Notice"]
-        if is_groom_external and is_bride_external:
-            notice_sheet['E44'] = g_full_addr
-            notice_sheet['E45'] = b_full_addr
-        elif is_groom_external:
-            notice_sheet['E44'] = g_full_addr
-            notice_sheet['E45'] = ""
-        elif is_bride_external:
-            notice_sheet['E44'] = b_full_addr
-            notice_sheet['E45'] = ""
-        else:
-            notice_sheet['E44'] = ""
-            notice_sheet['E45'] = ""
-            notice_sheet['E46'] = ""
-
-    # Filter sheets and visibility
-    sheets_to_keep = ["APPLICATION", "Notice"]
-    if sheet_name:
-        sheets_to_keep.append(sheet_name)
-    
-    if needs_back_sheets:
-        sheets_to_keep.extend(["AddressBACKnotice", "EnvelopeAddress"])
-    
-    for s in wb.sheetnames:
-        if s not in sheets_to_keep:
-            del wb[s]
-        elif s in ["AddressBACKnotice", "EnvelopeAddress"]:
-             wb[s].sheet_state = 'visible'
-
-    # Output to buffer (stdout)
-    wb.save(sys.stdout.buffer)
+    except Exception as e:
+        sys.stderr.write(f"Error during processing: {str(e)}\n")
+        os._exit(1)
 
 if __name__ == "__main__":
+    # Wait for input from stdin (Next.js sends data here)
     try:
-        input_data = json.load(sys.stdin)
-        process_excel(input_data)
+        input_raw = sys.stdin.read()
+        if not input_raw:
+            sys.stderr.write("No data received\n")
+            os._exit(1)
+        
+        input_json = json.loads(input_raw)
+        process_excel(input_json)
     except Exception as e:
-        sys.stderr.write(str(e))
-        sys.exit(1)
+        sys.stderr.write(f"Startup Error: {str(e)}\n")
+        os._exit(1)
