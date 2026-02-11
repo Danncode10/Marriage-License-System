@@ -8,7 +8,7 @@ import { ArrowRight, ChevronLeft, Copy, FileText, GraduationCap, Heart, Trash2 }
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 // @ts-ignore
-import { barangays, cities } from "select-philippines-address";
+import { barangays, cities, provinces, regions } from "select-philippines-address";
 
 const NUEVA_VIZCAYA_CODE = "0250";
 
@@ -37,10 +37,13 @@ const INITIAL_FORM_STATE = {
 export default function MarriageForm() {
     const [formData, setFormData] = useState(INITIAL_FORM_STATE);
     const [townOptions, setTownOptions] = useState<any[]>([]);
+    const [provincesList, setProvincesList] = useState<any[]>([]);
     const [gBrgyOptions, setGBrgyOptions] = useState<any[]>([]);
     const [bBrgyOptions, setBBrgyOptions] = useState<any[]>([]);
 
     // Birth Place Options
+    const [gBirthTownOptions, setGBirthTownOptions] = useState<any[]>([]);
+    const [bBirthTownOptions, setBBirthTownOptions] = useState<any[]>([]);
     const [gBirthBrgyOptions, setGBirthBrgyOptions] = useState<any[]>([]);
     const [bBirthBrgyOptions, setBBirthBrgyOptions] = useState<any[]>([]);
 
@@ -59,6 +62,12 @@ export default function MarriageForm() {
     };
 
     useEffect(() => {
+        // Fetch all provinces across all regions
+        regions().then(async (regs: any) => {
+            const allProvs = await Promise.all(regs.map((r: any) => provinces(r.region_code)));
+            setProvincesList(allProvs.flat().sort((a, b) => a.province_name.localeCompare(b.province_name)));
+        });
+
         cities(NUEVA_VIZCAYA_CODE).then((res: any) => setTownOptions(res));
     }, []);
 
@@ -86,17 +95,31 @@ export default function MarriageForm() {
         }));
     };
 
+    const handleProvinceChange = async (prefix: 'g' | 'b', provinceCode: string, provinceName: string) => {
+        setFormData(prev => {
+            const newData = { ...prev, [`${prefix}Prov`]: provinceName, [`${prefix}Town`]: "", [`${prefix}Brgy`]: "" };
+            const isSame = prefix === 'g' ? gSameAsAddress : bSameAsAddress;
+            if (isSame) {
+                newData[`${prefix}BirthPlace`] = provinceName;
+            }
+            return newData;
+        });
+        const res = await cities(provinceCode);
+        setTownOptions(res);
+    };
+
     const handleTownChange = async (prefix: 'g' | 'b', cityCode: string, cityName: string) => {
-        setFormData(prev => ({ ...prev, [`${prefix}Town`]: cityName, [`${prefix}Brgy`]: "" }));
+        setFormData(prev => {
+            const newData = { ...prev, [`${prefix}Town`]: cityName, [`${prefix}Brgy`]: "" };
+            const isSame = prefix === 'g' ? gSameAsAddress : bSameAsAddress;
+            if (isSame) {
+                newData[`${prefix}BirthPlace`] = `${cityName}, ${newData[`${prefix}Prov`]}`;
+            }
+            return newData;
+        });
         const res = await barangays(cityCode);
         if (prefix === 'g') setGBrgyOptions(res);
         else setBBrgyOptions(res);
-
-        // If "same as address" is active, update birth place too (clear barangay part)
-        const isSame = prefix === 'g' ? gSameAsAddress : bSameAsAddress;
-        if (isSame) {
-            setFormData(prev => ({ ...prev, [`${prefix}BirthPlace`]: `${cityName}, NUEVA VIZCAYA` }));
-        }
     };
 
     const handleBrgyChange = (prefix: 'g' | 'b', brgyName: string) => {
@@ -107,19 +130,32 @@ export default function MarriageForm() {
             const isSame = prefix === 'g' ? gSameAsAddress : bSameAsAddress;
             if (isSame) {
                 const town = newData[`${prefix}Town`];
-                newData[`${prefix}BirthPlace`] = `${brgyName}, ${town}, NUEVA VIZCAYA`;
+                const prov = newData[`${prefix}Prov`];
+                newData[`${prefix}BirthPlace`] = `${brgyName}, ${town}, ${prov}`;
             }
 
             return newData;
         });
     };
 
-    const handleBirthTownChange = async (prefix: 'g' | 'b', cityCode: string, cityName: string) => {
+    const handleBirthProvinceChange = async (prefix: 'g' | 'b', provinceCode: string, provinceName: string) => {
+        const res = await cities(provinceCode);
+        if (prefix === 'g') {
+            setGBirthTownOptions(res);
+            setGBirthBrgyOptions([]);
+        } else {
+            setBBirthTownOptions(res);
+            setBBirthBrgyOptions([]);
+        }
+        setFormData(prev => ({ ...prev, [`${prefix}BirthPlace`]: provinceName }));
+    };
+
+    const handleBirthTownChange = async (prefix: 'g' | 'b', cityCode: string, cityName: string, provinceName: string) => {
         const res = await barangays(cityCode);
         if (prefix === 'g') setGBirthBrgyOptions(res);
         else setBBirthBrgyOptions(res);
 
-        setFormData(prev => ({ ...prev, [`${prefix}BirthPlace`]: `${cityName}, NUEVA VIZCAYA` }));
+        setFormData(prev => ({ ...prev, [`${prefix}BirthPlace`]: `${cityName}, ${provinceName}` }));
     };
 
     const handleCopyAddressToBirthplace = (prefix: 'g' | 'b') => {
@@ -221,7 +257,13 @@ export default function MarriageForm() {
                                             </Field>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-100">
+                                            <Field label="Province">
+                                                <select className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" value={provincesList.find(p => p.province_name === formData.gProv)?.province_code || ""} onChange={(e) => { const prov = provincesList.find(p => p.province_code === e.target.value); handleProvinceChange('g', e.target.value, prov?.province_name || ""); }}>
+                                                    <option value="" disabled hidden>Select Province</option>
+                                                    {provincesList.map(p => <option key={p.province_code} value={p.province_code}>{p.province_name}</option>)}
+                                                </select>
+                                            </Field>
                                             <Field label="Town/Municipality">
                                                 <select className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" value={townOptions.find(t => t.city_name === formData.gTown)?.city_code || ""} onChange={(e) => { const town = townOptions.find(t => t.city_code === e.target.value); handleTownChange('g', e.target.value, town?.city_name || ""); }}>
                                                     <option value="" disabled hidden>Select Town</option>
@@ -273,17 +315,32 @@ export default function MarriageForm() {
                                                     <p className="text-sm font-bold text-slate-700">{formData.gBirthPlace || "Select address first..."}</p>
                                                 </div>
                                             ) : (
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-1">
-                                                    <Field label="Birth Town">
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-1">
+                                                    <Field label="Birth Province">
                                                         <select
                                                             className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
                                                             onChange={(e) => {
-                                                                const town = townOptions.find(t => t.city_code === e.target.value);
-                                                                handleBirthTownChange('g', e.target.value, town?.city_name || "");
+                                                                const prov = provincesList.find(p => p.province_code === e.target.value);
+                                                                handleBirthProvinceChange('g', e.target.value, prov?.province_name || "");
+                                                            }}
+                                                        >
+                                                            <option value="" disabled hidden>Select Province</option>
+                                                            {provincesList.map(p => <option key={p.province_code} value={p.province_code}>{p.province_name}</option>)}
+                                                        </select>
+                                                    </Field>
+                                                    <Field label="Birth Town">
+                                                        <select
+                                                            className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm disabled:opacity-50 focus:ring-2 focus:ring-primary outline-none"
+                                                            disabled={!gBirthTownOptions.length}
+                                                            onChange={(e) => {
+                                                                const town = gBirthTownOptions.find(t => t.city_code === e.target.value);
+                                                                const parts = formData.gBirthPlace.split(',');
+                                                                const prov = parts[parts.length - 1]?.trim() || "";
+                                                                handleBirthTownChange('g', e.target.value, town?.city_name || "", prov);
                                                             }}
                                                         >
                                                             <option value="" disabled hidden>Select Town</option>
-                                                            {townOptions.map(t => <option key={t.city_code} value={t.city_code}>{t.city_name}</option>)}
+                                                            {gBirthTownOptions.map(t => <option key={t.city_code} value={t.city_code}>{t.city_name}</option>)}
                                                         </select>
                                                     </Field>
                                                     <Field label="Birth Barangay">
@@ -291,8 +348,10 @@ export default function MarriageForm() {
                                                             className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm disabled:opacity-50 focus:ring-2 focus:ring-primary outline-none"
                                                             disabled={!gBirthBrgyOptions.length}
                                                             onChange={(e) => {
-                                                                const townName = formData.gBirthPlace.split(',').pop()?.trim() || formData.gTown;
-                                                                setFormData({ ...formData, gBirthPlace: `${e.target.value}, ${townName}, NUEVA VIZCAYA` });
+                                                                const parts = formData.gBirthPlace.split(',');
+                                                                const townName = parts.length >= 2 ? parts[parts.length - 2].trim() : "";
+                                                                const prov = parts[parts.length - 1]?.trim() || "";
+                                                                setFormData({ ...formData, gBirthPlace: `${e.target.value}, ${townName}, ${prov}` });
                                                             }}
                                                         >
                                                             <option value="" disabled hidden>Select Barangay</option>
@@ -330,7 +389,13 @@ export default function MarriageForm() {
                                             </Field>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-100">
+                                            <Field label="Province">
+                                                <select className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" value={provincesList.find(p => p.province_name === formData.bProv)?.province_code || ""} onChange={(e) => { const prov = provincesList.find(p => p.province_code === e.target.value); handleProvinceChange('b', e.target.value, prov?.province_name || ""); }}>
+                                                    <option value="" disabled hidden>Select Province</option>
+                                                    {provincesList.map(p => <option key={p.province_code} value={p.province_code}>{p.province_name}</option>)}
+                                                </select>
+                                            </Field>
                                             <Field label="Town/Municipality">
                                                 <select className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" value={townOptions.find(t => t.city_name === formData.bTown)?.city_code || ""} onChange={(e) => { const town = townOptions.find(t => t.city_code === e.target.value); handleTownChange('b', e.target.value, town?.city_name || ""); }}>
                                                     <option value="" disabled hidden>Select Town</option>
@@ -382,17 +447,32 @@ export default function MarriageForm() {
                                                     <p className="text-sm font-bold text-slate-700">{formData.bBirthPlace || "Select address first..."}</p>
                                                 </div>
                                             ) : (
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-1">
-                                                    <Field label="Birth Town">
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-1">
+                                                    <Field label="Birth Province">
                                                         <select
                                                             className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
                                                             onChange={(e) => {
-                                                                const town = townOptions.find(t => t.city_code === e.target.value);
-                                                                handleBirthTownChange('b', e.target.value, town?.city_name || "");
+                                                                const prov = provincesList.find(p => p.province_code === e.target.value);
+                                                                handleBirthProvinceChange('b', e.target.value, prov?.province_name || "");
+                                                            }}
+                                                        >
+                                                            <option value="" disabled hidden>Select Province</option>
+                                                            {provincesList.map(p => <option key={p.province_code} value={p.province_code}>{p.province_name}</option>)}
+                                                        </select>
+                                                    </Field>
+                                                    <Field label="Birth Town">
+                                                        <select
+                                                            className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm disabled:opacity-50 focus:ring-2 focus:ring-primary outline-none"
+                                                            disabled={!bBirthTownOptions.length}
+                                                            onChange={(e) => {
+                                                                const town = bBirthTownOptions.find(t => t.city_code === e.target.value);
+                                                                const parts = formData.bBirthPlace.split(',');
+                                                                const prov = parts[parts.length - 1]?.trim() || "";
+                                                                handleBirthTownChange('b', e.target.value, town?.city_name || "", prov);
                                                             }}
                                                         >
                                                             <option value="" disabled hidden>Select Town</option>
-                                                            {townOptions.map(t => <option key={t.city_code} value={t.city_code}>{t.city_name}</option>)}
+                                                            {bBirthTownOptions.map(t => <option key={t.city_code} value={t.city_code}>{t.city_name}</option>)}
                                                         </select>
                                                     </Field>
                                                     <Field label="Birth Barangay">
@@ -400,8 +480,10 @@ export default function MarriageForm() {
                                                             className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm disabled:opacity-50 focus:ring-2 focus:ring-primary outline-none"
                                                             disabled={!bBirthBrgyOptions.length}
                                                             onChange={(e) => {
-                                                                const townName = formData.bBirthPlace.split(',').pop()?.trim() || formData.bTown;
-                                                                setFormData({ ...formData, bBirthPlace: `${e.target.value}, ${townName}, NUEVA VIZCAYA` });
+                                                                const parts = formData.bBirthPlace.split(',');
+                                                                const townName = parts.length >= 2 ? parts[parts.length - 2].trim() : "";
+                                                                const prov = parts[parts.length - 1]?.trim() || "";
+                                                                setFormData({ ...formData, bBirthPlace: `${e.target.value}, ${townName}, ${prov}` });
                                                             }}
                                                         >
                                                             <option value="" disabled hidden>Select Barangay</option>
