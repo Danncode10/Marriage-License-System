@@ -144,6 +144,7 @@ ui/src/
 - Digital signature capabilities for electronic document approval
 - Multi-language support for diverse applicant base
 - Mobile camera integration for enhanced photo capture
+- Image compression and storage optimization for Supabase free tier limits (target: <200KB per photo, ~800-1,600 applications capacity)
 - Integration with LGU document management and archiving systems
 - Advanced analytics and reporting for operational insights
 - Audit logging and compliance reporting for regulatory requirements
