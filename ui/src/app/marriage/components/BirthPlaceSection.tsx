@@ -37,7 +37,7 @@ export function BirthPlaceSection({
                     onClick={() => {
                         setSameAsAddress(true);
                         const place = `${formData[`${prefix}Brgy`] ? formData[`${prefix}Brgy`] + ', ' : ''}${formData[`${prefix}Town`]}, ${formData[`${prefix}Prov`]}`;
-                        setFormData(prev => ({ ...prev, [`${prefix}BirthPlace`]: place }));
+                        setFormData((prev: any) => ({ ...prev, [`${prefix}BirthPlace`]: place }));
                     }}
                     className={`flex-1 py-2 text-[10px] font-black rounded-lg transition-all flex items-center justify-center gap-2 ${sameAsAddress ? 'bg-white shadow-md text-primary' : 'text-slate-400 hover:text-slate-600'}`}
                 >
