@@ -1,5 +1,5 @@
 import { Input } from "@/components/ui/input";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { FileText, GraduationCap } from "lucide-react";
 import React from "react";
 
@@ -97,7 +97,7 @@ export function FamilySubSection({ prefix, person, data, setData, toTitleCase }:
 interface GiverSubSectionProps {
     prefix: 'g' | 'b';
     age: number;
-    data: any;
+    data: any;  
     setData: (data: any) => void;
 }
 
@@ -105,18 +105,70 @@ export function GiverSubSection({ prefix, age, data, setData }: GiverSubSectionP
     if (!age || age < 18 || age > 24) return null;
     const label = age <= 20 ? "CONSENT" : "ADVICE";
 
+    const handleRelationshipChange = (val: string) => {
+        let newData = { ...data, [`${prefix}GiverRelation`]: val };
+
+        if (val === "Father") {
+            newData[`${prefix}GiverF`] = data[`${prefix}FathF`];
+            newData[`${prefix}GiverM`] = data[`${prefix}FathM`];
+            newData[`${prefix}GiverL`] = data[`${prefix}FathL`];
+        } else if (val === "Mother") {
+            newData[`${prefix}GiverF`] = data[`${prefix}MothF`];
+            newData[`${prefix}GiverM`] = data[`${prefix}MothM`];
+            newData[`${prefix}GiverL`] = data[`${prefix}MothL`];
+        } else {
+            // Reset names if switching to "Other"
+            newData[`${prefix}GiverF`] = "";
+            newData[`${prefix}GiverM`] = "";
+            newData[`${prefix}GiverL`] = "";
+        }
+        setData(newData);
+    };
+
     return (
         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="pt-6 border-t border-slate-100">
             <div className="p-6 bg-slate-50/80 rounded-2xl border border-slate-200 space-y-4">
                 <LabelWithIcon icon={<FileText className="w-3 h-3 text-primary" />} text={`PERSON GIVING ${label}`} />
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <Input placeholder="First Name" value={data[`${prefix}GiverF`]} onChange={e => setData({ ...data, [`${prefix}GiverF`]: e.target.value })} />
-                    <Input placeholder="Middle Name" value={data[`${prefix}GiverM`]} onChange={e => setData({ ...data, [`${prefix}GiverM`]: e.target.value })} />
-                    <Input placeholder="Last Name" value={data[`${prefix}GiverL`]} onChange={e => setData({ ...data, [`${prefix}GiverL`]: e.target.value })} />
-                </div>
-                <Field label="Relationship (e.g. Father)">
-                    <Input placeholder="Father" value={data[`${prefix}GiverRelation`]} onChange={e => setData({ ...data, [`${prefix}GiverRelation`]: e.target.value })} />
+                
+                {/* relationship selection */}
+                <Field label="Relationship">
+                    <select 
+                        className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm"
+                        value={data[`${prefix}GiverRelation`]}
+                        onChange={(e) => handleRelationshipChange(e.target.value)}
+                    >
+                        <option value="">Select Relationship</option>
+                        <option value="Father">Father</option>
+                        <option value="Mother">Mother</option>
+                        <option value="Other">Other</option>
+                    </select>
                 </Field>
+
+                {/* show "Specify Other" field only if "Other" is selected */}
+                {data[`${prefix}GiverRelation`] === "Other" && (
+                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+                        <Field label="Specify Relationship (e.g. Grandmother)">
+                            <Input 
+                                placeholder="Enter relationship..." 
+                                value={data[`${prefix}GiverOtherTitle`]} 
+                                onChange={e => setData({ ...data, [`${prefix}GiverOtherTitle`]: e.target.value })} 
+                            />
+                        </Field>
+                    </motion.div>
+                )}
+
+                {/* auto prints mother/father */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <Field label="First Name">
+                        <Input placeholder="First Name" value={data[`${prefix}GiverF`]} onChange={e => setData({ ...data, [`${prefix}GiverF`]: e.target.value })} />
+                    </Field>
+                    <Field label="Middle Name">
+                        <Input placeholder="Middle Name" value={data[`${prefix}GiverM`]} onChange={e => setData({ ...data, [`${prefix}GiverM`]: e.target.value })} />
+                    </Field>
+                    <Field label="Last Name">
+                        <Input placeholder="Last Name" value={data[`${prefix}GiverL`]} onChange={e => setData({ ...data, [`${prefix}GiverL`]: e.target.value })} />
+                    </Field>
+                </div>
             </div>
         </motion.div>
     );
