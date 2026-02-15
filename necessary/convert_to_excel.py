@@ -46,8 +46,8 @@ def process_excel(data):
         
         g_town_prov = (f"{data.get('gTown', '')}, {data.get('gProv', 'Nueva Vizcaya')}")
         b_town_prov = (f"{data.get('bTown', '')}, {data.get('bProv', 'Nueva Vizcaya')}")
-        g_full_addr = (f"{data.get('gBrgy', '')}, {g_town_prov}")
-        b_full_addr = (f"{data.get('bBrgy', '')}, {b_town_prov}")
+        g_full_addr = (f"Brgy. , {data.get('gBrgy', '')}, {g_town_prov}")
+        b_full_addr = (f"Brgy. , {data.get('bBrgy', '')}, {b_town_prov}")
 
         # Image Logic
         if os.path.exists(img_path) and "Notice" in wb.sheetnames:
@@ -67,9 +67,9 @@ def process_excel(data):
         app = wb["APPLICATION"]
         
         # Groom
-        app['B8'], app['B9'], app['B10'] =(data.get("gFirst")),(data.get("gMiddle")),(data.get("gLast"))
+        app['B8'], app['B9'], app['B10'] =(data.get("gFirst")).upper(),(data.get("gMiddle")).upper(),(data.get("gLast")).upper()
         app['B11'], app['N11'] =(data.get("gBday")), g_age
-        app['B12'], app['L12'] =(data.get("gBirthPlace") or g_town_prov),(data.get("gCountry", "Philippines"))
+        app['B12'], app['L12'] =g_town_prov,(data.get("gCountry", "Philippines"))
         app['B13'], app['H13'] = "Male",(data.get("gCitizen", "Filipino"))
         app['B15'], app['M15'] = g_full_addr,(data.get("gCountry", "Philippines"))
         app['B16'], app['B17'] =(data.get("gReligion")),(data.get("gStatus", "Single"))
@@ -82,9 +82,9 @@ def process_excel(data):
             app['B31'], app['B32'] =(data.get("gGiverRelation")),(data.get("gCitizen", "Filipino"))
 
         # Bride
-        app['U8'], app['U9'], app['U10'] =(data.get("bFirst")),(data.get("bMiddle")),(data.get("bLast"))
+        app['U8'], app['U9'], app['U10'] =(data.get("bFirst")).upper(),(data.get("bMiddle")).upper(),(data.get("bLast")).upper()
         app['U11'], app['AF11'] =(data.get("bBday")), b_age
-        app['U12'], app['AE12'] =(data.get("bBirthPlace") or b_town_prov),(data.get("bCountry", "Philippines"))
+        app['U12'], app['AE12'] =b_town_prov,(data.get("bCountry", "Philippines"))
         app['U13'], app['Z13'] = "Female",(data.get("bCitizen", "Filipino"))
         app['U15'], app['AF15'] = b_full_addr,(data.get("bCountry", "Philippines"))
         app['U16'], app['U17'] =(data.get("bReligion")),(data.get("bStatus", "Single"))
