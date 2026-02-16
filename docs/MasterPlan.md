@@ -24,21 +24,22 @@ Based on Overview.md core features: marriage application processing with dual ap
 
 | Table | Primary Key | Foreign Keys | Key Fields | Data Types | Description |
 |-------|-------------|--------------|------------|------------|-------------|
-| profiles | id (UUID) | auth.users(id) | role, full_name, employee_id | VARCHAR(20), TEXT, VARCHAR(10) | Employee/Admin profiles extending Supabase auth |
-| marriage_applications | id (UUID) | processed_by → profiles(id) | application_code, status, document_number | VARCHAR(20) UNIQUE, VARCHAR(20), INTEGER | Main application records with unique codes |
+| profiles | id (UUID) | auth.users(id) | role, full_name, employee_id | VARCHAR(20), TEXT, VARCHAR(10) | User/Employee/Admin profiles extending Supabase auth |
+| marriage_applications | id (UUID) | created_by → profiles(id), processed_by → profiles(id) | application_code, status, document_number | VARCHAR(20) UNIQUE, VARCHAR(20), INTEGER | Main application records with unique codes |
 | applicants | id (UUID) | application_id → marriage_applications(id), address_id → addresses(id) | type, first_name, middle_name, last_name, birth_date, age, religion, citizenship | VARCHAR(10), TEXT, TEXT, TEXT, DATE, INTEGER, TEXT, TEXT | Groom/Bride applicant data |
 | addresses | id (UUID) | - | province, municipality, barangay, street_address | TEXT, TEXT, TEXT, TEXT | Philippine address hierarchy |
+| user_document_uploads | id (UUID) | application_id → marriage_applications(id), uploaded_by → profiles(id) | document_type, file_path, file_size, file_name | VARCHAR(50), TEXT, INTEGER, TEXT | User-uploaded supporting documents |
 | application_photos | id (UUID) | application_id → marriage_applications(id) | photo_type, file_path, file_size | VARCHAR(10), TEXT, INTEGER | Photo storage metadata |
 | generated_documents | id (UUID) | application_id → marriage_applications(id) | file_path, file_size, generated_at | TEXT, INTEGER, TIMESTAMP | Excel document metadata |
 | audit_logs | id (UUID) | user_id → profiles(id), application_id → marriage_applications(id) | action, details | TEXT, JSONB | Audit trail for all actions |
 
 ### Complete SQL Schema
 ```sql
--- Employee/Admin profiles
+-- User/Employee/Admin profiles
 CREATE TABLE profiles (
   id UUID REFERENCES auth.users(id) PRIMARY KEY,
-  role VARCHAR(20) NOT NULL CHECK (role IN ('employee', 'admin')),
-  full_name TEXT NOT NULL,
+  role VARCHAR(20) NOT NULL CHECK (role IN ('user', 'employee', 'admin')),
+  full_name TEXT,
   employee_id VARCHAR(10) UNIQUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -48,11 +49,24 @@ CREATE TABLE profiles (
 CREATE TABLE marriage_applications (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   application_code VARCHAR(20) UNIQUE NOT NULL,
-  status VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'submitted', 'processing', 'completed', 'rejected')),
+  status VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'submitted', 'pending', 'approved', 'processing', 'completed', 'rejected', 'finished')),
   document_number INTEGER,
+  created_by UUID REFERENCES profiles(id),
   processed_by UUID REFERENCES profiles(id),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- User document uploads
+CREATE TABLE user_document_uploads (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  application_id UUID NOT NULL REFERENCES marriage_applications(id) ON DELETE CASCADE,
+  document_type VARCHAR(50) NOT NULL,
+  file_path TEXT NOT NULL,
+  file_size INTEGER NOT NULL,
+  file_name TEXT NOT NULL,
+  uploaded_by UUID REFERENCES profiles(id),
+  uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Applicant details (groom/bride)
@@ -130,11 +144,12 @@ ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 ### Row Level Security (RLS) Policies
 
 **profiles table**:
+- Users can read/update their own profile
 - Employees can read/update their own profile
 - Admins can read all profiles and manage employees
 ```sql
--- Employees can view/edit their own profile
-CREATE POLICY "employees_manage_own_profile" ON profiles
+-- Users and employees can view/edit their own profile
+CREATE POLICY "users_employees_manage_own_profile" ON profiles
 FOR ALL TO authenticated
 USING (auth.uid() = id);
 
@@ -160,10 +175,18 @@ USING (
 ```
 
 **marriage_applications table**:
+- Users can view their own applications
 - Employees can view all applications for processing
 - Admins can view all applications
 - No public access (applications created via API)
 ```sql
+-- Users can view their own applications
+CREATE POLICY "users_view_own_applications" ON marriage_applications
+FOR SELECT TO authenticated
+USING (
+  created_by = auth.uid()
+);
+
 -- Employees can view all applications
 CREATE POLICY "employees_view_all_applications" ON marriage_applications
 FOR SELECT TO authenticated
@@ -188,6 +211,29 @@ USING (
 CREATE POLICY "allow_application_creation" ON marriage_applications
 FOR INSERT TO anon
 WITH CHECK (true);
+```
+
+**user_document_uploads table**:
+- Users can view/manage their own uploaded documents
+- Employees can view all uploaded documents
+- Admins can view all uploaded documents
+```sql
+-- Users can view/manage their own documents
+CREATE POLICY "users_manage_own_documents" ON user_document_uploads
+FOR ALL TO authenticated
+USING (
+  uploaded_by = auth.uid()
+);
+
+-- Employees can view all documents
+CREATE POLICY "employees_view_all_documents" ON user_document_uploads
+FOR SELECT TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM profiles
+    WHERE id = auth.uid() AND role IN ('employee', 'admin')
+  )
+);
 ```
 
 **applicants table**:
@@ -267,7 +313,15 @@ WITH CHECK (true);
 ```
 
 ## 👥 User Roles & Dashboard Design
-Based on Overview.md dual role system: Employees process applications, Administrators oversee operations.
+Based on Overview.md three-tier role system: Users track applications, Employees process applications, Administrators oversee operations.
+
+### User Dashboard (`/dashboard/user`):
+- **Application Status Tracking**: View current status (pending, approved, finished) for all submitted applications
+- **Office Visit Instructions**: Clear guidance to visit Municipal Office in Solano for processing
+- **Application History**: Complete timeline of application progress and updates
+- **Document Management**: View uploaded supporting documents and download generated files
+- **Profile Management**: Update personal information and account settings
+- **Real-time Notifications**: Instant updates when application status changes
 
 ### Employee Dashboard (`/dashboard/employee`):
 - **Application Processing**: Enter application codes to access and review submitted forms
@@ -287,7 +341,8 @@ Based on Overview.md dual role system: Employees process applications, Administr
 - **System Health**: Monitor real-time status of operations
 
 ### Public/User Access:
-- **Marriage Application Form** (`/marriage`): Comprehensive form for dual applicants
+- **Marriage Application Form** (`/marriage`): Comprehensive form for dual applicants with optional document upload
+- **Account Creation**: User registration after form submission for status tracking
 - **Application Status Check** (`/status`): Public lookup using application code
 - **Form Submission**: Generate unique application code after validation
 
@@ -300,6 +355,11 @@ ui/src/app/
 │   ├── hooks/                  # Form state management
 │   └── utils.ts                # Form utilities
 ├── dashboard/
+│   ├── user/                   # User status tracking dashboard
+│   │   ├── page.tsx           # Main user dashboard
+│   │   ├── applications/      # Application status and history
+│   │   ├── documents/         # Document management
+│   │   └── profile/           # User profile management
 │   ├── employee/               # Employee processing dashboard
 │   │   ├── page.tsx           # Main employee dashboard
 │   │   ├── process/[code]/    # Application processing page
@@ -313,10 +373,12 @@ ui/src/app/
 ├── status/                     # Public status checking
 │   └── [code]/                # Status page by code
 ├── login/                      # Authentication pages
+├── signup/                     # User account creation
 ├── logout/                     # Logout handling
 └── api/                        # API routes
     ├── generate-excel/         # Excel generation endpoint
     ├── applications/           # Application CRUD
+    ├── documents/              # Document upload/download
     ├── photos/                 # Photo upload handling
     └── auth/                   # Authentication callbacks
 ```

@@ -31,13 +31,14 @@ The system follows a hybrid architecture combining modern web technologies with 
 
 ## Core Features
 
-### 1. Employee Authentication & Role Management
-- **Supabase Integration**: Secure authentication for office staff
-- **Dual Role System**:
+### 1. User Authentication & Role Management
+- **Supabase Integration**: Secure authentication for couples and office staff
+- **Three-Tier Role System**:
+  - **Users**: Couples applying for marriage licenses - access dashboard for status tracking
   - **Employees**: Process marriage applications, capture photos, generate documents
   - **Administrators**: Oversee operations, manage employees, view analytics
-- **Session Management**: Secure login sessions for office workstations
-- **Public Access**: Unauthenticated form filling for self-service kiosks
+- **Session Management**: Secure login sessions for all user types
+- **Public Access**: Unauthenticated form filling for initial application submission
 
 ### 2. Office Workflow Management
 - **Two-Tier Processing System**: User self-service data entry followed by employee verification and processing
@@ -99,14 +100,16 @@ ui/src/
 
 ### Application Processing Workflow
 1. **User Form Entry**: Applicants fill comprehensive marriage application form with dual applicant data
-2. **Data Review & Validation**: Users review all entered information and make corrections before submission
-3. **Form Locking & Code Generation**: Form becomes read-only, generates unique alphanumeric application code (e.g., "MLS-2024-001A")
-4. **Code Presentation**: User receives code to present to office employee for processing
-5. **Employee Code Processing**: Staff enters code in employee dashboard to access and review application
-6. **Employee Verification**: Staff reviews data, makes necessary corrections, and captures applicant photos
-7. **Document Finalization**: System assigns sequential document number and generates final Excel package
-8. **File Download**: Employee downloads officially numbered document (e.g., "MARRIAGE_APPLICATION_2024_0001.xlsx")
-9. **Status Tracking**: Real-time visibility into processing stages for both users and staff
+2. **Optional Document Upload**: Users can upload supporting documents (marriage counseling certificates, birth certificates, etc.)
+3. **Data Review & Validation**: Users review all entered information and uploaded documents before submission
+4. **Account Creation**: After form submission, users create accounts with role "user" for status tracking
+5. **Dashboard Access**: Users access their dashboard showing application status (pending, approved, finished)
+6. **Office Visit Instruction**: Dashboard displays instruction to visit the Municipal Office in Solano for processing
+7. **Employee Code Processing**: Staff enters application code in employee dashboard to access and review application
+8. **Employee Verification**: Staff reviews data, validates documents, makes necessary corrections, and captures applicant photos
+9. **Document Finalization**: System assigns sequential document number and generates final Excel package
+10. **File Download**: Employee downloads officially numbered document (e.g., "MARRIAGE_APPLICATION_2024_0001.xlsx")
+11. **Status Updates**: Real-time status updates visible in user dashboard and employee/admin interfaces
 
 ### Excel Template Management
 - **Template Location**: `necessary/data/APPLICATION-for-MARRIAGE-LICENSE.xlsx`
