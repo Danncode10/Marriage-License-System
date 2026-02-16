@@ -7,16 +7,16 @@ export const RELIGIONS = [
 ];
 
 export const INITIAL_FORM_STATE = {
-    gFirst: "", gMiddle: "", gLast: "", gBday: "", gAge: 0,
+    gFirst: "", gMiddle: "", gLast: "", gSuffix: "", gCustomSuffix: "", gBday: "", gAge: 0,
     gBirthPlace: "", gBrgy: "", gTown: "", gProv: "Nueva Vizcaya", gCountry: "Philippines",
-    gCitizen: "FILIPINO", gStatus: "SINGLE", gReligion: "",
+    gCitizen: "Filipino", gStatus: "Single", gReligion: "",
     gFathF: "", gFathM: "", gFathL: "",
     gMothF: "", gMothM: "", gMothL: "",
     gGiverF: "", gGiverM: "", gGiverL: "", gGiverRelation: "",
 
-    bFirst: "", bMiddle: "", bLast: "", bBday: "", bAge: 0,
+    bFirst: "", bMiddle: "", bLast: "", bSuffix: "", bCustomSuffix: "", bBday: "", bAge: 0,
     bBirthPlace: "", bBrgy: "", bTown: "", bProv: "Nueva Vizcaya", bCountry: "Philippines",
-    bCitizen: "FILIPINO", bStatus: "SINGLE", bReligion: "",
+    bCitizen: "Filipino", bStatus: "Single", bReligion: "",
     bFathF: "", bFathM: "", bFathL: "",
     bMothF: "", bMothM: "", bMothL: "",
     bGiverF: "", bGiverM: "", bGiverL: "", bGiverRelation: "",

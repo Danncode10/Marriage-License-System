@@ -15,6 +15,8 @@ import { RELIGIONS } from "./constants";
 import { useMarriageForm } from "./hooks/useMarriageForm";
 import { toTitleCase } from "./utils";
 
+export const SUFFIX_OPTIONS = ["Jr.", "Sr.", "I", "II", "III", "IV", "V", "Others"];
+
 export default function MarriageForm() {
     // PRIVACY contants
     const [hasAcceptedPrivacy, setHasAcceptedPrivacy] = useState(false);
@@ -205,11 +207,45 @@ export default function MarriageForm() {
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                         <SectionCard title="Groom's Information" color="blue">
                                             {/* (Existing Groom Content) */}
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                                 <Field label="First Name"><Input placeholder="Juan" className="bg-white" value={formData.gFirst} onChange={e => setFormData({ ...formData, gFirst: toTitleCase(e.target.value) })} /></Field>
                                                 <Field label="Middle Name"><Input placeholder="Dela" className="bg-white" value={formData.gMiddle} onChange={e => setFormData({ ...formData, gMiddle: toTitleCase(e.target.value) })} /></Field>
                                                 <Field label="Last Name"><Input placeholder="Cruz" className="bg-white" value={formData.gLast} onChange={e => setFormData({ ...formData, gLast: toTitleCase(e.target.value) })} /></Field>
+                                                <Field label="Suffix">
+                                                    <select
+                                                        className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+                                                        value={formData.gSuffix}
+                                                        onChange={(e) => setFormData({ ...formData, gSuffix: e.target.value })}
+                                                    >
+                                                        <option value="">None</option>
+                                                        {SUFFIX_OPTIONS.map(opt => (
+                                                            <option key={opt} value={opt}>{opt}</option>
+                                                        ))}
+                                                    </select>
+                                                </Field>
                                             </div>
+                                            <AnimatePresence>
+                                                {formData.gSuffix === "Others" && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, height: 0 }}
+                                                        animate={{ opacity: 1, height: 'auto' }}
+                                                        exit={{ opacity: 0, height: 0 }}
+                                                        className="grid grid-cols-1 md:grid-cols-4 gap-4"
+                                                    >
+                                                        <div></div>
+                                                        <div></div>
+                                                        <div></div>
+                                                        <Field label="Specify Suffix">
+                                                            <Input
+                                                                placeholder="e.g. VI"
+                                                                className="bg-white border-blue-200"
+                                                                value={formData.gCustomSuffix}
+                                                                onChange={e => setFormData({ ...formData, gCustomSuffix: e.target.value })}
+                                                            />
+                                                        </Field>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
                                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                                 <Field label="Birthday">
                                                     <Input type="date" className="bg-white" value={formData.gBday} onChange={e => {
@@ -233,11 +269,45 @@ export default function MarriageForm() {
 
                                         <SectionCard title="Bride's Information" color="yellow">
                                             {/* (Existing Bride Content) */}
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                                 <Field label="First Name"><Input placeholder="Maria" className="bg-white" value={formData.bFirst} onChange={e => setFormData({ ...formData, bFirst: toTitleCase(e.target.value) })} /></Field>
                                                 <Field label="Middle Name"><Input placeholder="Clara" className="bg-white" value={formData.bMiddle} onChange={e => setFormData({ ...formData, bMiddle: toTitleCase(e.target.value) })} /></Field>
                                                 <Field label="Last Name"><Input placeholder="Santos" className="bg-white" value={formData.bLast} onChange={e => setFormData({ ...formData, bLast: toTitleCase(e.target.value) })} /></Field>
+                                                <Field label="Suffix">
+                                                    <select
+                                                        className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+                                                        value={formData.bSuffix}
+                                                        onChange={(e) => setFormData({ ...formData, bSuffix: e.target.value })}
+                                                    >
+                                                        <option value="">None</option>
+                                                        {SUFFIX_OPTIONS.map(opt => (
+                                                            <option key={opt} value={opt}>{opt}</option>
+                                                        ))}
+                                                    </select>
+                                                </Field>
                                             </div>
+                                            <AnimatePresence>
+                                                {formData.bSuffix === "Others" && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, height: 0 }}
+                                                        animate={{ opacity: 1, height: 'auto' }}
+                                                        exit={{ opacity: 0, height: 0 }}
+                                                        className="grid grid-cols-1 md:grid-cols-4 gap-4"
+                                                    >
+                                                        <div></div>
+                                                        <div></div>
+                                                        <div></div>
+                                                        <Field label="Specify Suffix">
+                                                            <Input
+                                                                placeholder="e.g. VI"
+                                                                className="bg-white border-blue-200"
+                                                                value={formData.bCustomSuffix}
+                                                                onChange={e => setFormData({ ...formData, bCustomSuffix: e.target.value })}
+                                                            />
+                                                        </Field>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
                                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                                 <Field label="Birthday">
                                                     <Input type="date" className="bg-white" value={formData.bBday} onChange={e => {
