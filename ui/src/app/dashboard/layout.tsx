@@ -34,7 +34,7 @@ export default async function DashboardLayout({
 
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-                <Header userInitials={userInitials} />
+                <Header userInitials={userInitials} userRole={userRole} />
 
                 <main className="flex-1 overflow-y-auto p-8 scroll-smooth">
                     {children}

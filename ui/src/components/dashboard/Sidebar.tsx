@@ -6,12 +6,10 @@ import { logout } from "@/app/logout/actions";
 import { Button } from "@/components/ui/button";
 import {
     LayoutDashboard,
-    Settings,
     User,
     LogOut,
     ShieldCheck,
-    Bell,
-    FileText
+    Bell
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -62,16 +60,6 @@ export function Sidebar({ userRole = "user" }: SidebarProps) {
                     >
                         <Bell className="h-4 w-4" />
                         Notifications
-                    </Button>
-                </Link>
-
-                <Link href={`/dashboard/${userRole}/settings`}>
-                    <Button
-                        variant={isActive(`/dashboard/${userRole}/settings`) ? "secondary" : "ghost"}
-                        className={cn("w-full justify-start gap-3 h-11 px-3", isActive(`/dashboard/${userRole}/settings`) ? "bg-zinc-100 font-medium" : "text-zinc-500 hover:text-black")}
-                    >
-                        <Settings className="h-4 w-4" />
-                        Settings
                     </Button>
                 </Link>
             </nav>
