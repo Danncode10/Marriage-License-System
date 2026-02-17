@@ -197,11 +197,111 @@ export default function MarriageForm() {
                                     <p className="text-slate-500 mt-3 text-lg">Make sure that all data you entered is correct!</p>
                                 </div>
 
-                                <form onSubmit={(e) => {
+                                <form onSubmit={async (e) => {
                                     e.preventDefault();
-                                    setApplicationCode(`${Math.floor(1000 + Math.random() * 9000)}`);
-                                    setIsSubmitted(true);
-                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                                    try {
+                                        const createClient = (await import('@/utils/supabase/client')).createClient;
+                                        const supabase = createClient();
+
+                                        // Insert into marriage_applications
+
+                                        // Wait for profile creation to complete by polling or delay
+                                        const userId = (await supabase.auth.getUser()).data.user?.id;
+                                        if (!userId) throw new Error('User not authenticated');
+
+                                        // Poll for profile existence with timeout
+                                        const maxRetries = 5;
+                                        let retries = 0;
+                                        let profileExists = false;
+                                        while (retries < maxRetries) {
+                                            const { data: profileData, error: profileError } = await supabase
+                                                .from('profiles')
+                                                .select('id')
+                                                .eq('id', userId)
+                                                .single();
+
+                                            if (profileError) {
+                                                if (profileError.code === 'PGRST116') { // No rows found
+                                                    await new Promise(res => setTimeout(res, 500));
+                                                    retries++;
+                                                    continue;
+                                                } else {
+                                                    throw new Error(`Profile check error: ${profileError.message}`);
+                                                }
+                                            }
+
+                                            if (profileData) {
+                                                profileExists = true;
+                                                break;
+                                            }
+                                        }
+
+                                        if (!profileExists) {
+                                            throw new Error('Profile creation not confirmed after sign-up');
+                                        }
+
+                                        const { data: appData, error: appError } = await supabase
+                                            .from('marriage_applications')
+                                            .insert([{
+                                                created_by: userId,
+                                                // Add other application fields from formData if needed
+                                            }])
+                                            .select()
+                                            .single();
+
+                                        if (appError) throw new Error(`Application insert error: ${appError.message}`);
+
+                                        const application_id = appData.id;
+
+                                        // Insert into addresses
+                                        const { data: addressData, error: addressError } = await supabase
+                                            .from('addresses')
+                                            .insert([{
+                                                // Map address fields from formData here
+                                                // Example: street: formData.gStreet, city: formData.gCity, etc.
+                                            }])
+                                            .select()
+                                            .single();
+
+                                        if (addressError) throw new Error(`Address insert error: ${addressError.message}`);
+
+                                        const address_id = addressData.id;
+
+                                        // Insert Groom applicant
+                                        const { error: groomError } = await supabase
+                                            .from('applicants')
+                                            .insert([{
+                                                application_id,
+                                                address_id,
+                                                // Map groom fields from formData here
+                                                // Example: first_name: formData.gFirst, last_name: formData.gLast, etc.
+                                            }]);
+
+                                        if (groomError) throw new Error(`Groom insert error: ${groomError.message}`);
+
+                                        // Insert Bride applicant
+                                        const { error: brideError } = await supabase
+                                            .from('applicants')
+                                            .insert([{
+                                                application_id,
+                                                address_id,
+                                                // Map bride fields from formData here
+                                                // Example: first_name: formData.bFirst, last_name: formData.bLast, etc.
+                                            }]);
+
+                                        if (brideError) throw new Error(`Bride insert error: ${brideError.message}`);
+
+                                        setApplicationCode(`${Math.floor(1000 + Math.random() * 9000)}`);
+                                        setIsSubmitted(true);
+                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                    } catch (error) {
+                                        if (error instanceof Error) {
+                                            alert(error.message);
+                                        } else {
+                                            alert('An unknown error occurred');
+                                        }
+                                    }
                                 }} className="space-y-8">
                                     {/* GROOM AND BRIDE SECTIONS HERE */}
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
