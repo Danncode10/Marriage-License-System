@@ -10,7 +10,6 @@ import {
     MapPin,
     Clock,
     Download,
-    AlertHorizontal,
     PenSquare
 } from "lucide-react";
 
