@@ -102,46 +102,63 @@ export default function UserDashboard() {
             }
             setUser(authUser);
 
-            // Check for application_code in localStorage and claim if exists
+            // NEW FLOW: Check for full pending application data in localStorage (Guest conversion)
+            const pendingAppDataStr = localStorage.getItem('pending_marriage_application');
+            if (pendingAppDataStr) {
+                localStorage.removeItem('pending_marriage_application');
+                try {
+                    setLoading(true);
+                    const { formData, applicationCode } = JSON.parse(pendingAppDataStr);
+                    console.log('Found full pending application data. Finalizing submission to DB...');
+
+                    const { submitApplication } = await import('../../marriage/submission-utils');
+                    await submitApplication(formData, applicationCode, authUser.id);
+
+                    console.log('Application finalized successfully for user:', authUser.id);
+                    localStorage.removeItem('application_code'); // Clean up buddy key if exists
+                } catch (e) {
+                    console.error('Failed to finalize pending application:', e);
+                }
+            }
+
+            // RECONCILIATION: Check for application_code (Already in DB but needs claiming)
             const applicationCode = localStorage.getItem('application_code');
             if (applicationCode) {
-                console.log('Found application code in localStorage:', applicationCode);
+                console.log('Checking for unclaimed application code:', applicationCode);
 
-                // First, check if the application exists and is unclaimed
                 const { data: existingApp, error: checkError } = await supabase
                     .from('marriage_applications')
                     .select('id, created_by')
                     .eq('application_code', applicationCode)
-                    .single();
+                    .maybeSingle();
 
                 if (checkError) {
-                    console.error('Error checking application:', checkError);
+                    console.error('Error checking application status:', checkError.message || checkError);
+                    localStorage.removeItem('application_code'); // Clean up on error
                 } else if (existingApp) {
-                    console.log('Found application:', existingApp);
-
                     if (!existingApp.created_by) {
-                        // Claim the application
+                        // Claim the orphaned application
+                        console.log('Found unclaimed application. Linking to user...');
                         const { error: claimError } = await supabase
                             .from('marriage_applications')
                             .update({ created_by: authUser.id })
-                            .eq('application_code', applicationCode);
+                            .eq('id', existingApp.id);
 
                         if (!claimError) {
-                            console.log('Application claimed successfully for user:', authUser.id);
+                            console.log('Application claimed successfully.');
                             localStorage.removeItem('application_code');
                         } else {
-                            console.error('Failed to claim application:', claimError.message, claimError);
+                            console.error('Failed to claim application:', claimError.message);
+                            localStorage.removeItem('application_code'); // Clean up on claim error
                         }
                     } else {
-                        console.log('Application already claimed by user:', existingApp.created_by);
+                        // Already claimed or owned
                         localStorage.removeItem('application_code');
                     }
                 } else {
-                    console.log('No application found with code:', applicationCode);
+                    // No such application found
                     localStorage.removeItem('application_code');
                 }
-            } else {
-                console.log('No application code found in localStorage');
             }
 
             // Fetch applications

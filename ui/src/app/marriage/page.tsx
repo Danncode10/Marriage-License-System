@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, ChevronLeft, FileText, Heart, Scale, ShieldCheck, Trash2 } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AddressSection } from "./components/AddressSection";
 import { BirthPlaceSection } from "./components/BirthPlaceSection";
 import { FamilySubSection, Field, GiverSubSection } from "./components/FormComponents";
@@ -14,6 +14,7 @@ import { SectionCard } from "./components/SectionCard";
 import { RELIGIONS } from "./constants";
 import { useMarriageForm } from "./hooks/useMarriageForm";
 import { toTitleCase } from "./utils";
+import { createClient } from "@/utils/supabase/client";
 
 export const SUFFIX_OPTIONS = ["Jr.", "Sr.", "I", "II", "III", "IV", "V", "Others"];
 
@@ -21,6 +22,18 @@ export default function MarriageForm() {
     // PRIVACY contants
     const [hasAcceptedPrivacy, setHasAcceptedPrivacy] = useState(false);
     const [showLawDetails, setShowLawDetails] = useState(false);
+    const [authChecking, setAuthChecking] = useState(true);
+    const [user, setUser] = useState<any>(null);
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            const supabase = createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+            setUser(user);
+            setAuthChecking(false);
+        };
+        checkAuth();
+    }, []);
 
     const {
         formData,
@@ -54,6 +67,14 @@ export default function MarriageForm() {
         generateExcel,
         calculateAge,
     } = useMarriageForm();
+
+    if (authChecking) {
+        return (
+            <div className="min-h-screen bg-slate-50/50 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-slate-50/50 pb-20">
@@ -201,138 +222,33 @@ export default function MarriageForm() {
                                     e.preventDefault();
 
                                     try {
-                                        const createClient = (await import('@/utils/supabase/client')).createClient;
                                         const supabase = createClient();
+
+                                        // NEW FLOW: Only save to DB if user exists
+                                        const { data: { user: currentUser } } = await supabase.auth.getUser();
 
                                         // Generate application code
                                         const generatedCode = `${Math.floor(1000 + Math.random() * 9000)}`;
 
-                                        console.log('Starting sequential submission...');
-
-                                        // Step A: Insert addresses for Groom and Bride, capture IDs
-                                        console.log('Step A: Inserting addresses...');
-
-                                        let groom_address_id = null;
-                                        if (formData.gBrgy && formData.gProv && formData.gTown) {
-                                            const groomAddressPayload = {
-                                                street_address: "", // Not collected in form
-                                                barangay: formData.gBrgy,
-                                                province: formData.gProv,
-                                                municipality: formData.gTown,
+                                        if (!currentUser) {
+                                            console.log('No user logged in. Saving to localStorage for later...');
+                                            const pendingData = {
+                                                formData,
+                                                applicationCode: generatedCode,
+                                                timestamp: new Date().toISOString()
                                             };
-                                            console.log('Groom address payload:', groomAddressPayload);
+                                            localStorage.setItem('pending_marriage_application', JSON.stringify(pendingData));
 
-                                            const { data: groomAddr, error: groomAddrError } = await supabase
-                                                .from('addresses')
-                                                .insert([groomAddressPayload])
-                                                .select()
-                                                .single();
-
-                                            if (groomAddrError) throw new Error(`Groom address insert error: ${groomAddrError.message}`);
-                                            if (!groomAddr) throw new Error('Failed to insert groom address - no data returned');
-                                            groom_address_id = groomAddr.id;
-                                            console.log('Groom address inserted with ID:', groom_address_id);
+                                            setApplicationCode(generatedCode);
+                                            setIsSubmitted(true);
+                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                            return;
                                         }
 
-                                        let bride_address_id = null;
-                                        if (formData.bBrgy && formData.bProv && formData.bTown) {
-                                            const brideAddressPayload = {
-                                                street_address: "", // Not collected in form
-                                                barangay: formData.bBrgy,
-                                                province: formData.bProv,
-                                                municipality: formData.bTown,
-                                            };
-                                            console.log('Bride address payload:', brideAddressPayload);
+                                        console.log('User logged in. Starting database submission...');
 
-                                            const { data: brideAddr, error: brideAddrError } = await supabase
-                                                .from('addresses')
-                                                .insert([brideAddressPayload])
-                                                .select()
-                                                .single();
-
-                                            if (brideAddrError) throw new Error(`Bride address insert error: ${brideAddrError.message}`);
-                                            if (!brideAddr) throw new Error('Failed to insert bride address - no data returned');
-                                            bride_address_id = brideAddr.id;
-                                            console.log('Bride address inserted with ID:', bride_address_id);
-                                        }
-
-                                        // Step B: Insert marriage_applications row, capture ID
-                                        console.log('Step B: Inserting marriage application...');
-
-                                        // Get current user if any
-                                        const { data: { user: currentUser } } = await supabase.auth.getUser();
-
-                                        const { data: appData, error: appError } = await supabase
-                                            .from('marriage_applications')
-                                            .insert([{
-                                                application_code: generatedCode,
-                                                created_by: currentUser?.id || null
-                                            }])
-                                            .select()
-                                            .single();
-
-                                        if (appError) throw new Error(`Application insert error: ${appError.message}`);
-                                        if (!appData) throw new Error('Failed to insert application - no data returned');
-
-                                        const application_id = appData.id;
-                                        console.log('Application inserted with ID:', application_id);
-
-                                        // Step C: Insert applicants (Groom and Bride), linking address_id and application_id
-                                        console.log('Step C: Inserting applicants...');
-
-                                        // Insert Groom applicant
-                                        const groomPayload = {
-                                            application_id,
-                                            address_id: groom_address_id,
-                                            first_name: formData.gFirst,
-                                            last_name: formData.gLast,
-                                            middle_name: formData.gMiddle || null,
-                                            suffix: formData.gSuffix === "Others" ? formData.gCustomSuffix : (formData.gSuffix || null),
-                                            type: 'groom',
-                                            birth_date: formData.gBday,
-                                            age: formData.gAge,
-                                            citizenship: formData.gCitizen,
-                                            religion: formData.gReligion || null,
-                                            father_name: [formData.gFathF, formData.gFathM, formData.gFathL].filter(Boolean).join(' ') || null,
-                                            father_citizenship: null, // Not collected
-                                            mother_name: [formData.gMothF, formData.gMothM, formData.gMothL].filter(Boolean).join(' ') || null,
-                                            mother_citizenship: null, // Not collected
-                                            phone_number: null, // Not collected
-                                        };
-                                        console.log('Groom applicant payload:', groomPayload);
-
-                                        const { error: groomError } = await supabase
-                                            .from('applicants')
-                                            .insert([groomPayload]);
-
-                                        if (groomError) throw new Error(`Groom applicant insert error: ${groomError.message}`);
-
-                                        // Insert Bride applicant
-                                        const bridePayload = {
-                                            application_id,
-                                            address_id: bride_address_id,
-                                            first_name: formData.bFirst,
-                                            last_name: formData.bLast,
-                                            middle_name: formData.bMiddle || null,
-                                            suffix: formData.bSuffix === "Others" ? formData.bCustomSuffix : (formData.bSuffix || null),
-                                            type: 'bride',
-                                            birth_date: formData.bBday,
-                                            age: formData.bAge,
-                                            citizenship: formData.bCitizen,
-                                            religion: formData.bReligion || null,
-                                            father_name: [formData.bFathF, formData.bFathM, formData.bFathL].filter(Boolean).join(' ') || null,
-                                            father_citizenship: null, // Not collected
-                                            mother_name: [formData.bMothF, formData.bMothM, formData.bMothL].filter(Boolean).join(' ') || null,
-                                            mother_citizenship: null, // Not collected
-                                            phone_number: null, // Not collected
-                                        };
-                                        console.log('Bride applicant payload:', bridePayload);
-
-                                        const { error: brideError } = await supabase
-                                            .from('applicants')
-                                            .insert([bridePayload]);
-
-                                        if (brideError) throw new Error(`Bride applicant insert error: ${brideError.message}`);
+                                        const { submitApplication } = await import('./submission-utils');
+                                        await submitApplication(formData, generatedCode, currentUser.id);
 
                                         console.log('All inserts completed successfully');
 
@@ -342,9 +258,6 @@ export default function MarriageForm() {
 
                                         // Store application code in localStorage for claiming later
                                         localStorage.setItem('application_code', generatedCode);
-
-                                        // Redirect user to sign-up page with application code
-                                        window.location.href = `/login/signup?code=${generatedCode}`;
 
                                     } catch (error) {
                                         console.error('Submission error:', error);
@@ -512,19 +425,39 @@ export default function MarriageForm() {
                                             </h3>
                                             <p className="text-sm text-blue-800/80 pl-8 mb-4">You will need this code when you visit the Municipal Office.</p>
 
-                                            <h3 className="font-bold text-blue-900 flex items-center gap-2 mb-2">
-                                                <div className="w-6 h-6 rounded-full bg-blue-200 flex items-center justify-center text-xs">2</div>
-                                                Create an Account
-                                            </h3>
-                                            <p className="text-sm text-blue-800/80 pl-8">To track your application status and view instructions, proceed to create your account.</p>
+                                            {user ? (
+                                                <>
+                                                    <h3 className="font-bold text-blue-900 flex items-center gap-2 mb-2">
+                                                        <div className="w-6 h-6 rounded-full bg-blue-200 flex items-center justify-center text-xs">2</div>
+                                                        Track your Application
+                                                    </h3>
+                                                    <p className="text-sm text-blue-800/80 pl-8">You are logged in. You can track your status in your dashboard.</p>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <h3 className="font-bold text-blue-900 flex items-center gap-2 mb-2">
+                                                        <div className="w-6 h-6 rounded-full bg-blue-200 flex items-center justify-center text-xs">2</div>
+                                                        Create an Account
+                                                    </h3>
+                                                    <p className="text-sm text-blue-800/80 pl-8">To track your application status and view instructions, proceed to create your account.</p>
+                                                </>
+                                            )}
                                         </div>
 
                                         <div className="flex flex-col gap-4">
-                                            <Link href={`/login/signup?code=${applicationCode}`}>
-                                                <Button size="lg" className="h-16 w-full text-xl shadow-xl rounded-2xl font-bold">
-                                                    Create Account to Track
-                                                </Button>
-                                            </Link>
+                                            {user ? (
+                                                <Link href="/dashboard/user">
+                                                    <Button size="lg" className="h-16 w-full text-xl shadow-xl rounded-2xl font-bold bg-green-600 hover:bg-green-700">
+                                                        Go to My Dashboard
+                                                    </Button>
+                                                </Link>
+                                            ) : (
+                                                <Link href={`/login/signup?code=${applicationCode}`}>
+                                                    <Button size="lg" className="h-16 w-full text-xl shadow-xl rounded-2xl font-bold">
+                                                        Create Account to Track
+                                                    </Button>
+                                                </Link>
+                                            )}
                                             <div className="flex gap-4 justify-center">
                                                 <Button onClick={generateExcel} disabled={loading} variant="ghost" className="text-slate-500">
                                                     {loading ? "Exporting..." : "Download File (Optional)"}
@@ -557,6 +490,6 @@ export default function MarriageForm() {
                     </div>
                 )}
             </AnimatePresence>
-        </div>
+        </div >
     );
 }

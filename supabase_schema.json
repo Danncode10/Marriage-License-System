@@ -35,22 +35,23 @@
     ],
     "policies": [
       {
-        "name": "allow_address_select",
-        "command": "SELECT",
+        "name": "addresses_insert_authenticated_only",
+        "command": "INSERT",
         "roles": [
           "authenticated"
         ],
-        "using": "(check_is_staff() OR (EXISTS ( SELECT 1\n   FROM (applicants a\n     JOIN marriage_applications m ON ((m.id = a.application_id)))\n  WHERE ((a.address_id = addresses.id) AND (m.created_by = auth.uid())))) OR (NOT (EXISTS ( SELECT 1\n   FROM applicants a\n  WHERE (a.address_id = addresses.id)))))",
-        "check": null
-      },
-      {
-        "name": "allow_address_insert",
-        "command": "INSERT",
-        "roles": [
-          "public"
-        ],
         "using": null,
         "check": "true"
+      },
+      {
+        "name": "addresses_select_final",
+        "command": "SELECT",
+        "roles": [
+          "anon",
+          "authenticated"
+        ],
+        "using": "true",
+        "check": null
       }
     ],
     "foreign_keys": []
@@ -156,28 +157,19 @@
     ],
     "policies": [
       {
-        "name": "applicants_access",
+        "name": "applicants_select_final",
         "command": "SELECT",
         "roles": [
+          "anon",
           "authenticated"
         ],
-        "using": "((EXISTS ( SELECT 1\n   FROM marriage_applications\n  WHERE ((marriage_applications.id = applicants.application_id) AND (marriage_applications.created_by = auth.uid())))) OR check_is_staff())",
+        "using": "true",
         "check": null
       },
       {
-        "name": "authenticated_create_applicants",
+        "name": "applicants_insert_authenticated_only",
         "command": "INSERT",
         "roles": [
-          "authenticated"
-        ],
-        "using": null,
-        "check": "true"
-      },
-      {
-        "name": "allow_applicant_creation",
-        "command": "INSERT",
-        "roles": [
-          "anon",
           "authenticated"
         ],
         "using": null,
@@ -440,43 +432,7 @@
         "check": "((created_by = auth.uid()) AND (NOT (EXISTS ( SELECT 1\n   FROM marriage_applications marriage_applications_1\n  WHERE (marriage_applications_1.created_by = auth.uid())))))"
       },
       {
-        "name": "allow_authenticated_view_unclaimed",
-        "command": "SELECT",
-        "roles": [
-          "authenticated"
-        ],
-        "using": "(created_by IS NULL)",
-        "check": null
-      },
-      {
-        "name": "allow_anon_application_creation",
-        "command": "INSERT",
-        "roles": [
-          "anon"
-        ],
-        "using": null,
-        "check": "true"
-      },
-      {
-        "name": "anon_view_own_applications",
-        "command": "SELECT",
-        "roles": [
-          "anon"
-        ],
-        "using": "(created_by IS NULL)",
-        "check": null
-      },
-      {
-        "name": "anon_view_by_code",
-        "command": "SELECT",
-        "roles": [
-          "anon"
-        ],
-        "using": "true",
-        "check": null
-      },
-      {
-        "name": "enforce_one_app_insert",
+        "name": "app_insert_authenticated",
         "command": "INSERT",
         "roles": [
           "authenticated"
@@ -500,6 +456,15 @@
           "authenticated"
         ],
         "using": "check_user_role(ARRAY['employee'::text, 'admin'::text])",
+        "check": null
+      },
+      {
+        "name": "allow_authenticated_view_unclaimed",
+        "command": "SELECT",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(created_by IS NULL)",
         "check": null
       }
     ],
@@ -552,6 +517,15 @@
     ],
     "policies": [
       {
+        "name": "profiles_view_own",
+        "command": "SELECT",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(id = auth.uid())",
+        "check": null
+      },
+      {
         "name": "profiles_view_all_as_staff",
         "command": "SELECT",
         "roles": [
@@ -567,15 +541,6 @@
           "authenticated"
         ],
         "using": "(auth.uid() = id)",
-        "check": null
-      },
-      {
-        "name": "profiles_view_own",
-        "command": "SELECT",
-        "roles": [
-          "authenticated"
-        ],
-        "using": "(id = auth.uid())",
         "check": null
       }
     ],
