@@ -6,6 +6,7 @@ interface AddressSectionProps {
     townOptions: any[];
     brgyOptions: any[];
     formData: any;
+
     handleProvinceChange: (prefix: 'g' | 'b', provinceCode: string, provinceName: string) => void;
     handleTownChange: (prefix: 'g' | 'b', cityCode: string, cityName: string) => void;
     handleBrgyChange: (prefix: 'g' | 'b', brgyName: string) => void;

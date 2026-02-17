@@ -10,7 +10,7 @@
       {
         "column": "barangay",
         "type": "text",
-        "nullable": "NO"
+        "nullable": "YES"
       },
       {
         "column": "id",
@@ -20,7 +20,7 @@
       {
         "column": "province",
         "type": "text",
-        "nullable": "NO"
+        "nullable": "YES"
       },
       {
         "column": "created_at",
@@ -30,7 +30,7 @@
       {
         "column": "municipality",
         "type": "text",
-        "nullable": "NO"
+        "nullable": "YES"
       }
     ],
     "policies": [
@@ -81,12 +81,12 @@
       {
         "column": "birth_date",
         "type": "date",
-        "nullable": "NO"
+        "nullable": "YES"
       },
       {
         "column": "age",
         "type": "int4",
-        "nullable": "NO"
+        "nullable": "YES"
       },
       {
         "column": "address_id",
@@ -111,7 +111,7 @@
       {
         "column": "citizenship",
         "type": "text",
-        "nullable": "NO"
+        "nullable": "YES"
       },
       {
         "column": "religion",
@@ -126,12 +126,12 @@
       {
         "column": "first_name",
         "type": "text",
-        "nullable": "NO"
+        "nullable": "YES"
       },
       {
         "column": "type",
         "type": "varchar",
-        "nullable": "NO"
+        "nullable": "YES"
       },
       {
         "column": "suffix",
@@ -141,7 +141,7 @@
       {
         "column": "last_name",
         "type": "text",
-        "nullable": "NO"
+        "nullable": "YES"
       },
       {
         "column": "mother_citizenship",

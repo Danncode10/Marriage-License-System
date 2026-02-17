@@ -200,73 +200,151 @@ export default function MarriageForm() {
                                 <form onSubmit={async (e) => {
                                     e.preventDefault();
 
-                                    // Instead of signing up here, redirect to the dedicated sign-up page after form submission
                                     try {
                                         const createClient = (await import('@/utils/supabase/client')).createClient;
                                         const supabase = createClient();
 
-                                        // Insert into marriage_applications without user ID (since user not signed up yet)
+                                        // Generate application code
+                                        const generatedCode = `${Math.floor(1000 + Math.random() * 9000)}`;
+
+                                        console.log('Starting sequential submission...');
+
+                                        // Step A: Insert addresses for Groom and Bride, capture IDs
+                                        console.log('Step A: Inserting addresses...');
+
+                                        let groom_address_id = null;
+                                        if (formData.gBrgy && formData.gProv && formData.gTown) {
+                                            const groomAddressPayload = {
+                                                street_address: "", // Not collected in form
+                                                barangay: formData.gBrgy,
+                                                province: formData.gProv,
+                                                municipality: formData.gTown,
+                                            };
+                                            console.log('Groom address payload:', groomAddressPayload);
+
+                                            const { data: groomAddr, error: groomAddrError } = await supabase
+                                                .from('addresses')
+                                                .insert([groomAddressPayload])
+                                                .select()
+                                                .single();
+
+                                            if (groomAddrError) throw new Error(`Groom address insert error: ${groomAddrError.message}`);
+                                            if (!groomAddr) throw new Error('Failed to insert groom address - no data returned');
+                                            groom_address_id = groomAddr.id;
+                                            console.log('Groom address inserted with ID:', groom_address_id);
+                                        }
+
+                                        let bride_address_id = null;
+                                        if (formData.bBrgy && formData.bProv && formData.bTown) {
+                                            const brideAddressPayload = {
+                                                street_address: "", // Not collected in form
+                                                barangay: formData.bBrgy,
+                                                province: formData.bProv,
+                                                municipality: formData.bTown,
+                                            };
+                                            console.log('Bride address payload:', brideAddressPayload);
+
+                                            const { data: brideAddr, error: brideAddrError } = await supabase
+                                                .from('addresses')
+                                                .insert([brideAddressPayload])
+                                                .select()
+                                                .single();
+
+                                            if (brideAddrError) throw new Error(`Bride address insert error: ${brideAddrError.message}`);
+                                            if (!brideAddr) throw new Error('Failed to insert bride address - no data returned');
+                                            bride_address_id = brideAddr.id;
+                                            console.log('Bride address inserted with ID:', bride_address_id);
+                                        }
+
+                                        // Step B: Insert marriage_applications row, capture ID
+                                        console.log('Step B: Inserting marriage application...');
+
                                         const { data: appData, error: appError } = await supabase
                                             .from('marriage_applications')
                                             .insert([{
-                                                // Add other application fields from formData if needed
+                                                application_code: generatedCode,
                                             }])
                                             .select()
                                             .single();
 
-                                        if (appError) {
-                                            alert(`Failed to save application: ${appError.message}`);
-                                            return;
-                                        }
+                                        if (appError) throw new Error(`Application insert error: ${appError.message}`);
+                                        if (!appData) throw new Error('Failed to insert application - no data returned');
 
                                         const application_id = appData.id;
+                                        console.log('Application inserted with ID:', application_id);
 
-                                        // Insert into addresses
-                                        const { data: addressData, error: addressError } = await supabase
-                                            .from('addresses')
-                                            .insert([{
-                                                // Map address fields from formData here
-                                            }])
-                                            .select()
-                                            .single();
-
-                                        if (addressError) throw new Error(`Address insert error: ${addressError.message}`);
-
-                                        const address_id = addressData.id;
+                                        // Step C: Insert applicants (Groom and Bride), linking address_id and application_id
+                                        console.log('Step C: Inserting applicants...');
 
                                         // Insert Groom applicant
+                                        const groomPayload = {
+                                            application_id,
+                                            address_id: groom_address_id,
+                                            first_name: formData.gFirst,
+                                            last_name: formData.gLast,
+                                            middle_name: formData.gMiddle || null,
+                                            suffix: formData.gSuffix === "Others" ? formData.gCustomSuffix : (formData.gSuffix || null),
+                                            type: 'groom',
+                                            birth_date: formData.gBday,
+                                            age: formData.gAge,
+                                            citizenship: formData.gCitizen,
+                                            religion: formData.gReligion || null,
+                                            father_name: [formData.gFathF, formData.gFathM, formData.gFathL].filter(Boolean).join(' ') || null,
+                                            father_citizenship: null, // Not collected
+                                            mother_name: [formData.gMothF, formData.gMothM, formData.gMothL].filter(Boolean).join(' ') || null,
+                                            mother_citizenship: null, // Not collected
+                                            phone_number: null, // Not collected
+                                        };
+                                        console.log('Groom applicant payload:', groomPayload);
+
                                         const { error: groomError } = await supabase
                                             .from('applicants')
-                                            .insert([{
-                                                application_id,
-                                                address_id,
-                                                // Map groom fields from formData here
-                                            }]);
+                                            .insert([groomPayload]);
 
-                                        if (groomError) throw new Error(`Groom insert error: ${groomError.message}`);
+                                        if (groomError) throw new Error(`Groom applicant insert error: ${groomError.message}`);
 
                                         // Insert Bride applicant
+                                        const bridePayload = {
+                                            application_id,
+                                            address_id: bride_address_id,
+                                            first_name: formData.bFirst,
+                                            last_name: formData.bLast,
+                                            middle_name: formData.bMiddle || null,
+                                            suffix: formData.bSuffix === "Others" ? formData.bCustomSuffix : (formData.bSuffix || null),
+                                            type: 'bride',
+                                            birth_date: formData.bBday,
+                                            age: formData.bAge,
+                                            citizenship: formData.bCitizen,
+                                            religion: formData.bReligion || null,
+                                            father_name: [formData.bFathF, formData.bFathM, formData.bFathL].filter(Boolean).join(' ') || null,
+                                            father_citizenship: null, // Not collected
+                                            mother_name: [formData.bMothF, formData.bMothM, formData.bMothL].filter(Boolean).join(' ') || null,
+                                            mother_citizenship: null, // Not collected
+                                            phone_number: null, // Not collected
+                                        };
+                                        console.log('Bride applicant payload:', bridePayload);
+
                                         const { error: brideError } = await supabase
                                             .from('applicants')
-                                            .insert([{
-                                                application_id,
-                                                address_id,
-                                                // Map bride fields from formData here
-                                            }]);
+                                            .insert([bridePayload]);
 
-                                        if (brideError) throw new Error(`Bride insert error: ${brideError.message}`);
+                                        if (brideError) throw new Error(`Bride applicant insert error: ${brideError.message}`);
 
-                                        setApplicationCode(`${Math.floor(1000 + Math.random() * 9000)}`);
+                                        console.log('All inserts completed successfully');
+
+                                        setApplicationCode(generatedCode);
                                         setIsSubmitted(true);
                                         window.scrollTo({ top: 0, behavior: 'smooth' });
 
                                         // Redirect user to sign-up page with application code
-                                        window.location.href = `/login/signup?code=${applicationCode}`;
+                                        window.location.href = `/login/signup?code=${generatedCode}`;
+
                                     } catch (error) {
+                                        console.error('Submission error:', error);
                                         if (error instanceof Error) {
-                                            alert(error.message);
+                                            alert(`Submission failed: ${error.message}`);
                                         } else {
-                                            alert('An unknown error occurred');
+                                            alert('An unknown error occurred during submission');
                                         }
                                     }
                                 }} className="space-y-8">
