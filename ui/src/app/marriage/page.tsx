@@ -200,57 +200,24 @@ export default function MarriageForm() {
                                 <form onSubmit={async (e) => {
                                     e.preventDefault();
 
+                                    // Instead of signing up here, redirect to the dedicated sign-up page after form submission
                                     try {
                                         const createClient = (await import('@/utils/supabase/client')).createClient;
                                         const supabase = createClient();
 
-                                        // Insert into marriage_applications
-
-                                        // Wait for profile creation to complete by polling or delay
-                                        const userId = (await supabase.auth.getUser()).data.user?.id;
-                                        if (!userId) throw new Error('User not authenticated');
-
-                                        // Poll for profile existence with timeout
-                                        const maxRetries = 5;
-                                        let retries = 0;
-                                        let profileExists = false;
-                                        while (retries < maxRetries) {
-                                            const { data: profileData, error: profileError } = await supabase
-                                                .from('profiles')
-                                                .select('id')
-                                                .eq('id', userId)
-                                                .single();
-
-                                            if (profileError) {
-                                                if (profileError.code === 'PGRST116') { // No rows found
-                                                    await new Promise(res => setTimeout(res, 500));
-                                                    retries++;
-                                                    continue;
-                                                } else {
-                                                    throw new Error(`Profile check error: ${profileError.message}`);
-                                                }
-                                            }
-
-                                            if (profileData) {
-                                                profileExists = true;
-                                                break;
-                                            }
-                                        }
-
-                                        if (!profileExists) {
-                                            throw new Error('Profile creation not confirmed after sign-up');
-                                        }
-
+                                        // Insert into marriage_applications without user ID (since user not signed up yet)
                                         const { data: appData, error: appError } = await supabase
                                             .from('marriage_applications')
                                             .insert([{
-                                                created_by: userId,
                                                 // Add other application fields from formData if needed
                                             }])
                                             .select()
                                             .single();
 
-                                        if (appError) throw new Error(`Application insert error: ${appError.message}`);
+                                        if (appError) {
+                                            alert(`Failed to save application: ${appError.message}`);
+                                            return;
+                                        }
 
                                         const application_id = appData.id;
 
@@ -259,7 +226,6 @@ export default function MarriageForm() {
                                             .from('addresses')
                                             .insert([{
                                                 // Map address fields from formData here
-                                                // Example: street: formData.gStreet, city: formData.gCity, etc.
                                             }])
                                             .select()
                                             .single();
@@ -275,7 +241,6 @@ export default function MarriageForm() {
                                                 application_id,
                                                 address_id,
                                                 // Map groom fields from formData here
-                                                // Example: first_name: formData.gFirst, last_name: formData.gLast, etc.
                                             }]);
 
                                         if (groomError) throw new Error(`Groom insert error: ${groomError.message}`);
@@ -287,7 +252,6 @@ export default function MarriageForm() {
                                                 application_id,
                                                 address_id,
                                                 // Map bride fields from formData here
-                                                // Example: first_name: formData.bFirst, last_name: formData.bLast, etc.
                                             }]);
 
                                         if (brideError) throw new Error(`Bride insert error: ${brideError.message}`);
@@ -295,6 +259,9 @@ export default function MarriageForm() {
                                         setApplicationCode(`${Math.floor(1000 + Math.random() * 9000)}`);
                                         setIsSubmitted(true);
                                         window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                                        // Redirect user to sign-up page with application code
+                                        window.location.href = `/login/signup?code=${applicationCode}`;
                                     } catch (error) {
                                         if (error instanceof Error) {
                                             alert(error.message);
