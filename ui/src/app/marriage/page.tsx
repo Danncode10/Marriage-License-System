@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowRight, ChevronLeft, FileText, Heart, MapPin, Scale, ShieldCheck, Trash2 } from 'lucide-react';
+import { ArrowRight, ChevronLeft, Clock, FileText, Heart, MapPin, Phone, Scale, ShieldCheck, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { AddressSection } from "./components/AddressSection";
@@ -391,6 +391,33 @@ export default function MarriageForm() {
                                             <BirthPlaceSection prefix="b" sameAsAddress={bSameAsAddress} setSameAsAddress={setBSameAsAddress} formData={formData} setFormData={setFormData} provincesList={provincesList} birthTownOptions={bBirthTownOptions} birthBrgyOptions={bBirthBrgyOptions} handleBirthProvinceChange={handleBirthProvinceChange} handleBirthTownChange={handleBirthTownChange} />
                                             <FamilySubSection prefix="b" person="Bride" data={formData} setData={setFormData} toTitleCase={toTitleCase} />
                                             <GiverSubSection prefix="b" age={formData.bAge} data={formData} setData={setFormData} toTitleCase={toTitleCase} />
+                                        </SectionCard>
+                                    </div>
+
+                                    <div className="mt-12">
+                                        <SectionCard title="Contact Information" color="blue">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                                                <Field label="Primary Contact Number">
+                                                    <div className="relative">
+                                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 text-blue-600 border-r border-blue-200 pr-3">
+                                                            <span className="text-xs font-black tracking-tighter font-mono">+63</span>
+                                                        </div>
+                                                        <Input
+                                                            type="tel"
+                                                            placeholder="912 345 6789"
+                                                            className="pl-16 h-12 bg-white border-blue-100 focus:border-blue-500 rounded-xl"
+                                                            value={formData.contactNumber}
+                                                            onChange={e => setFormData({ ...formData, contactNumber: e.target.value })}
+                                                        />
+                                                    </div>
+                                                </Field>
+                                                <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 flex items-center gap-3">
+                                                    <Clock className="w-5 h-5 text-blue-500 shrink-0" />
+                                                    <p className="text-[10px] font-black text-blue-700 uppercase tracking-tight leading-tight">
+                                                        Our staff will coordinate with you via this number for interview schedules and updates.
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </SectionCard>
                                     </div>
 

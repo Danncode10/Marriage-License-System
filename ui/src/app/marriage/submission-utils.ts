@@ -61,7 +61,8 @@ export async function submitApplication(formData: any, generatedCode: string, us
         .from('marriage_applications')
         .insert([{
             application_code: generatedCode,
-            created_by: userId
+            created_by: userId,
+            contact_number: formData.contactNumber || null
         }])
         .select()
         .single();

@@ -14,6 +14,7 @@ export const INITIAL_FORM_STATE = {
     gMothF: "", gMothM: "", gMothL: "",
     gGiverF: "", gGiverM: "", gGiverL: "", gGiverRelation: "",
 
+    contactNumber: "",
     bFirst: "", bMiddle: "", bLast: "", bSuffix: "", bCustomSuffix: "", bBday: "", bAge: 0,
     bBirthPlace: "", bBrgy: "", bTown: "", bProv: "Nueva Vizcaya", bCountry: "Philippines",
     bCitizen: "Filipino", bStatus: "Single", bReligion: "",
