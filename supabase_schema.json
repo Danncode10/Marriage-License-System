@@ -44,15 +44,6 @@
         "check": "true"
       },
       {
-        "name": "public_read_addresses",
-        "command": "SELECT",
-        "roles": [
-          "anon"
-        ],
-        "using": "true",
-        "check": null
-      },
-      {
         "name": "allow_anon_address_insert",
         "command": "INSERT",
         "roles": [
@@ -61,6 +52,15 @@
         ],
         "using": null,
         "check": "true"
+      },
+      {
+        "name": "public_read_addresses",
+        "command": "SELECT",
+        "roles": [
+          "anon"
+        ],
+        "using": "true",
+        "check": null
       }
     ],
     "foreign_keys": []
@@ -166,19 +166,19 @@
     ],
     "policies": [
       {
-        "name": "authenticated_create_applicants",
+        "name": "allow_applicant_creation",
         "command": "INSERT",
         "roles": [
+          "anon",
           "authenticated"
         ],
         "using": null,
         "check": "true"
       },
       {
-        "name": "allow_applicant_creation",
+        "name": "authenticated_create_applicants",
         "command": "INSERT",
         "roles": [
-          "anon",
           "authenticated"
         ],
         "using": null,
@@ -441,6 +441,15 @@
     ],
     "policies": [
       {
+        "name": "anon_view_by_code",
+        "command": "SELECT",
+        "roles": [
+          "anon"
+        ],
+        "using": "true",
+        "check": null
+      },
+      {
         "name": "employees_update_applications",
         "command": "UPDATE",
         "roles": [
@@ -448,15 +457,6 @@
         ],
         "using": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND ((profiles.role)::text = ANY ((ARRAY['employee'::character varying, 'admin'::character varying])::text[])))))",
         "check": null
-      },
-      {
-        "name": "authenticated_create_applications",
-        "command": "INSERT",
-        "roles": [
-          "authenticated"
-        ],
-        "using": null,
-        "check": "(auth.uid() = created_by)"
       },
       {
         "name": "allow_application_creation",
@@ -467,6 +467,15 @@
         ],
         "using": null,
         "check": "true"
+      },
+      {
+        "name": "anon_view_own_applications",
+        "command": "SELECT",
+        "roles": [
+          "anon"
+        ],
+        "using": "(created_by IS NULL)",
+        "check": null
       },
       {
         "name": "users_view_own_applications",
@@ -527,13 +536,22 @@
     ],
     "policies": [
       {
-        "name": "profiles_read_policy",
-        "command": "SELECT",
+        "name": "admins_manage_employees",
+        "command": "ALL",
         "roles": [
           "authenticated"
         ],
-        "using": "((id = auth.uid()) OR ((( SELECT profiles_1.role\n   FROM profiles profiles_1\n  WHERE (profiles_1.id = auth.uid())))::text = ANY ((ARRAY['admin'::character varying, 'employee'::character varying])::text[])))",
+        "using": "(EXISTS ( SELECT 1\n   FROM profiles profiles_1\n  WHERE ((profiles_1.id = auth.uid()) AND ((profiles_1.role)::text = 'admin'::text))))",
         "check": null
+      },
+      {
+        "name": "users_insert_own_profile",
+        "command": "INSERT",
+        "roles": [
+          "authenticated"
+        ],
+        "using": null,
+        "check": "((id = auth.uid()) AND ((role)::text = ANY ((ARRAY['user'::character varying, 'employee'::character varying, 'admin'::character varying])::text[])))"
       },
       {
         "name": "Users can update own profile.",
@@ -542,6 +560,15 @@
           "public"
         ],
         "using": "(( SELECT auth.uid() AS uid) = id)",
+        "check": null
+      },
+      {
+        "name": "profiles_read_policy",
+        "command": "SELECT",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((id = auth.uid()) OR ((( SELECT profiles_1.role\n   FROM profiles profiles_1\n  WHERE (profiles_1.id = auth.uid())))::text = ANY ((ARRAY['admin'::character varying, 'employee'::character varying])::text[])))",
         "check": null
       },
       {
@@ -561,24 +588,6 @@
         ],
         "using": "(EXISTS ( SELECT 1\n   FROM profiles profiles_1\n  WHERE ((profiles_1.id = auth.uid()) AND ((profiles_1.role)::text = 'admin'::text))))",
         "check": null
-      },
-      {
-        "name": "admins_manage_employees",
-        "command": "ALL",
-        "roles": [
-          "authenticated"
-        ],
-        "using": "(EXISTS ( SELECT 1\n   FROM profiles profiles_1\n  WHERE ((profiles_1.id = auth.uid()) AND ((profiles_1.role)::text = 'admin'::text))))",
-        "check": null
-      },
-      {
-        "name": "users_insert_own_profile",
-        "command": "INSERT",
-        "roles": [
-          "authenticated"
-        ],
-        "using": null,
-        "check": "((id = auth.uid()) AND ((role)::text = ANY ((ARRAY['user'::character varying, 'employee'::character varying, 'admin'::character varying])::text[])))"
       }
     ],
     "foreign_keys": []
@@ -629,21 +638,21 @@
     ],
     "policies": [
       {
-        "name": "users_manage_own_documents",
-        "command": "ALL",
-        "roles": [
-          "authenticated"
-        ],
-        "using": "(uploaded_by = auth.uid())",
-        "check": null
-      },
-      {
         "name": "employees_view_all_documents",
         "command": "SELECT",
         "roles": [
           "authenticated"
         ],
         "using": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND ((profiles.role)::text = ANY ((ARRAY['employee'::character varying, 'admin'::character varying])::text[])))))",
+        "check": null
+      },
+      {
+        "name": "users_manage_own_documents",
+        "command": "ALL",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(uploaded_by = auth.uid())",
         "check": null
       }
     ],
