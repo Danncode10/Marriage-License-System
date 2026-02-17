@@ -1,0 +1,53 @@
+[
+    {
+        "category": "Setup",
+        "tasks": [
+            {
+                "id": "1",
+                "title": "Create a New User Account",
+                "action": "Go to /marriage and submit a dummy application, or go to /signup (if enabled).",
+                "expected_outcome": "You should be logged in and redirected to /dashboard/user (because your role is 'user' by default)."
+            },
+            {
+                "id": "2",
+                "title": "Access the User Dashboard",
+                "action": "Visit http://localhost:3000/dashboard/user.",
+                "expected_outcome": "You should see the dashboard with 'My Applications', 'Visit Instructions', and your user initials in the header."
+            }
+        ]
+    },
+    {
+        "category": "Features",
+        "tasks": [
+            {
+                "id": "3",
+                "title": "Verify Application Tracking",
+                "action": "Check the 'My Applications' list on the dashboard.",
+                "expected_outcome": "If you just submitted a form, it should appear here with status 'Pending' (or 'Submitted'). If not, it should show authorized empty state."
+            },
+            {
+                "id": "4",
+                "title": "Check Visit Instructions",
+                "action": "Look for the blue 'Visit Instructions' card on the right side.",
+                "expected_outcome": "It should clearly list the 3 steps: Bring IDs, Bring Birth Certificates, Provide App Code."
+            },
+            {
+                "id": "5",
+                "title": "Test Navigation",
+                "action": "Click 'Applications', 'Profile', or 'Settings' in the sidebar.",
+                "expected_outcome": "The main content area should update to show the relevant page without a full page reload."
+            }
+        ]
+    },
+    {
+        "category": "Profile",
+        "tasks": [
+            {
+                "id": "6",
+                "title": "View Profile",
+                "action": "Go to Profile page.",
+                "expected_outcome": "You should see your email address, role (User), and a placeholder for avatar and name."
+            }
+        ]
+    }
+]
