@@ -28,6 +28,9 @@ export async function signup(formData: FormData) {
     password,
     options: {
       emailRedirectTo: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/callback`,
+      data: {
+        full_name: formData.get("full_name") as string,
+      },
     },
   });
 
