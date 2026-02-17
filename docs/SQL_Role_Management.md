@@ -50,3 +50,44 @@ from public.profiles
 join auth.users on profiles.id = auth.users.id
 where public.profiles.role in ('admin', 'employee');
 ```
+
+
+## 6. How to delete User from the Authentication
+
+```sql
+-- Replace 'user-email@example.com' with the actual user email
+with user_to_delete as (
+  select id from auth.users where email = 'user-email@example.com'
+),
+deleted_applications as (
+  delete from marriage_applications
+  where created_by in (select id from user_to_delete)
+  returning id
+),
+deleted_applicants as (
+  delete from applicants
+  where application_id in (select id from deleted_applications)
+),
+deleted_user_docs as (
+  delete from user_document_uploads
+  where application_id in (select id from deleted_applications)
+),
+deleted_photos as (
+  delete from application_photos
+  where application_id in (select id from deleted_applications)
+),
+deleted_generated_docs as (
+  delete from generated_documents
+  where application_id in (select id from deleted_applications)
+),
+deleted_audit_logs as (
+  delete from audit_logs
+  where user_id in (select id from user_to_delete)
+),
+deleted_profiles as (
+  delete from public.profiles
+  where id in (select id from user_to_delete)
+)
+delete from auth.users
+where id in (select id from user_to_delete);
+```
