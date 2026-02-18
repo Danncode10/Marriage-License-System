@@ -10,15 +10,15 @@ import {
     Printer
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { getUserRole } from "@/utils/roles";
 
 export const dynamic = "force-dynamic";
 
 export default async function EmployeeDashboard() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const role = await getUserRole();
 
-    if (!user) {
-        redirect("/login");
+    if (role !== "employee") {
+        redirect("/dashboard");
     }
 
     // Placeholder for Employee Dashboard

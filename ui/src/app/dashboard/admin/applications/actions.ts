@@ -15,7 +15,7 @@ export async function getAllApplications() {
                 last_name,
                 type
             ),
-            profiles!marriage_applications_created_by_fkey (
+            profiles!created_by (
                 full_name,
                 email
             )
@@ -23,19 +23,24 @@ export async function getAllApplications() {
         .order("created_at", { ascending: false });
 
     if (error) {
-        console.error("Error fetching all applications:", error);
+        console.error("CRITICAL: Error fetching all applications:", error.message, error.details, error.hint);
         return [];
     }
 
-    return apps.map(app => {
-        const groom = app.applicants.find((a: any) => a.type === 'groom');
-        const bride = app.applicants.find((a: any) => a.type === 'bride');
+    return (apps || []).map(app => {
+        const applicants = Array.isArray(app.applicants) ? app.applicants : [];
+        const groom = applicants.find((a: any) => a.type === 'groom');
+        const bride = applicants.find((a: any) => a.type === 'bride');
+
+        // Handle alias from join (can be single object or array depending on client version/join type)
+        const profileData = (app as any).profiles;
+        const profile = Array.isArray(profileData) ? profileData[0] : profileData;
 
         return {
             ...app,
             groom_name: groom ? `${groom.first_name} ${groom.last_name}` : 'Unknown',
             bride_name: bride ? `${bride.first_name} ${bride.last_name}` : 'Unknown',
-            submitted_by: (app.profiles as any)?.full_name || (app.profiles as any)?.email || 'Anonymous'
+            submitted_by: profile?.full_name || profile?.email || 'Anonymous'
         };
     });
 }
