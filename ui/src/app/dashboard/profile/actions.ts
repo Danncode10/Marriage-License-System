@@ -36,6 +36,6 @@ export async function updateProfilePhoneNumber(formData: FormData) {
         // but for robustness we might want to.
     }
 
-    revalidatePath("/dashboard/user/profile");
+    revalidatePath("/dashboard/profile");
     return { success: true };
 }

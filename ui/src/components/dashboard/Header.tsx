@@ -22,8 +22,8 @@ export function Header({ userInitials, userRole }: HeaderProps) {
 
     const navLinks = [
         { href: `/dashboard/${userRole}`, label: "Dashboard", icon: LayoutDashboard },
-        { href: `/dashboard/${userRole}/profile`, label: "Profile", icon: User },
-        { href: `/dashboard/${userRole}/notifications`, label: "Notifications", icon: Bell },
+        { href: "/dashboard/profile", label: "Profile", icon: User },
+        { href: "/dashboard/notifications", label: "Notifications", icon: Bell },
     ];
 
     return (
@@ -57,13 +57,13 @@ export function Header({ userInitials, userRole }: HeaderProps) {
                 </div>
 
                 <div className="flex items-center gap-2 md:gap-4">
-                    <Link href={`/dashboard/${userRole}/notifications`}>
+                    <Link href="/dashboard/notifications">
                         <button className="p-2 text-zinc-500 hover:bg-zinc-100 rounded-lg relative transition-colors">
                             <Bell className="h-5 w-5" />
                             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
                         </button>
                     </Link>
-                    <Link href={`/dashboard/${userRole}/profile`}>
+                    <Link href="/dashboard/profile">
                         <Avatar className="cursor-pointer hover:ring-2 ring-zinc-200 transition-all" fallback={userInitials} />
                     </Link>
                 </div>

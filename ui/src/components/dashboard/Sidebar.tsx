@@ -43,20 +43,20 @@ export function Sidebar({ userRole = "user" }: SidebarProps) {
                 </Link>
 
 
-                <Link href={`/dashboard/${userRole}/profile`}>
+                <Link href="/dashboard/profile">
                     <Button
-                        variant={isActive(`/dashboard/${userRole}/profile`) ? "secondary" : "ghost"}
-                        className={cn("w-full justify-start gap-3 h-11 px-3", isActive(`/dashboard/${userRole}/profile`) ? "bg-zinc-100 font-medium" : "text-zinc-500 hover:text-black")}
+                        variant={isActive("/dashboard/profile") ? "secondary" : "ghost"}
+                        className={cn("w-full justify-start gap-3 h-11 px-3", isActive("/dashboard/profile") ? "bg-zinc-100 font-medium" : "text-zinc-500 hover:text-black")}
                     >
                         <User className="h-4 w-4" />
                         Profile
                     </Button>
                 </Link>
 
-                <Link href={`/dashboard/${userRole}/notifications`}>
+                <Link href="/dashboard/notifications">
                     <Button
-                        variant={isActive(`/dashboard/${userRole}/notifications`) ? "secondary" : "ghost"}
-                        className={cn("w-full justify-start gap-3 h-11 px-3", isActive(`/dashboard/${userRole}/notifications`) ? "bg-zinc-100 font-medium" : "text-zinc-500 hover:text-black")}
+                        variant={isActive("/dashboard/notifications") ? "secondary" : "ghost"}
+                        className={cn("w-full justify-start gap-3 h-11 px-3", isActive("/dashboard/notifications") ? "bg-zinc-100 font-medium" : "text-zinc-500 hover:text-black")}
                     >
                         <Bell className="h-4 w-4" />
                         Notifications
