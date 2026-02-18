@@ -83,16 +83,73 @@ export async function onboardStaff(email: string, fullName: string, employeeId: 
     return { success: true };
 }
 
-export async function updateStaffRole(userId: string, newRole: 'user' | 'employee' | 'admin') {
+export async function secureUpdateStaff(password: string, userId: string, newRole: 'employee' | 'admin') {
     const supabase = await createClient();
 
-    const { error } = await supabase
+    // 1. Verify admin password
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Not authenticated" };
+
+    const { error: authError } = await supabase.auth.signInWithPassword({
+        email: user.email!,
+        password: password
+    });
+
+    if (authError) {
+        return { success: false, error: "Incorrect password. Authorization failed." };
+    }
+
+    // 2. Perform the update using admin client to bypass RLS
+    const adminSupabase = await createAdminClient();
+    const { error } = await adminSupabase
         .from("profiles")
         .update({ role: newRole })
         .eq("id", userId);
 
-    if (error) return { success: false, error: error.message };
+    if (error) {
+        console.error("Update failed:", error.message);
+        return { success: false, error: error.message };
+    }
 
     revalidatePath("/dashboard/admin/staff");
     return { success: true };
 }
+
+export async function secureDeleteStaff(password: string, userId: string) {
+    const supabase = await createClient();
+    const adminSupabase = await createAdminClient();
+
+    // 1. Verify admin password
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Not authenticated" };
+
+    const { error: authError } = await supabase.auth.signInWithPassword({
+        email: user.email!,
+        password: password
+    });
+
+    if (authError) {
+        return { success: false, error: "Incorrect password. Authorization failed." };
+    }
+
+    // 2. Perform deletion (from profiles first, then auth if needed, but let's start with profiles/roles)
+    // To truly "delete" we'd use admin client for auth.users
+
+    // For now, let's demote to 'user' as a safer "delete from staff" 
+    // OR actually delete if the user specifically wants DELETION.
+    // The user said "delete employee", so let's revoke their access first.
+
+    // Note: Deleting a user who has processed applications might break foreign keys 
+    // unless we nullify them.
+
+    const { error: deleteError } = await adminSupabase.auth.admin.deleteUser(userId);
+
+    if (deleteError) {
+        console.error("User deletion failed:", deleteError);
+        return { success: false, error: "Deletion failed. They might have related data." };
+    }
+
+    revalidatePath("/dashboard/admin/staff");
+    return { success: true };
+}
+

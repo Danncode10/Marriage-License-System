@@ -2,17 +2,17 @@
 
 import { useState } from "react";
 import {
-    Shield,
-    User as UserIcon,
     Mail,
     IdCard,
     FileCheck,
-    AlertCircle,
-    Users
+    Users,
+    Trash2,
+    ArrowUpCircle,
+    ArrowDownCircle
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { updateStaffRole } from "./actions";
+import { secureUpdateStaff, secureDeleteStaff } from "./actions";
+import { SecurityModal } from "./SecurityModal";
 
 interface StaffMember {
     id: string;
@@ -26,12 +26,57 @@ interface StaffMember {
 
 export function StaffTable({ initialStaff }: { initialStaff: any[] }) {
     const [staff, setStaff] = useState(initialStaff);
+    const [securityConfig, setSecurityConfig] = useState<{
+        isOpen: boolean;
+        title: string;
+        description: string;
+        confirmText: string;
+        variant: "default" | "destructive";
+        onConfirm: (pass: string) => Promise<{ success: boolean; error?: string }>;
+    }>({
+        isOpen: false,
+        title: "",
+        description: "",
+        confirmText: "",
+        variant: "default",
+        onConfirm: async () => ({ success: false })
+    });
 
-    const handleRoleUpdate = async (userId: string, newRole: any) => {
-        const result = await updateStaffRole(userId, newRole);
-        if (result.success) {
-            setStaff(prev => prev.map(s => s.id === userId ? { ...s, role: newRole } : s));
-        }
+    const triggerUpdateRole = (member: StaffMember) => {
+        const isCurrentlyAdmin = member.role === 'admin';
+        const targetRole = isCurrentlyAdmin ? 'employee' : 'admin';
+
+        setSecurityConfig({
+            isOpen: true,
+            title: isCurrentlyAdmin ? "Demote to Employee" : "Promote to Admin",
+            description: `You are about to change ${member.full_name}'s role to ${targetRole}. Please confirm your identity.`,
+            confirmText: `Confirm ${targetRole}`,
+            variant: "default",
+            onConfirm: async (password: string) => {
+                const result = await secureUpdateStaff(password, member.id, targetRole);
+                if (result.success) {
+                    setStaff(prev => prev.map(s => s.id === member.id ? { ...s, role: targetRole } : s));
+                }
+                return result;
+            }
+        });
+    };
+
+    const triggerDelete = (member: StaffMember) => {
+        setSecurityConfig({
+            isOpen: true,
+            title: "Delete Employee",
+            description: `Permanently remove ${member.full_name} from the system. This action cannot be undone.`,
+            confirmText: "Delete Permanently",
+            variant: "destructive",
+            onConfirm: async (password: string) => {
+                const result = await secureDeleteStaff(password, member.id);
+                if (result.success) {
+                    setStaff(prev => prev.filter(s => s.id !== member.id));
+                }
+                return result;
+            }
+        });
     };
 
     if (staff.length === 0) {
@@ -48,76 +93,74 @@ export function StaffTable({ initialStaff }: { initialStaff: any[] }) {
 
     return (
         <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <SecurityModal
+                {...securityConfig}
+                onClose={() => setSecurityConfig(prev => ({ ...prev, isOpen: false }))}
+            />
+
+            <table className="w-full text-left border-collapse table-fixed">
                 <thead>
                     <tr className="border-b border-zinc-100 bg-zinc-50/30">
-                        <th className="p-6 text-[10px] font-black uppercase tracking-widest text-zinc-400">Employee</th>
-                        <th className="p-6 text-[10px] font-black uppercase tracking-widest text-zinc-400">ID / Role</th>
-                        <th className="p-6 text-[10px] font-black uppercase tracking-widest text-zinc-400">Performance</th>
-                        <th className="p-6 text-[10px] font-black uppercase tracking-widest text-zinc-400">Status</th>
-                        <th className="p-6 text-[10px] font-black uppercase tracking-widest text-zinc-400 text-right">Actions</th>
+                        <th className="w-[40%] px-8 py-5 text-[10px] font-black uppercase tracking-widest text-zinc-400">Employee</th>
+                        <th className="w-[20%] px-6 py-5 text-[10px] font-black uppercase tracking-widest text-zinc-400">ID / Role</th>
+                        <th className="w-[20%] px-6 py-5 text-[10px] font-black uppercase tracking-widest text-zinc-400">Performance</th>
+                        <th className="w-[20%] pr-12 py-5 text-[10px] font-black uppercase tracking-widest text-zinc-400 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-50">
                     {staff.map((member) => (
                         <tr key={member.id} className="group hover:bg-zinc-50/50 transition-colors">
-                            <td className="p-6">
+                            <td className="px-8 py-6 truncate">
                                 <div className="flex items-center gap-4">
-                                    <div className="h-12 w-12 rounded-2xl bg-zinc-900 text-white flex items-center justify-center font-black text-lg">
+                                    <div className="h-12 w-12 shrink-0 rounded-2xl bg-zinc-900 text-white flex items-center justify-center font-black text-lg shadow-xl shadow-zinc-200/50 transition-transform group-hover:scale-105">
                                         {member.full_name?.substring(0, 1) || 'S'}
                                     </div>
-                                    <div>
-                                        <p className="font-black text-zinc-900 uppercase tracking-tight">{member.full_name || 'Unnamed Staff'}</p>
-                                        <div className="flex items-center gap-1.5 text-zinc-400">
-                                            <Mail className="h-3 w-3" />
-                                            <span className="text-xs font-medium">{member.email}</span>
+                                    <div className="truncate">
+                                        <p className="font-black text-zinc-900 uppercase tracking-tight leading-tight truncate">{member.full_name || 'Unnamed Staff'}</p>
+                                        <div className="flex items-center gap-1.5 text-zinc-400 mt-1">
+                                            <Mail className="h-3 w-3 shrink-0" />
+                                            <span className="text-[11px] font-bold tracking-tight truncate">{member.email}</span>
                                         </div>
                                     </div>
                                 </div>
                             </td>
-                            <td className="p-6">
-                                <div className="space-y-1">
+                            <td className="px-6 py-6 truncate">
+                                <div className="space-y-1.5">
                                     <div className="flex items-center gap-2">
                                         <IdCard className="h-3.5 w-3.5 text-zinc-400" />
-                                        <span className="text-sm font-bold text-zinc-700">{member.employee_id || 'NOT-ASSIGNED'}</span>
+                                        <span className="text-xs font-black text-zinc-600 tracking-tight">{member.employee_id || 'NOT-ASSIGNED'}</span>
                                     </div>
-                                    <Badge className={member.role === 'admin' ? "bg-purple-100 text-purple-700 border-none px-2 py-0 text-[10px] font-black uppercase" : "bg-blue-100 text-blue-700 border-none px-2 py-0 text-[10px] font-black uppercase"}>
+                                    <Badge className={member.role === 'admin' ? "bg-purple-50 text-purple-700 border-purple-100 px-2 py-0 text-[10px] font-black uppercase tracking-wider" : "bg-blue-50 text-blue-700 border-blue-100 px-2 py-0 text-[10px] font-black uppercase tracking-wider"}>
                                         {member.role}
                                     </Badge>
                                 </div>
                             </td>
-                            <td className="p-6">
+                            <td className="px-6 py-6 truncate">
                                 <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 rounded-xl bg-orange-50 flex items-center justify-center">
-                                        <FileCheck className="h-5 w-5 text-orange-600" />
+                                    <div className="h-10 w-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                                        <FileCheck className="h-5 w-5 text-amber-600" />
                                     </div>
                                     <div>
-                                        <p className="text-lg font-black text-zinc-900 tabular-nums leading-none">{member.processed_applications}</p>
-                                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight">Apps Processed</p>
+                                        <p className="text-xl font-black text-zinc-900 tabular-nums leading-none tracking-tight">{member.processed_applications}</p>
+                                        <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mt-0.5">Processed</p>
                                     </div>
                                 </div>
                             </td>
-                            <td className="p-6">
-                                <div className="flex items-center gap-2">
-                                    <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-                                    <span className="text-xs font-black text-zinc-900 uppercase tracking-tight">Online</span>
-                                </div>
-                            </td>
-                            <td className="p-6 text-right">
-                                <div className="flex justify-end gap-2">
+                            <td className="pr-12 py-6 text-right">
+                                <div className="flex justify-end items-center gap-3">
                                     <button
-                                        onClick={() => handleRoleUpdate(member.id, member.role === 'admin' ? 'employee' : 'admin')}
+                                        onClick={() => triggerUpdateRole(member)}
                                         title={member.role === 'admin' ? 'Demote to Employee' : 'Promote to Admin'}
-                                        className="h-9 w-9 rounded-xl hover:bg-zinc-100 flex items-center justify-center text-zinc-400 hover:text-zinc-900 transition-all"
+                                        className="h-10 w-10 rounded-xl bg-zinc-50 hover:bg-zinc-900 hover:text-white flex items-center justify-center text-zinc-400 transition-all shadow-sm active:scale-90"
                                     >
-                                        <Shield className="h-4 w-4" />
+                                        {member.role === 'admin' ? <ArrowDownCircle className="h-5 w-5" /> : <ArrowUpCircle className="h-5 w-5" />}
                                     </button>
                                     <button
-                                        onClick={() => handleRoleUpdate(member.id, 'user')}
-                                        title="Revoke Access"
-                                        className="h-9 w-9 rounded-xl hover:bg-red-50 flex items-center justify-center text-zinc-400 hover:text-red-600 transition-all"
+                                        onClick={() => triggerDelete(member)}
+                                        title="Delete Employee"
+                                        className="h-10 w-10 rounded-xl bg-red-50 hover:bg-red-600 hover:text-white flex items-center justify-center text-red-500 transition-all shadow-sm active:scale-90"
                                     >
-                                        <AlertCircle className="h-4 w-4" />
+                                        <Trash2 className="h-5 w-5" />
                                     </button>
                                 </div>
                             </td>
@@ -128,5 +171,3 @@ export function StaffTable({ initialStaff }: { initialStaff: any[] }) {
         </div>
     );
 }
-
-
