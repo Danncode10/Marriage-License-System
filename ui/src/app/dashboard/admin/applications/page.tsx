@@ -27,8 +27,9 @@ const StatusPulse = ({ className }: { className?: string }) => (
 const STATUS_CONFIG: Record<string, { color: string, icon: any, bg: string }> = {
     pending: { color: "text-amber-600", icon: Clock, bg: "bg-amber-50" },
     processing: { color: "text-blue-600", icon: ActivityIcon, bg: "bg-blue-50" },
+    approved: { color: "text-emerald-600", icon: CheckCircle2, bg: "bg-emerald-50" },
     completed: { color: "text-emerald-600", icon: CheckCircle2, bg: "bg-emerald-50" },
-    finished: { color: "text-emerald-600", icon: CheckCircle2, bg: "bg-emerald-50" },
+    issued: { color: "text-zinc-900", icon: CheckCircle2, bg: "bg-zinc-100" },
     rejected: { color: "text-red-600", icon: XCircle, bg: "bg-red-50" }
 };
 

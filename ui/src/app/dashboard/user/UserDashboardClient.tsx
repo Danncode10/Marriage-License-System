@@ -416,23 +416,21 @@ function DetailItem({ label, value }: { label: string, value?: string | null }) 
 
 function StatusBadge({ status }: { status: string }) {
     const styles: Record<string, string> = {
-        draft: "bg-zinc-100 text-zinc-600 border-zinc-200",
-        submitted: "bg-blue-50 text-blue-700 border-blue-200",
         pending: "bg-amber-50 text-amber-700 border-amber-200",
+        processing: "bg-blue-50 text-blue-700 border-blue-200",
         approved: "bg-emerald-50 text-emerald-700 border-emerald-200",
-        processing: "bg-purple-50 text-purple-700 border-purple-200",
         completed: "bg-green-50 text-green-700 border-green-200",
+        issued: "bg-zinc-900 text-white border-zinc-900",
         rejected: "bg-red-50 text-red-700 border-red-200",
     };
 
     const labels: Record<string, string> = {
-        draft: "Draft",
-        submitted: "Submitted",
-        pending: "Pending Review",
-        approved: "Approved",
-        processing: "Processing",
+        pending: "Waiting for Review",
+        processing: "Under Staff Review",
+        approved: "Verified & Approved",
         completed: "Ready for Pickup",
-        rejected: "Rejected",
+        issued: "Issued & Released",
+        rejected: "Application Denied",
     };
 
     return (

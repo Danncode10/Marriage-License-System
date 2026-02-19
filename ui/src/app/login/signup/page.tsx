@@ -35,8 +35,29 @@ export default async function SignupPage() {
             <Suspense fallback={<div className="h-10 w-full animate-pulse bg-zinc-100 rounded-2xl mb-6" />}>
               <NotificationHandler />
             </Suspense>
-
             <form action={signup} className="space-y-6">
+              <div className="space-y-2">
+                <label
+                  htmlFor="full_name"
+                  className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-1"
+                >
+                  Full Name
+                </label>
+                <div className="relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-black transition-colors">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                  <Input
+                    id="full_name"
+                    name="full_name"
+                    type="text"
+                    placeholder="Juan Dela Cruz"
+                    className="pl-11 h-12 bg-zinc-50/50 border-zinc-100 focus:border-black rounded-2xl transition-all font-medium"
+                    required
+                  />
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <label
                   htmlFor="email"
@@ -103,7 +124,7 @@ export default async function SignupPage() {
           </Link>
         </p>
       </main>
-    </div>
+    </div >
   );
 }
 

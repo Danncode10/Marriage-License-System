@@ -3,12 +3,21 @@ import { createClient } from "@/utils/supabase/client";
 export async function submitApplication(formData: any, generatedCode: string, userId: string) {
     const supabase = createClient();
 
+    console.log('=== submitApplication START ===');
+    console.log('userId:', userId);
+    console.log('generatedCode:', generatedCode);
+
     // Safety: Check if this application was already created (Idempotency)
-    const { data: existingApp } = await supabase
+    const { data: existingApp, error: existingCheckError } = await supabase
         .from('marriage_applications')
         .select('id')
         .eq('application_code', generatedCode)
         .maybeSingle();
+
+    if (existingCheckError) {
+        console.error('Error checking existing application:', existingCheckError.message, existingCheckError.details);
+        throw new Error(`Duplicate check failed: ${existingCheckError.message}`);
+    }
 
     if (existingApp) {
         console.log('Application already exists in DB. Skipping creation.');
@@ -25,15 +34,20 @@ export async function submitApplication(formData: any, generatedCode: string, us
             municipality: formData.gTown,
         };
 
+        console.log('Inserting groom address:', groomAddressPayload);
         const { data: groomAddr, error: groomAddrError } = await supabase
             .from('addresses')
             .insert([groomAddressPayload])
             .select()
             .single();
 
-        if (groomAddrError) throw new Error(`Groom address insert error: ${groomAddrError.message}`);
+        if (groomAddrError) {
+            console.error('Groom address insert error:', groomAddrError.message, groomAddrError.details, groomAddrError.hint);
+            throw new Error(`Groom address insert error: ${groomAddrError.message}`);
+        }
         if (!groomAddr) throw new Error('Failed to insert groom address - no data returned');
         groom_address_id = groomAddr.id;
+        console.log('Groom address ID:', groom_address_id);
     }
 
     let bride_address_id = null;
@@ -45,32 +59,45 @@ export async function submitApplication(formData: any, generatedCode: string, us
             municipality: formData.bTown,
         };
 
+        console.log('Inserting bride address:', brideAddressPayload);
         const { data: brideAddr, error: brideAddrError } = await supabase
             .from('addresses')
             .insert([brideAddressPayload])
             .select()
             .single();
 
-        if (brideAddrError) throw new Error(`Bride address insert error: ${brideAddrError.message}`);
+        if (brideAddrError) {
+            console.error('Bride address insert error:', brideAddrError.message, brideAddrError.details, brideAddrError.hint);
+            throw new Error(`Bride address insert error: ${brideAddrError.message}`);
+        }
         if (!brideAddr) throw new Error('Failed to insert bride address - no data returned');
         bride_address_id = brideAddr.id;
+        console.log('Bride address ID:', bride_address_id);
     }
 
     // Step B: Insert marriage_applications row, capture ID
+    const appPayload = {
+        application_code: generatedCode,
+        created_by: userId,
+        contact_number: formData.contactNumber || null,
+        status: 'pending'
+    };
+    console.log('Inserting application:', appPayload);
+
     const { data: appData, error: appError } = await supabase
         .from('marriage_applications')
-        .insert([{
-            application_code: generatedCode,
-            created_by: userId,
-            contact_number: formData.contactNumber || null
-        }])
+        .insert([appPayload])
         .select()
         .single();
 
-    if (appError) throw new Error(`Application insert error: ${appError.message}`);
+    if (appError) {
+        console.error('Application insert error:', appError.message, appError.details, appError.hint, appError.code);
+        throw new Error(`Application insert error: ${appError.message}`);
+    }
     if (!appData) throw new Error('Failed to insert application - no data returned');
 
     const application_id = appData.id;
+    console.log('Application inserted, ID:', application_id);
 
     // Step C: Insert applicants (Groom and Bride)
     const groomPayload = {
@@ -89,11 +116,16 @@ export async function submitApplication(formData: any, generatedCode: string, us
         mother_name: [formData.gMothF, formData.gMothM, formData.gMothL].filter(Boolean).join(' ') || null,
     };
 
+    console.log('Inserting groom applicant...');
     const { error: groomError } = await supabase
         .from('applicants')
         .insert([groomPayload]);
 
-    if (groomError) throw new Error(`Groom applicant insert error: ${groomError.message}`);
+    if (groomError) {
+        console.error('Groom insert error:', groomError.message, groomError.details, groomError.hint);
+        throw new Error(`Groom applicant insert error: ${groomError.message}`);
+    }
+    console.log('Groom inserted successfully.');
 
     const bridePayload = {
         application_id,
@@ -111,11 +143,17 @@ export async function submitApplication(formData: any, generatedCode: string, us
         mother_name: [formData.bMothF, formData.bMothM, formData.bMothL].filter(Boolean).join(' ') || null,
     };
 
+    console.log('Inserting bride applicant...');
     const { error: brideError } = await supabase
         .from('applicants')
         .insert([bridePayload]);
 
-    if (brideError) throw new Error(`Bride applicant insert error: ${brideError.message}`);
+    if (brideError) {
+        console.error('Bride insert error:', brideError.message, brideError.details, brideError.hint);
+        throw new Error(`Bride applicant insert error: ${brideError.message}`);
+    }
+    console.log('Bride inserted successfully.');
+    console.log('=== submitApplication COMPLETE ===');
 
     return application_id;
 }

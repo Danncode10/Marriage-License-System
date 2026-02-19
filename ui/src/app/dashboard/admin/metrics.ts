@@ -47,7 +47,7 @@ export async function getAdminMetrics(): Promise<SystemMetrics> {
         total: apps?.length || 0,
         pending: apps?.filter(a => a.status === 'pending').length || 0,
         processing: apps?.filter(a => a.status === 'processing').length || 0,
-        completed: apps?.filter(a => a.status === 'completed' || a.status === 'finished').length || 0,
+        completed: apps?.filter(a => a.status === 'completed' || a.status === 'issued' || a.status === 'approved').length || 0,
         rejected: apps?.filter(a => a.status === 'rejected').length || 0,
     };
 
