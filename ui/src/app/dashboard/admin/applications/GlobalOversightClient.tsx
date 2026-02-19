@@ -233,7 +233,7 @@ export default function GlobalOversightClient({
             const startCamera = async () => {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: 'user' },
+                        video: { facingMode: 'environment' },
                         audio: false
                     });
                     streamRef.current = stream;
