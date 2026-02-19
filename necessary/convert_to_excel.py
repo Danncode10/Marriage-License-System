@@ -17,7 +17,9 @@ def process_excel(data):
         # Load paths relative to script location
         script_dir = os.path.dirname(os.path.abspath(__file__))
         template_path = os.path.join(script_dir, "data", "APPLICATION-for-MARRIAGE-LICENSE.xlsx")
-        img_path = os.path.join(script_dir, "data", "couple_img.png")
+
+        # Use provided image path or skip image insertion
+        img_path = data.get("coupleImagePath")
         
         if not os.path.exists(template_path):
             sys.stderr.write(f"Error: Template not found at {template_path}\n")

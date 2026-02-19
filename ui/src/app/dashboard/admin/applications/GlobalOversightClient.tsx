@@ -276,7 +276,10 @@ export default function GlobalOversightClient({
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(excelData),
+                body: JSON.stringify({
+                    ...excelData,
+                    applicationCode: app.application_code,
+                }),
             });
 
             if (response.ok) {
