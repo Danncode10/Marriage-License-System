@@ -11,7 +11,8 @@ import {
     ShieldCheck,
     Bell,
     Users,
-    FileText
+    FileText,
+    BarChart
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -62,6 +63,15 @@ export function Sidebar({ userRole = "user" }: SidebarProps) {
                             >
                                 <FileText className="h-4 w-4" />
                                 Global Applications
+                            </Button>
+                        </Link>
+                        <Link href="/dashboard/admin/reports">
+                            <Button
+                                variant={isActive("/dashboard/admin/reports") ? "secondary" : "ghost"}
+                                className={cn("w-full justify-start gap-3 h-11 px-3", isActive("/dashboard/admin/reports") ? "bg-zinc-100 font-medium" : "text-zinc-500 hover:text-black")}
+                            >
+                                <BarChart className="h-4 w-4" />
+                                Reports & Analytics
                             </Button>
                         </Link>
                     </>

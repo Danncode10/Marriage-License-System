@@ -49,6 +49,11 @@ export default async function AdminDashboard() {
                             <FileText className="mr-2 h-4 w-4" /> Applications
                         </Button>
                     </Link>
+                    <Link href="/dashboard/admin/reports">
+                        <Button variant="outline" className="rounded-xl h-11 px-6 font-bold uppercase tracking-widest text-[10px] border-zinc-200 hover:bg-zinc-50 transition-all active:scale-95">
+                            <BarChart className="mr-2 h-4 w-4" /> Reports
+                        </Button>
+                    </Link>
                 </div>
             </div>
 
