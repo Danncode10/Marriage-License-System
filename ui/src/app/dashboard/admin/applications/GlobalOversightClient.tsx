@@ -31,45 +31,18 @@ function DetailItem({ label, value }: { label: string; value?: string | number |
     );
 }
 
-// ── Per-row action buttons: Eye + Horizontal-dots status dropdown ────────────
+// ── Per-row action buttons: Eye + Horizontal-dots manual update ────────────
 function ActionDropdown({
     app,
     onView,
-    onStatusChange,
     onManualUpdate,
     isUpdating,
 }: {
     app: any;
     onView: () => void;
-    onStatusChange: (id: string, status: string) => void;
     onManualUpdate: (app: any) => void;
     isUpdating: boolean;
 }) {
-    const [open, setOpen] = useState(false);
-    const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
-    const btnRef = useRef<HTMLButtonElement>(null);
-
-    const openDropdown = useCallback(() => {
-        if (btnRef.current) {
-            const rect = btnRef.current.getBoundingClientRect();
-            setDropdownPos({
-                top: rect.bottom + 8,
-                left: rect.right - 208, // 208 = w-52 in px
-            });
-        }
-        setOpen(true);
-    }, []);
-
-    useEffect(() => {
-        if (!open) return;
-        function handle(e: MouseEvent) {
-            setOpen(false);
-        }
-        // Small delay so the open click doesn't immediately close
-        const t = setTimeout(() => document.addEventListener("mousedown", handle), 10);
-        return () => { clearTimeout(t); document.removeEventListener("mousedown", handle); };
-    }, [open]);
-
     return (
         <div className="flex items-center gap-2 justify-center">
             {/* Eye — View Details */}
@@ -81,11 +54,10 @@ function ActionDropdown({
                 <Eye className="h-4 w-4" />
             </button>
 
-            {/* Horizontal dots — Status dropdown (fixed positioned to escape overflow) */}
+            {/* Horizontal dots — Manual Update (opens modal with code auto-detected) */}
             <button
-                ref={btnRef}
-                title="Change Status"
-                onClick={openDropdown}
+                title="Manual Status Update"
+                onClick={() => onManualUpdate(app)}
                 className="h-9 w-9 rounded-xl bg-zinc-100 hover:bg-zinc-900 hover:text-white text-zinc-500 flex items-center justify-center transition-all duration-200 shadow-sm active:scale-90"
             >
                 {isUpdating
@@ -93,47 +65,6 @@ function ActionDropdown({
                     : <MoreHorizontal className="h-4 w-4" />
                 }
             </button>
-
-            {open && (
-                <div
-                    style={{ top: dropdownPos.top, left: dropdownPos.left }}
-                    className="fixed z-[200] w-52 bg-white rounded-2xl border border-zinc-100 shadow-2xl shadow-zinc-300/40 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150"
-                    onMouseDown={e => e.stopPropagation()}
-                >
-                    <div className="px-4 pt-3 pb-1">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Set Status</p>
-                    </div>
-                    {STATUS_ACTIONS.map(({ value, label, dot, hover }) => (
-                        <button
-                            key={value}
-                            disabled={app.status === value}
-                            onClick={() => {
-                                console.log("Table action clicked:", { appCode: app.application_code, newStatus: value });
-                                onStatusChange(app.application_code, value);
-                                setOpen(false);
-                            }}
-                            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-zinc-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${hover}`}
-                        >
-                            <div className={`h-2 w-2 rounded-full shrink-0 ${dot}`} />
-                            {label}
-                            {app.status === value && (
-                                <span className="ml-auto text-[9px] font-black uppercase tracking-widest text-zinc-400">Current</span>
-                            )}
-                        </button>
-                    ))}
-                    <div className="border-t border-zinc-100 my-2"></div>
-                    <button
-                        onClick={() => {
-                            onManualUpdate(app);
-                            setOpen(false);
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-zinc-700 transition-colors hover:bg-purple-50"
-                    >
-                        <div className="h-2 w-2 rounded-full shrink-0 bg-purple-400" />
-                        Manual Update
-                    </button>
-                </div>
-            )}
         </div>
     );
 }
@@ -290,6 +221,63 @@ export default function GlobalOversightClient({ apps: initialApps }: { apps: any
                 </div>
             </div>
 
+            {/* ── Manual Status Update Form ── */}
+            <div className="bg-white rounded-[2.5rem] border border-zinc-100 shadow-2xl shadow-zinc-200/50 p-8">
+                <h3 className="text-xl font-black text-zinc-900 uppercase tracking-tight mb-6">Manual Status Update</h3>
+
+                <div className="flex flex-col sm:flex-row gap-4 items-end">
+                    <div className="flex-1">
+                        <label className="block text-sm font-bold text-zinc-700 mb-2">Application Code</label>
+                        <input
+                            type="text"
+                            placeholder="Enter application code (e.g., ABC123)"
+                            className="w-full h-12 bg-white border border-zinc-100 rounded-2xl px-4 text-sm font-bold placeholder:text-zinc-400 focus:outline-none focus:ring-4 focus:ring-zinc-900/5 transition-all shadow-xl shadow-zinc-200/20"
+                            value={manualAppCode}
+                            onChange={(e) => setManualAppCode(e.target.value.toUpperCase())}
+                        />
+                    </div>
+
+                    <div className="flex-1">
+                        <label className="block text-sm font-bold text-zinc-700 mb-2">Set Status</label>
+                        <select
+                            className="w-full h-12 bg-white border border-zinc-100 rounded-2xl px-4 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-zinc-900/5 transition-all shadow-xl shadow-zinc-200/20"
+                            value={manualStatus}
+                            onChange={(e) => setManualStatus(e.target.value)}
+                        >
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="pending">Pending</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+
+                    <button
+                        onClick={handleManualStatusUpdate}
+                        disabled={manualUpdating || !manualAppCode.trim()}
+                        className="h-12 px-8 bg-zinc-900 hover:bg-zinc-800 disabled:bg-zinc-400 text-white rounded-2xl font-bold text-sm transition-all shadow-xl shadow-zinc-200/20 disabled:cursor-not-allowed"
+                    >
+                        {manualUpdating ? (
+                            <div className="flex items-center gap-2">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Updating...
+                            </div>
+                        ) : (
+                            'Update Status'
+                        )}
+                    </button>
+                </div>
+
+                {manualMessage && (
+                    <div className={`mt-4 p-4 rounded-2xl text-sm font-bold ${
+                        manualMessage.type === 'success'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : 'bg-red-50 text-red-700 border border-red-200'
+                    }`}>
+                        {manualMessage.text}
+                    </div>
+                )}
+            </div>
+
             {/* ── Table ── */}
             <div className="bg-white rounded-[2.5rem] border border-zinc-100 shadow-2xl shadow-zinc-200/50 overflow-hidden">
                 <div className="p-8 border-b border-zinc-50 flex items-center justify-between bg-zinc-50/30">
@@ -378,7 +366,6 @@ export default function GlobalOversightClient({ apps: initialApps }: { apps: any
                                                 <ActionDropdown
                                                     app={app}
                                                     onView={() => setSelectedApp(app)}
-                                                    onStatusChange={handleStatusChange}
                                                     onManualUpdate={(app) => {
                                                         setRowManualApp(app);
                                                         setRowManualStatus(app.status || "approved");
@@ -396,62 +383,7 @@ export default function GlobalOversightClient({ apps: initialApps }: { apps: any
                 </div>
             </div>
 
-            {/* ── Manual Status Update Form ── */}
-            <div className="bg-white rounded-[2.5rem] border border-zinc-100 shadow-2xl shadow-zinc-200/50 p-8 mt-8">
-                <h3 className="text-xl font-black text-zinc-900 uppercase tracking-tight mb-6">Manual Status Update</h3>
 
-                <div className="flex flex-col sm:flex-row gap-4 items-end">
-                    <div className="flex-1">
-                        <label className="block text-sm font-bold text-zinc-700 mb-2">Application Code</label>
-                        <input
-                            type="text"
-                            placeholder="Enter application code (e.g., ABC123)"
-                            className="w-full h-12 bg-white border border-zinc-100 rounded-2xl px-4 text-sm font-bold placeholder:text-zinc-400 focus:outline-none focus:ring-4 focus:ring-zinc-900/5 transition-all shadow-xl shadow-zinc-200/20"
-                            value={manualAppCode}
-                            onChange={(e) => setManualAppCode(e.target.value.toUpperCase())}
-                        />
-                    </div>
-
-                    <div className="flex-1">
-                        <label className="block text-sm font-bold text-zinc-700 mb-2">Set Status</label>
-                        <select
-                            className="w-full h-12 bg-white border border-zinc-100 rounded-2xl px-4 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-zinc-900/5 transition-all shadow-xl shadow-zinc-200/20"
-                            value={manualStatus}
-                            onChange={(e) => setManualStatus(e.target.value)}
-                        >
-                            <option value="approved">Approved</option>
-                            <option value="rejected">Rejected</option>
-                            <option value="pending">Pending</option>
-                            <option value="completed">Completed</option>
-                        </select>
-                    </div>
-
-                    <button
-                        onClick={handleManualStatusUpdate}
-                        disabled={manualUpdating || !manualAppCode.trim()}
-                        className="h-12 px-8 bg-zinc-900 hover:bg-zinc-800 disabled:bg-zinc-400 text-white rounded-2xl font-bold text-sm transition-all shadow-xl shadow-zinc-200/20 disabled:cursor-not-allowed"
-                    >
-                        {manualUpdating ? (
-                            <div className="flex items-center gap-2">
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                Updating...
-                            </div>
-                        ) : (
-                            'Update Status'
-                        )}
-                    </button>
-                </div>
-
-                {manualMessage && (
-                    <div className={`mt-4 p-4 rounded-2xl text-sm font-bold ${
-                        manualMessage.type === 'success'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : 'bg-red-50 text-red-700 border border-red-200'
-                    }`}>
-                        {manualMessage.text}
-                    </div>
-                )}
-            </div>
 
             {/* ── Detail Modal ── */}
             {selectedApp && (
@@ -573,7 +505,7 @@ export default function GlobalOversightClient({ apps: initialApps }: { apps: any
                         onClick={e => e.stopPropagation()}
                     >
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-black text-zinc-900 uppercase tracking-tight">Manual Status Update</h3>
+                            <h3 className="text-xl font-black text-zinc-900 uppercase tracking-tight">Status Update</h3>
                             <button
                                 onClick={() => setRowManualApp(null)}
                                 className="h-8 w-8 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center transition-all"
