@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { signup } from "./actions";
 import { Button } from "@/components/ui/button";
@@ -5,9 +7,18 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { NotificationHandler } from "@/components/ui/notification-handler";
 import { Mail, Lock, ShieldCheck, ArrowRight, CheckCircle2 } from "lucide-react";
-import { Suspense } from "react";
+import { Suspense, useEffect, use } from "react";
 
-export default async function SignupPage() {
+export default function SignupPage({ searchParams }: { searchParams: Promise<{ code?: string }> }) {
+  const params = use(searchParams);
+  const applicationCode = params.code;
+
+  // If we have an application code, store it for later use after signup
+  useEffect(() => {
+    if (applicationCode) {
+      localStorage.setItem('pending_application_code', applicationCode);
+    }
+  }, [applicationCode]);
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4">
       {/* Dynamic Background Elements */}

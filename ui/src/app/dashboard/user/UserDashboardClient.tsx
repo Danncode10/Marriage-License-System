@@ -118,6 +118,45 @@ export default function UserDashboard() {
                     localStorage.removeItem('application_code'); // Clean up buddy key if exists
                 } catch (e) {
                     console.error('Failed to finalize pending application:', e);
+                    // Re-store the data if submission failed
+                    localStorage.setItem('pending_marriage_application', pendingAppDataStr);
+                }
+            }
+
+            // ALTERNATIVE FLOW: Check for orphaned application code (from signup flow)
+            const pendingCode = localStorage.getItem('pending_application_code');
+            if (pendingCode && !pendingAppDataStr) {
+                console.log('Checking for orphaned application code:', pendingCode);
+                try {
+                    const { data: existingApp, error: checkError } = await supabase
+                        .from('marriage_applications')
+                        .select('id, created_by, application_code')
+                        .eq('application_code', pendingCode)
+                        .maybeSingle();
+
+                    if (checkError) {
+                        console.error('Error checking orphaned application:', checkError.message);
+                    } else if (existingApp && !existingApp.created_by) {
+                        // Found orphaned application, claim it
+                        console.log('Found orphaned application. Claiming for user...');
+                        const { error: claimError } = await supabase
+                            .from('marriage_applications')
+                            .update({ created_by: authUser.id })
+                            .eq('id', existingApp.id);
+
+                        if (!claimError) {
+                            console.log('Orphaned application claimed successfully.');
+                            localStorage.removeItem('pending_application_code');
+                        } else {
+                            console.error('Failed to claim orphaned application:', claimError.message);
+                        }
+                    } else if (existingApp && existingApp.created_by) {
+                        // Already claimed
+                        console.log('Application already claimed by someone else or self.');
+                        localStorage.removeItem('pending_application_code');
+                    }
+                } catch (e) {
+                    console.error('Error in orphaned application check:', e);
                 }
             }
 
