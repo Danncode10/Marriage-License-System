@@ -10,36 +10,50 @@ export default async function DashboardLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const supabase = await createClient();
+    try {
+        const supabase = await createClient();
 
-    if (!supabase) {
-        redirect("/login");
-        return;
-    }
+        if (!supabase) {
+            console.error("Failed to create Supabase client");
+            redirect("/login");
+            return;
+        }
 
-    const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    if (!user) {
-        redirect("/login");
-    }
+        if (authError) {
+            console.error("Auth error in dashboard layout:", authError);
+            redirect("/login");
+            return;
+        }
 
-    const profile = await getUserProfile();
-    const userRole = profile?.role || "user";
-    const userInitials = user.email?.split("@")[0].substring(0, 2).toUpperCase() || "US";
+        if (!user) {
+            console.log("No user found, redirecting to login");
+            redirect("/login");
+            return;
+        }
 
-    return (
-        <div className="flex min-h-screen bg-zinc-50 w-full overflow-hidden">
-            {/* Sidebar - Persistent */}
-            <Sidebar userRole={userRole} />
+        const profile = await getUserProfile();
+        const userRole = profile?.role || "user";
+        const userInitials = user.email?.split("@")[0].substring(0, 2).toUpperCase() || "US";
 
-            {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-                <Header userInitials={userInitials} userRole={userRole} />
+        return (
+            <div className="flex min-h-screen bg-zinc-50 w-full overflow-hidden">
+                {/* Sidebar - Persistent */}
+                <Sidebar userRole={userRole} />
 
-                <main className="flex-1 overflow-y-auto p-8 scroll-smooth">
-                    {children}
-                </main>
+                {/* Main Content Area */}
+                <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+                    <Header userInitials={userInitials} userRole={userRole} />
+
+                    <main className="flex-1 overflow-y-auto p-8 scroll-smooth">
+                        {children}
+                    </main>
+                </div>
             </div>
-        </div>
-    );
+        );
+    } catch (error) {
+        console.error("Error in dashboard layout:", error);
+        redirect("/login");
+    }
 }
