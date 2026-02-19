@@ -73,7 +73,6 @@ function ActionDropdown({
 export default function GlobalOversightClient({ apps: initialApps }: { apps: any[] }) {
     const [apps, setApps] = useState<any[]>(initialApps);
     const [selectedApp, setSelectedApp] = useState<any | null>(null);
-    const [search, setSearch] = useState("");
     const [updatingId, setUpdatingId] = useState<string | null>(null);
 
     // Manual status update form state
@@ -191,15 +190,7 @@ export default function GlobalOversightClient({ apps: initialApps }: { apps: any
         }
     }
 
-    const filtered = apps.filter(app => {
-        const q = search.toLowerCase();
-        return (
-            app.application_code?.toLowerCase().includes(q) ||
-            app.groom_name?.toLowerCase().includes(q) ||
-            app.bride_name?.toLowerCase().includes(q) ||
-            app.submitted_by?.toLowerCase().includes(q)
-        );
-    });
+
 
     return (
         <>
@@ -208,16 +199,6 @@ export default function GlobalOversightClient({ apps: initialApps }: { apps: any
                 <div>
                     <h1 className="text-4xl font-black text-zinc-900 tracking-tighter uppercase leading-none">Global Oversight</h1>
                     <p className="text-zinc-500 font-medium mt-2">Monitoring all marriage license applications across the municipality.</p>
-                </div>
-                <div className="relative group">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 group-focus-within:text-zinc-900 transition-colors" />
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        placeholder="Search by Code or Name..."
-                        className="h-12 w-[300px] bg-white border border-zinc-100 rounded-2xl pl-12 pr-4 text-sm font-bold placeholder:text-zinc-400 focus:outline-none focus:ring-4 focus:ring-zinc-900/5 transition-all shadow-xl shadow-zinc-200/20"
-                    />
                 </div>
             </div>
 
@@ -287,7 +268,7 @@ export default function GlobalOversightClient({ apps: initialApps }: { apps: any
                         </div>
                         <h2 className="text-xl font-black text-zinc-900 uppercase tracking-tight">Master Directory</h2>
                     </div>
-                    <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">{filtered.length} records</span>
+                    <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">{apps.length} records</span>
                 </div>
 
                 <div className="overflow-x-auto">
@@ -302,7 +283,7 @@ export default function GlobalOversightClient({ apps: initialApps }: { apps: any
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-zinc-50">
-                            {filtered.length === 0 ? (
+                            {apps.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="py-24 text-center">
                                         <div className="w-20 h-20 bg-zinc-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
@@ -312,7 +293,7 @@ export default function GlobalOversightClient({ apps: initialApps }: { apps: any
                                     </td>
                                 </tr>
                             ) : (
-                                filtered.map((app) => {
+                                apps.map((app) => {
                                     const config = STATUS_CONFIG[app.status?.toLowerCase()] || STATUS_CONFIG.pending;
                                     const StatusIcon = config.icon;
 

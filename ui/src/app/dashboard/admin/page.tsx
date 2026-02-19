@@ -157,15 +157,6 @@ export default async function AdminDashboard() {
                                     <p className="text-sm font-bold text-zinc-900 uppercase">Operational</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-4">
-                                <div className="h-10 w-10 rounded-xl bg-zinc-50 flex items-center justify-center text-zinc-400">
-                                    <Search className="h-5 w-5" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Quick Query</p>
-                                    <p className="text-sm font-bold text-zinc-900 uppercase">842 Records Indexed</p>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </Card>

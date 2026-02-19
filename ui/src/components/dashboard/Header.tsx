@@ -38,14 +38,7 @@ export function Header({ userInitials, userRole }: HeaderProps) {
                         <Menu className="h-6 w-6" />
                     </button>
 
-                    <div className="hidden md:block flex-1 max-w-md">
-                        {userRole !== "user" && (
-                            <div className="relative">
-                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-zinc-500" />
-                                <Input placeholder="Search..." className="h-9 bg-zinc-50 border-none pl-9" />
-                            </div>
-                        )}
-                    </div>
+
 
                     {/* Mobile Logo Visibility */}
                     <div className="flex md:hidden items-center gap-2">
