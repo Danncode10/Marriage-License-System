@@ -6,7 +6,7 @@ import {
     CheckCircle2, XCircle, Eye, X, MoreHorizontal,
     Loader2
 } from "lucide-react";
-import { updateApplicationStatus } from "./actions";
+import { updateApplicationStatus, uploadApplicationPhoto } from "./actions";
 
 const STATUS_CONFIG: Record<string, { color: string; icon: any; bg: string; border: string; dot: string }> = {
     pending: { color: "text-amber-700", icon: Clock, bg: "bg-amber-50", border: "border-amber-200", dot: "bg-amber-400" },
@@ -87,6 +87,18 @@ export default function GlobalOversightClient({ apps: initialApps }: { apps: any
     const [rowManualStatus, setRowManualStatus] = useState("approved");
     const [rowManualUpdating, setRowManualUpdating] = useState(false);
     const [rowManualMessage, setRowManualMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+
+    // Photo capture form state
+    const [photoAppCode, setPhotoAppCode] = useState("");
+    const [showCamera, setShowCamera] = useState(false);
+    const [capturedImage, setCapturedImage] = useState<string | null>(null);
+    const [uploadingPhoto, setUploadingPhoto] = useState(false);
+    const [photoMessage, setPhotoMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+
+    // Camera refs
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const streamRef = useRef<MediaStream | null>(null);
 
     async function handleStatusChange(appCode: string, newStatus: string) {
         console.log("UI: handleStatusChange called with:", { appCode, newStatus });
@@ -201,7 +213,35 @@ export default function GlobalOversightClient({ apps: initialApps }: { apps: any
         );
     });
 
+    // Camera setup effect
+    useEffect(() => {
+        if (showCamera && !capturedImage) {
+            const startCamera = async () => {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'user' },
+                        audio: false
+                    });
+                    streamRef.current = stream;
+                    if (videoRef.current) {
+                        videoRef.current.srcObject = stream;
+                    }
+                } catch (error) {
+                    console.error('Error accessing camera:', error);
+                    setPhotoMessage({ type: 'error', text: 'Unable to access camera' });
+                }
+            };
 
+            startCamera();
+        }
+
+        return () => {
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach(track => track.stop());
+                streamRef.current = null;
+            }
+        };
+    }, [showCamera, capturedImage]);
 
     return (
         <>
@@ -278,6 +318,32 @@ export default function GlobalOversightClient({ apps: initialApps }: { apps: any
                         {manualMessage.text}
                     </div>
                 )}
+            </div>
+
+            {/* ── Photo Capture Form ── */}
+            <div className="bg-white rounded-[2.5rem] border border-zinc-100 shadow-2xl shadow-zinc-200/50 p-8">
+                <h3 className="text-xl font-black text-zinc-900 uppercase tracking-tight mb-6">Photo Capture</h3>
+
+                <div className="flex flex-col sm:flex-row gap-4 items-end">
+                    <div className="flex-1">
+                        <label className="block text-sm font-bold text-zinc-700 mb-2">Application Code</label>
+                        <input
+                            type="text"
+                            placeholder="Enter application code (e.g., ABC123)"
+                            className="w-full h-12 bg-white border border-zinc-100 rounded-2xl px-4 text-sm font-bold placeholder:text-zinc-400 focus:outline-none focus:ring-4 focus:ring-zinc-900/5 transition-all shadow-xl shadow-zinc-200/20"
+                            value={photoAppCode}
+                            onChange={(e) => setPhotoAppCode(e.target.value.toUpperCase())}
+                        />
+                    </div>
+
+                    <button
+                        onClick={() => setShowCamera(true)}
+                        disabled={!photoAppCode.trim()}
+                        className="h-12 px-8 bg-zinc-900 hover:bg-zinc-800 disabled:bg-zinc-400 text-white rounded-2xl font-bold text-sm transition-all shadow-xl shadow-zinc-200/20 disabled:cursor-not-allowed"
+                    >
+                        Capture Photo
+                    </button>
+                </div>
             </div>
 
             {/* ── Table ── */}
@@ -563,6 +629,164 @@ export default function GlobalOversightClient({ apps: initialApps }: { apps: any
                                         : 'bg-red-50 text-red-700 border border-red-200'
                                 }`}>
                                     {rowManualMessage.text}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Camera Modal ── */}
+            {showCamera && (
+                <div
+                    className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+                    onClick={() => {
+                        setShowCamera(false);
+                        setCapturedImage(null);
+                        setPhotoMessage(null);
+                        if (streamRef.current) {
+                            streamRef.current.getTracks().forEach(track => track.stop());
+                            streamRef.current = null;
+                        }
+                    }}
+                >
+                    <div
+                        className="w-full max-w-md bg-white rounded-[2rem] shadow-2xl p-8"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-black text-zinc-900 uppercase tracking-tight">Photo Capture</h3>
+                            <button
+                                onClick={() => {
+                                    setShowCamera(false);
+                                    setCapturedImage(null);
+                                    setPhotoMessage(null);
+                                    if (streamRef.current) {
+                                        streamRef.current.getTracks().forEach(track => track.stop());
+                                        streamRef.current = null;
+                                    }
+                                }}
+                                className="h-8 w-8 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center transition-all"
+                            >
+                                <X className="h-4 w-4 text-zinc-600" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-6">
+                            {!capturedImage ? (
+                                <>
+                                    <div className="relative">
+                                        <video
+                                            ref={videoRef}
+                                            autoPlay
+                                            playsInline
+                                            muted
+                                            className="w-full h-64 bg-zinc-100 rounded-2xl object-cover"
+                                        />
+                                        <canvas ref={canvasRef} className="hidden" />
+                                    </div>
+                                    <button
+                                        onClick={async () => {
+                                            if (!videoRef.current || !canvasRef.current) return;
+
+                                            const video = videoRef.current;
+                                            const canvas = canvasRef.current;
+                                            const ctx = canvas.getContext('2d');
+                                            if (!ctx) return;
+
+                                            canvas.width = video.videoWidth;
+                                            canvas.height = video.videoHeight;
+                                            ctx.drawImage(video, 0, 0);
+
+                                            const imageData = canvas.toDataURL('image/jpeg', 0.8);
+                                            setCapturedImage(imageData);
+                                        }}
+                                        className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 text-white rounded-2xl font-bold text-sm transition-all shadow-xl shadow-zinc-200/20"
+                                    >
+                                        Capture Photo
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="relative">
+                                        <img
+                                            src={capturedImage}
+                                            alt="Captured"
+                                            className="w-full h-64 bg-zinc-100 rounded-2xl object-cover"
+                                        />
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={() => setCapturedImage(null)}
+                                            className="flex-1 h-12 bg-zinc-100 hover:bg-zinc-200 text-zinc-900 rounded-2xl font-bold text-sm transition-all"
+                                        >
+                                            Retake
+                                        </button>
+                                        <button
+                                            onClick={async () => {
+                                                if (!capturedImage) return;
+
+                                                setUploadingPhoto(true);
+                                                setPhotoMessage(null);
+
+                                                try {
+                                                    // Convert base64 to blob
+                                                    const response = await fetch(capturedImage);
+                                                    const blob = await response.blob();
+                                                    const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
+
+                                                    const formData = new FormData();
+                                                    formData.append('applicationCode', photoAppCode);
+                                                    formData.append('photoType', 'groom'); // Default photo type
+                                                    formData.append('photo', file);
+
+                                                    const result = await uploadApplicationPhoto(formData);
+
+                                                    if (result.success) {
+                                                        setPhotoMessage({ type: 'success', text: 'Photo uploaded successfully!' });
+                                                        setTimeout(() => {
+                                                            setShowCamera(false);
+                                                            setCapturedImage(null);
+                                                            setPhotoAppCode('');
+                                                            setPhotoMessage(null);
+                                                            if (streamRef.current) {
+                                                                streamRef.current.getTracks().forEach(track => track.stop());
+                                                                streamRef.current = null;
+                                                            }
+                                                        }, 2000);
+                                                    } else {
+                                                        setPhotoMessage({ type: 'error', text: result.error || 'Upload failed' });
+                                                    }
+                                                } catch (error) {
+                                                    console.error('Upload error:', error);
+                                                    setPhotoMessage({ type: 'error', text: 'An error occurred during upload' });
+                                                } finally {
+                                                    setUploadingPhoto(false);
+                                                }
+                                            }}
+                                            disabled={uploadingPhoto}
+                                            className="flex-1 h-12 bg-zinc-900 hover:bg-zinc-800 disabled:bg-zinc-400 text-white rounded-2xl font-bold text-sm transition-all shadow-xl shadow-zinc-200/20 disabled:cursor-not-allowed"
+                                        >
+                                            {uploadingPhoto ? (
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                    Uploading...
+                                                </div>
+                                            ) : (
+                                                'Upload Photo'
+                                            )}
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+
+                            {photoMessage && (
+                                <div className={`p-4 rounded-2xl text-sm font-bold ${
+                                    photoMessage.type === 'success'
+                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                        : 'bg-red-50 text-red-700 border border-red-200'
+                                }`}>
+                                    {photoMessage.text}
                                 </div>
                             )}
                         </div>

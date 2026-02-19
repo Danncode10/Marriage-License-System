@@ -82,3 +82,69 @@ export async function updateApplicationStatus(applicationId: string, newStatus: 
     revalidatePath("/dashboard/admin");
     return { success: true };
 }
+
+export async function uploadApplicationPhoto(formData: FormData) {
+    const supabase = createAdminClient();
+
+    const applicationCode = formData.get("applicationCode") as string;
+    const photoType = formData.get("photoType") as string;
+    const photoFile = formData.get("photo") as File;
+
+    if (!applicationCode || !photoType || !photoFile) {
+        return { success: false, error: "Missing required fields" };
+    }
+
+    // Find application by code
+    const { data: app, error: appError } = await supabase
+        .from("marriage_applications")
+        .select("id")
+        .eq("application_code", applicationCode.toUpperCase())
+        .single();
+
+    if (appError || !app) {
+        return { success: false, error: "Application not found" };
+    }
+
+    // Get current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+        return { success: false, error: "Not authenticated" };
+    }
+
+    // Upload file to storage
+    const fileName = `${app.id}/${photoType}/${Date.now()}.jpg`;
+    const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("marriage-license-files")
+        .upload(fileName, photoFile, {
+            contentType: "image/jpeg",
+            upsert: false
+        });
+
+    if (uploadError) {
+        console.error("Upload error:", uploadError);
+        return { success: false, error: "Failed to upload photo" };
+    }
+
+    // Insert record
+    const { error: insertError } = await supabase
+        .from("application_photos")
+        .insert({
+            application_id: app.id,
+            photo_type: photoType,
+            file_path: uploadData.path,
+            file_size: photoFile.size,
+            uploaded_by: user.id
+        });
+
+    if (insertError) {
+        console.error("Insert error:", insertError);
+        // Try to delete the uploaded file
+        await supabase.storage
+            .from("marriage-license-files")
+            .remove([uploadData.path]);
+        return { success: false, error: "Failed to save photo record" };
+    }
+
+    revalidatePath("/dashboard/admin/applications");
+    return { success: true };
+}
