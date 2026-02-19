@@ -3,9 +3,22 @@
 import { createClient, createAdminClient } from "@/utils/supabase/server-utils";
 import { revalidatePath } from "next/cache";
 
-export async function getAllApplications() {
+export async function getAllApplications(page: number = 1, limit: number = 50) {
     const supabase = createAdminClient();
 
+    const offset = (page - 1) * limit;
+
+    // Get total count first
+    const { count: totalCount, error: countError } = await supabase
+        .from("marriage_applications")
+        .select("*", { count: "exact", head: true });
+
+    if (countError) {
+        console.error("Error getting total count:", countError);
+        return { apps: [], totalCount: 0, totalPages: 0 };
+    }
+
+    // Get paginated data
     const { data: apps, error } = await supabase
         .from("marriage_applications")
         .select(`
@@ -33,14 +46,15 @@ export async function getAllApplications() {
                 full_name
             )
         `)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .range(offset, offset + limit - 1);
 
     if (error) {
-        console.error("CRITICAL: Error fetching all applications:", error.message, error.details, error.hint);
-        return [];
+        console.error("CRITICAL: Error fetching applications:", error.message, error.details, error.hint);
+        return { apps: [], totalCount: 0, totalPages: 0 };
     }
 
-    return (apps || []).map(app => {
+    const processedApps = (apps || []).map(app => {
         const applicants = Array.isArray(app.applicants) ? app.applicants : [];
         const groom = applicants.find((a: any) => a.type === 'groom');
         const bride = applicants.find((a: any) => a.type === 'bride');
@@ -57,6 +71,16 @@ export async function getAllApplications() {
             bride: bride || null,
         };
     });
+
+    const totalPages = Math.ceil((totalCount || 0) / limit);
+
+    return {
+        apps: processedApps,
+        totalCount: totalCount || 0,
+        totalPages,
+        currentPage: page,
+        limit
+    };
 }
 
 export async function updateApplicationStatus(applicationId: string, newStatus: string) {

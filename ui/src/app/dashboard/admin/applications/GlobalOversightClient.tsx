@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
     FileText, Search, Calendar, User, Clock,
     CheckCircle2, XCircle, Eye, X, MoreHorizontal,
-    Loader2
+    Loader2, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { updateApplicationStatus, uploadApplicationPhoto } from "./actions";
 
@@ -70,7 +71,20 @@ function ActionDropdown({
 }
 
 // ── Main Component ──────────────────────────────────────────────────────────
-export default function GlobalOversightClient({ apps: initialApps }: { apps: any[] }) {
+export default function GlobalOversightClient({
+    apps: initialApps,
+    totalCount,
+    totalPages,
+    currentPage,
+    limit
+}: {
+    apps: any[];
+    totalCount: number;
+    totalPages: number;
+    currentPage: number;
+    limit: number;
+}) {
+    const router = useRouter();
     const [apps, setApps] = useState<any[]>(initialApps);
     const [selectedApp, setSelectedApp] = useState<any | null>(null);
     const [search, setSearch] = useState("");
@@ -263,86 +277,89 @@ export default function GlobalOversightClient({ apps: initialApps }: { apps: any
                 </div>
             </div>
 
-            {/* ── Manual Status Update Form ── */}
-            <div className="bg-white rounded-[2.5rem] border border-zinc-100 shadow-2xl shadow-zinc-200/50 p-8">
-                <h3 className="text-xl font-black text-zinc-900 uppercase tracking-tight mb-6">Manual Status Update</h3>
+            {/* ── Manual Status Update and Photo Capture Forms ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Manual Status Update Form */}
+                <div className="bg-white rounded-[2.5rem] border border-zinc-100 shadow-2xl shadow-zinc-200/50 p-8">
+                    <h3 className="text-xl font-black text-zinc-900 uppercase tracking-tight mb-6">Manual Status Update</h3>
 
-                <div className="flex flex-col sm:flex-row gap-4 items-end">
-                    <div className="flex-1">
-                        <label className="block text-sm font-bold text-zinc-700 mb-2">Application Code</label>
-                        <input
-                            type="text"
-                            placeholder="Enter application code (e.g., ABC123)"
-                            className="w-full h-12 bg-white border border-zinc-100 rounded-2xl px-4 text-sm font-bold placeholder:text-zinc-400 focus:outline-none focus:ring-4 focus:ring-zinc-900/5 transition-all shadow-xl shadow-zinc-200/20"
-                            value={manualAppCode}
-                            onChange={(e) => setManualAppCode(e.target.value.toUpperCase())}
-                        />
-                    </div>
+                    <div className="flex flex-col sm:flex-row gap-4 items-end">
+                        <div className="flex-1">
+                            <label className="block text-sm font-bold text-zinc-700 mb-2">Application Code</label>
+                            <input
+                                type="text"
+                                placeholder="Enter application code (e.g., ABC123)"
+                                className="w-full h-12 bg-white border border-zinc-100 rounded-2xl px-4 text-sm font-bold placeholder:text-zinc-400 focus:outline-none focus:ring-4 focus:ring-zinc-900/5 transition-all shadow-xl shadow-zinc-200/20"
+                                value={manualAppCode}
+                                onChange={(e) => setManualAppCode(e.target.value.toUpperCase())}
+                            />
+                        </div>
 
-                    <div className="flex-1">
-                        <label className="block text-sm font-bold text-zinc-700 mb-2">Set Status</label>
-                        <select
-                            className="w-full h-12 bg-white border border-zinc-100 rounded-2xl px-4 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-zinc-900/5 transition-all shadow-xl shadow-zinc-200/20"
-                            value={manualStatus}
-                            onChange={(e) => setManualStatus(e.target.value)}
+                        <div className="flex-1">
+                            <label className="block text-sm font-bold text-zinc-700 mb-2">Set Status</label>
+                            <select
+                                className="w-full h-12 bg-white border border-zinc-100 rounded-2xl px-4 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-zinc-900/5 transition-all shadow-xl shadow-zinc-200/20"
+                                value={manualStatus}
+                                onChange={(e) => setManualStatus(e.target.value)}
+                            >
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                                <option value="pending">Pending</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+
+                        <button
+                            onClick={handleManualStatusUpdate}
+                            disabled={manualUpdating || !manualAppCode.trim()}
+                            className="h-12 px-8 bg-zinc-900 hover:bg-zinc-800 disabled:bg-zinc-400 text-white rounded-2xl font-bold text-sm transition-all shadow-xl shadow-zinc-200/20 disabled:cursor-not-allowed"
                         >
-                            <option value="approved">Approved</option>
-                            <option value="rejected">Rejected</option>
-                            <option value="pending">Pending</option>
-                            <option value="completed">Completed</option>
-                        </select>
+                            {manualUpdating ? (
+                                <div className="flex items-center gap-2">
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    Updating...
+                                </div>
+                            ) : (
+                                'Update Status'
+                            )}
+                        </button>
                     </div>
 
-                    <button
-                        onClick={handleManualStatusUpdate}
-                        disabled={manualUpdating || !manualAppCode.trim()}
-                        className="h-12 px-8 bg-zinc-900 hover:bg-zinc-800 disabled:bg-zinc-400 text-white rounded-2xl font-bold text-sm transition-all shadow-xl shadow-zinc-200/20 disabled:cursor-not-allowed"
-                    >
-                        {manualUpdating ? (
-                            <div className="flex items-center gap-2">
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                Updating...
-                            </div>
-                        ) : (
-                            'Update Status'
-                        )}
-                    </button>
+                    {manualMessage && (
+                        <div className={`mt-4 p-4 rounded-2xl text-sm font-bold ${
+                            manualMessage.type === 'success'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : 'bg-red-50 text-red-700 border border-red-200'
+                        }`}>
+                            {manualMessage.text}
+                        </div>
+                    )}
                 </div>
 
-                {manualMessage && (
-                    <div className={`mt-4 p-4 rounded-2xl text-sm font-bold ${
-                        manualMessage.type === 'success'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : 'bg-red-50 text-red-700 border border-red-200'
-                    }`}>
-                        {manualMessage.text}
+                {/* Photo Capture Form */}
+                <div className="bg-white rounded-[2.5rem] border border-zinc-100 shadow-2xl shadow-zinc-200/50 p-8">
+                    <h3 className="text-xl font-black text-zinc-900 uppercase tracking-tight mb-6">Photo Capture</h3>
+
+                    <div className="flex flex-col sm:flex-row gap-4 items-end">
+                        <div className="flex-1">
+                            <label className="block text-sm font-bold text-zinc-700 mb-2">Application Code</label>
+                            <input
+                                type="text"
+                                placeholder="Enter application code (e.g., ABC123)"
+                                className="w-full h-12 bg-white border border-zinc-100 rounded-2xl px-4 text-sm font-bold placeholder:text-zinc-400 focus:outline-none focus:ring-4 focus:ring-zinc-900/5 transition-all shadow-xl shadow-zinc-200/20"
+                                value={photoAppCode}
+                                onChange={(e) => setPhotoAppCode(e.target.value.toUpperCase())}
+                            />
+                        </div>
+
+                        <button
+                            onClick={() => setShowCamera(true)}
+                            disabled={!photoAppCode.trim()}
+                            className="h-12 px-8 bg-zinc-900 hover:bg-zinc-800 disabled:bg-zinc-400 text-white rounded-2xl font-bold text-sm transition-all shadow-xl shadow-zinc-200/20 disabled:cursor-not-allowed"
+                        >
+                            Capture Photo
+                        </button>
                     </div>
-                )}
-            </div>
-
-            {/* ── Photo Capture Form ── */}
-            <div className="bg-white rounded-[2.5rem] border border-zinc-100 shadow-2xl shadow-zinc-200/50 p-8">
-                <h3 className="text-xl font-black text-zinc-900 uppercase tracking-tight mb-6">Photo Capture</h3>
-
-                <div className="flex flex-col sm:flex-row gap-4 items-end">
-                    <div className="flex-1">
-                        <label className="block text-sm font-bold text-zinc-700 mb-2">Application Code</label>
-                        <input
-                            type="text"
-                            placeholder="Enter application code (e.g., ABC123)"
-                            className="w-full h-12 bg-white border border-zinc-100 rounded-2xl px-4 text-sm font-bold placeholder:text-zinc-400 focus:outline-none focus:ring-4 focus:ring-zinc-900/5 transition-all shadow-xl shadow-zinc-200/20"
-                            value={photoAppCode}
-                            onChange={(e) => setPhotoAppCode(e.target.value.toUpperCase())}
-                        />
-                    </div>
-
-                    <button
-                        onClick={() => setShowCamera(true)}
-                        disabled={!photoAppCode.trim()}
-                        className="h-12 px-8 bg-zinc-900 hover:bg-zinc-800 disabled:bg-zinc-400 text-white rounded-2xl font-bold text-sm transition-all shadow-xl shadow-zinc-200/20 disabled:cursor-not-allowed"
-                    >
-                        Capture Photo
-                    </button>
                 </div>
             </div>
 
@@ -451,7 +468,54 @@ export default function GlobalOversightClient({ apps: initialApps }: { apps: any
                 </div>
             </div>
 
+            {/* ── Pagination ── */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between bg-white rounded-[2.5rem] border border-zinc-100 shadow-2xl shadow-zinc-200/50 p-6">
+                    <div className="text-sm font-bold text-zinc-600">
+                        Showing {((currentPage - 1) * limit) + 1} to {Math.min(currentPage * limit, totalCount)} of {totalCount} applications
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => router.push(`/dashboard/admin/applications?page=${currentPage - 1}&limit=${limit}`)}
+                            disabled={currentPage <= 1}
+                            className="flex items-center gap-2 h-10 px-4 bg-zinc-100 hover:bg-zinc-200 disabled:bg-zinc-50 disabled:text-zinc-400 text-zinc-900 rounded-2xl font-bold text-sm transition-all disabled:cursor-not-allowed"
+                        >
+                            <ChevronLeft className="h-4 w-4" />
+                            Previous
+                        </button>
 
+                        <div className="flex items-center gap-1">
+                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                                if (pageNum > totalPages) return null;
+
+                                return (
+                                    <button
+                                        key={pageNum}
+                                        onClick={() => router.push(`/dashboard/admin/applications?page=${pageNum}&limit=${limit}`)}
+                                        className={`h-10 w-10 rounded-2xl font-bold text-sm transition-all ${
+                                            pageNum === currentPage
+                                                ? 'bg-zinc-900 text-white'
+                                                : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900'
+                                        }`}
+                                    >
+                                        {pageNum}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <button
+                            onClick={() => router.push(`/dashboard/admin/applications?page=${currentPage + 1}&limit=${limit}`)}
+                            disabled={currentPage >= totalPages}
+                            className="flex items-center gap-2 h-10 px-4 bg-zinc-100 hover:bg-zinc-200 disabled:bg-zinc-50 disabled:text-zinc-400 text-zinc-900 rounded-2xl font-bold text-sm transition-all disabled:cursor-not-allowed"
+                        >
+                            Next
+                            <ChevronRight className="h-4 w-4" />
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* ── Detail Modal ── */}
             {selectedApp && (
