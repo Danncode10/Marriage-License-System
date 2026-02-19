@@ -1,6 +1,6 @@
 "use server";
 
-import { createAdminClient } from "@/utils/supabase/server-utils";
+import { createClient, createAdminClient } from "@/utils/supabase/server-utils";
 import { revalidatePath } from "next/cache";
 
 export async function getAllApplications() {
@@ -84,7 +84,12 @@ export async function updateApplicationStatus(applicationId: string, newStatus: 
 }
 
 export async function uploadApplicationPhoto(formData: FormData) {
-    const supabase = createAdminClient();
+    const supabase = await createClient();
+    const adminSupabase = createAdminClient();
+
+    if (!supabase) {
+        return { success: false, error: "Failed to create database client" };
+    }
 
     const applicationCode = formData.get("applicationCode") as string;
     const photoType = formData.get("photoType") as string;
@@ -94,8 +99,14 @@ export async function uploadApplicationPhoto(formData: FormData) {
         return { success: false, error: "Missing required fields" };
     }
 
+    // Get current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+        return { success: false, error: "Not authenticated" };
+    }
+
     // Find application by code
-    const { data: app, error: appError } = await supabase
+    const { data: app, error: appError } = await adminSupabase
         .from("marriage_applications")
         .select("id")
         .eq("application_code", applicationCode.toUpperCase())
@@ -105,14 +116,8 @@ export async function uploadApplicationPhoto(formData: FormData) {
         return { success: false, error: "Application not found" };
     }
 
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-        return { success: false, error: "Not authenticated" };
-    }
-
     // Upload file to storage
-    const fileName = `${app.id}/${photoType}/${Date.now()}.jpg`;
+    const fileName = `${app.id}/${Date.now()}.jpg`;
     const { data: uploadData, error: uploadError } = await supabase.storage
         .from("marriage-license-files")
         .upload(fileName, photoFile, {
