@@ -46,24 +46,42 @@ export async function POST(req: NextRequest) {
                     .from("marriage-license-files")
                     .download(imagePath);
 
-                if (error) {
-                    console.error("Error downloading image:", error);
-                    // Try PNG fallback
-                    const altPath = imagePath!.replace(".jpg", ".png");
-                    const { data: altData } = await supabase.storage
-                        .from("marriage-license-files")
-                        .download(altPath);
-                    if (altData) await saveTempImage(altData, altPath); // Use altPath here
-                } else if (data) {
+                if (data) {
                     await saveTempImage(data, imagePath!);
+                } else if (error) {
+                    console.error(`[ExcelGen] Failed to download image at ${imagePath}:`, error.message);
+
+                    // Fallback strategy: try common extensions if the specific one fails
+                    const extensions = ['jpg', 'jpeg', 'png', 'JPG', 'JPEG', 'PNG'];
+                    let downloaded = false;
+
+                    for (const ext of extensions) {
+                        const fallbackPath = `${appCode}.${ext}`;
+                        if (fallbackPath === imagePath) continue;
+
+                        console.log(`[ExcelGen] Trying fallback path: ${fallbackPath}`);
+                        const { data: fallbackData } = await supabase.storage
+                            .from("marriage-license-files")
+                            .download(fallbackPath);
+
+                        if (fallbackData) {
+                            await saveTempImage(fallbackData, fallbackPath);
+                            downloaded = true;
+                            break;
+                        }
+                    }
+
+                    if (!downloaded) {
+                        console.warn(`[ExcelGen] No image found for ${appCode} after trying fallbacks.`);
+                    }
                 }
 
                 async function saveTempImage(data: Blob, imgPath: string) {
                     const tempDir = path.join(os.tmpdir(), "solano-mls");
                     if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
 
-                    // Preserve original extension or default to png
-                    const ext = imgPath.split('.').pop() || 'png';
+                    // Preserve original extension (case-insensitive)
+                    const ext = imgPath.split('.').pop()?.toLowerCase() || 'png';
                     tempImagePath = path.join(tempDir, `couple_${Date.now()}.${ext}`);
                     const buffer = Buffer.from(await data.arrayBuffer());
                     fs.writeFileSync(tempImagePath, buffer);

@@ -259,9 +259,13 @@ export class ExcelGenerator {
             const noticeSheet = workbook.getWorksheet('Notice');
             if (noticeSheet) {
                 try {
+                    // Determine final extension for ExcelJS (only supports 'jpeg' or 'png')
+                    const ext = (data.imageExtension || 'png').toLowerCase();
+                    const finalExt = (ext === 'jpg' || ext === 'jpeg') ? 'jpeg' : 'png';
+
                     const imageId = workbook.addImage({
                         filename: data.coupleImagePath,
-                        extension: 'png', // Assuming PNG as handled in the route
+                        extension: finalExt as 'jpeg' | 'png',
                     });
 
                     // Positioning like Python: Cell T11

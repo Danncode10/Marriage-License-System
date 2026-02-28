@@ -193,19 +193,6 @@ export async function uploadApplicationPhoto(formData: FormData) {
         return { success: false, error: "Application not found" };
     }
 
-    // Delete any existing photo records for this application (file will be overwritten)
-    const { error: deleteDbError } = await adminSupabase
-        .from("application_photos")
-        .delete()
-        .eq("application_id", app.id);
-
-    if (deleteDbError) {
-        console.error("Error deleting old photo records:", deleteDbError);
-        return { success: false, error: "Failed to delete old photo records" };
-    }
-
-    console.log("Old photo records deleted from database successfully");
-
     // Robustly handle image replacement in storage (using admin client to bypass RLS)
     const storageResult = await handleImageReplace(
         adminSupabase,
@@ -220,15 +207,18 @@ export async function uploadApplicationPhoto(formData: FormData) {
 
     const filePath = storageResult.path;
 
-    // Insert new record
+    // Upsert record: This ensures we only ever have ONE record per app/type
     const { error: insertError } = await adminSupabase
         .from("application_photos")
-        .insert({
+        .upsert({
             application_id: app.id,
             photo_type: photoType,
             file_path: filePath,
             file_size: photoFile.size,
-            uploaded_by: user.id
+            uploaded_by: user.id,
+            uploaded_at: new Date().toISOString()
+        }, {
+            onConflict: 'application_id,photo_type'
         });
 
     if (insertError) {

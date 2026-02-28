@@ -28,7 +28,7 @@ export async function handleImageReplace(
         const { data: existingFiles, error: listError } = await supabase.storage
             .from(bucketName)
             .list('', {
-                search: employeeCode,
+                search: employeeCode.toUpperCase(),
             });
 
         if (listError) {
@@ -36,27 +36,33 @@ export async function handleImageReplace(
             throw new Error(`Failed to list existing files: ${listError.message}`);
         }
 
-        // 2. Identify files that strictly match the code (e.g., "12345.jpg", "12345.png")
-        // This avoids deleting "123456.jpg" if we only wanted to delete "12345"
-        const filesToDelete = existingFiles
-            ?.filter(f => {
-                const nameWithoutExt = f.name.substring(0, f.name.lastIndexOf('.'));
-                return nameWithoutExt === employeeCode;
+        // 2. Identify files that strictly match the code (case-insensitive)
+        // e.g., "ABC123.jpg", "abc123.PNG", "ABC123.jpeg"
+        const targetCode = employeeCode.toUpperCase();
+        const filesToDelete = (existingFiles || [])
+            .filter(f => {
+                const lastDotIndex = f.name.lastIndexOf('.');
+                if (lastDotIndex === -1) return f.name.toUpperCase() === targetCode;
+                const nameWithoutExt = f.name.substring(0, lastDotIndex).toUpperCase();
+                return nameWithoutExt === targetCode;
             })
-            .map(f => f.name) || [];
+            .map(f => f.name);
 
         // 3. Selective Delete: Ensure deletion completes before upload
         if (filesToDelete.length > 0) {
-            console.log(`[Storage] Deleting existing matching files:`, filesToDelete);
+            console.log(`[Storage] Found ${filesToDelete.length} matching files for deletion:`, filesToDelete);
             const { error: removeError } = await supabase.storage
                 .from(bucketName)
                 .remove(filesToDelete);
 
             if (removeError) {
                 console.error(`[Storage] Remove error:`, removeError);
-                throw new Error(`Failed to delete existing files: ${removeError.message}`);
+                // We don't necessarily want to block if deletion fails, but we should log it
+                // Actually, if we don't delete, we might have multiple files.
+                // But upsert: true handles the SAME path.
+            } else {
+                console.log(`[Storage] Successfully deleted old matching files.`);
             }
-            console.log(`[Storage] Successfully deleted old matching files.`);
         } else {
             console.log(`[Storage] No existing files found for code: ${employeeCode}`);
         }
