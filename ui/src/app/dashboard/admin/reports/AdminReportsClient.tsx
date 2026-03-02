@@ -20,6 +20,7 @@ import {
     AlertCircle
 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
+import { ExportButton } from "@/components/common/ExportButton";
 
 interface Application {
     id: string;
@@ -145,12 +146,11 @@ export default function AdminReportsClient() {
 
         // Age distribution
         const ageGroups = {
-            "18-20": 0,
-            "21-24": 0,
-            "25-30": 0,
-            "31-40": 0,
-            "41-50": 0,
-            "51+": 0
+            "18-25": 0,
+            "26-35": 0,
+            "36-45": 0,
+            "46-55": 0,
+            "56+": 0
         };
 
         // Religion breakdown
@@ -175,12 +175,11 @@ export default function AdminReportsClient() {
 
                 // Age groups
                 if (applicant.age) {
-                    if (applicant.age >= 18 && applicant.age <= 20) ageGroups["18-20"]++;
-                    else if (applicant.age >= 21 && applicant.age <= 24) ageGroups["21-24"]++;
-                    else if (applicant.age >= 25 && applicant.age <= 30) ageGroups["25-30"]++;
-                    else if (applicant.age >= 31 && applicant.age <= 40) ageGroups["31-40"]++;
-                    else if (applicant.age >= 41 && applicant.age <= 50) ageGroups["41-50"]++;
-                    else if (applicant.age >= 51) ageGroups["51+"]++;
+                    if (applicant.age >= 18 && applicant.age <= 25) ageGroups["18-25"]++;
+                    else if (applicant.age >= 26 && applicant.age <= 35) ageGroups["26-35"]++;
+                    else if (applicant.age >= 36 && applicant.age <= 45) ageGroups["36-45"]++;
+                    else if (applicant.age >= 46 && applicant.age <= 55) ageGroups["46-55"]++;
+                    else if (applicant.age >= 56) ageGroups["56+"]++;
                 }
 
                 // Religion counts
@@ -196,6 +195,7 @@ export default function AdminReportsClient() {
         });
 
         return {
+            filteredApps,
             total: filteredApps.length,
             statusCounts,
             municipalityCounts,
@@ -344,10 +344,19 @@ export default function AdminReportsClient() {
                             Last Week
                         </Button>
                     </div>
-                    <Button variant="outline" className="rounded-xl">
-                        <Download className="mr-2 h-4 w-4" />
-                        Export Report
-                    </Button>
+                    <ExportButton
+                        data={stats.filteredApps}
+                        metadata={{
+                            generationDate: new Date().toLocaleString(),
+                            timeframe: selectedTimeframe === "all" ? "All Time" :
+                                selectedTimeframe === "month" ? "Last Month" : "Last Week",
+                            totalRecords: stats.total
+                        }}
+                        stats={stats}
+                        fileName="Marriage_License_Analytics"
+                        variant="outline"
+                        className="rounded-xl"
+                    />
                 </div>
             </div>
 
@@ -500,7 +509,7 @@ export default function AdminReportsClient() {
                     <CardContent className="space-y-4">
                         {Object.entries(stats.religionCounts)
                             .sort(([, a], [, b]) => b - a)
-                            .slice(0,)
+                            .slice(0, 6)
                             .map(([religion, count]) => (
                                 <div key={religion} className="flex items-center justify-between">
                                     <span className="text-sm font-semibold capitalize">{religion}</span>

@@ -100,10 +100,6 @@ export async function submitApplication(formData: any, generatedCode: string, us
     console.log('Application inserted, ID:', application_id);
 
     // Step C: Insert applicants (Groom and Bride)
-    // Resolve ID types (handle "Others" custom type)
-    const groomIdType = formData.gIdType === "Others" ? formData.gIdCustomType : formData.gIdType;
-    const groomGiverIdType = formData.gGiverIdType === "Others" ? formData.gGiverIdCustomType : formData.gGiverIdType;
-
     const groomPayload = {
         application_id,
         address_id: groom_address_id,
@@ -120,11 +116,6 @@ export async function submitApplication(formData: any, generatedCode: string, us
         mother_name: [formData.gMothF, formData.gMothM, formData.gMothL].filter(Boolean).join(' ') || null,
         giver_name: [formData.gGiverF, formData.gGiverM, formData.gGiverL].filter(Boolean).join(' ') || null,
         giver_relationship: formData.gGiverOtherTitle || formData.gGiverRelation || null,
-        // Valid ID fields (only save when user opted to include ID)
-        valid_id_type: formData.gIncludeId ? (groomIdType || null) : null,
-        valid_id_number: formData.gIncludeId ? (formData.gIdNo || null) : null,
-        giver_id_type: formData.gGiverIncludeId ? (groomGiverIdType || null) : null,
-        giver_id_number: formData.gGiverIncludeId ? (formData.gGiverIdNo || null) : null,
     };
 
     console.log('Inserting groom applicant...');
@@ -137,10 +128,6 @@ export async function submitApplication(formData: any, generatedCode: string, us
         throw new Error(`Groom applicant insert error: ${groomError.message}`);
     }
     console.log('Groom inserted successfully.');
-
-    // Resolve ID types (handle "Others" custom type)
-    const brideIdType = formData.bIdType === "Others" ? formData.bIdCustomType : formData.bIdType;
-    const brideGiverIdType = formData.bGiverIdType === "Others" ? formData.bGiverIdCustomType : formData.bGiverIdType;
 
     const bridePayload = {
         application_id,
@@ -158,11 +145,6 @@ export async function submitApplication(formData: any, generatedCode: string, us
         mother_name: [formData.bMothF, formData.bMothM, formData.bMothL].filter(Boolean).join(' ') || null,
         giver_name: [formData.bGiverF, formData.bGiverM, formData.bGiverL].filter(Boolean).join(' ') || null,
         giver_relationship: formData.bGiverOtherTitle || formData.bGiverRelation || null,
-        // Valid ID fields (only save when user opted to include ID)
-        valid_id_type: formData.bIncludeId ? (brideIdType || null) : null,
-        valid_id_number: formData.bIncludeId ? (formData.bIdNo || null) : null,
-        giver_id_type: formData.bGiverIncludeId ? (brideGiverIdType || null) : null,
-        giver_id_number: formData.bGiverIncludeId ? (formData.bGiverIdNo || null) : null,
     };
 
     console.log('Inserting bride applicant...');

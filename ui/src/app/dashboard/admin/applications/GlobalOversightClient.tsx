@@ -164,13 +164,6 @@ export default function GlobalOversightClient({
             const brideMother = splitName(app.bride?.mother_name);
             const brideGiver = splitName(app.bride?.giver_name);
 
-            // Derive "includeId" from whether the DB has a saved ID number
-            // (The DB has no boolean column — we infer it from presence of data)
-            const groomHasId = !!(app.groom?.valid_id_number);
-            const brideHasId = !!(app.bride?.valid_id_number);
-            const groomGiverHasId = !!(app.groom?.giver_id_number);
-            const brideGiverHasId = !!(app.bride?.giver_id_number);
-
             const excelData = {
                 gFirst: app.groom?.first_name || '',
                 gMiddle: app.groom?.middle_name || '',
@@ -194,13 +187,6 @@ export default function GlobalOversightClient({
                 gGiverM: groomGiver.middle,
                 gGiverL: groomGiver.last,
                 gGiverRelation: app.groom?.giver_relationship || '',
-                // Groom Valid ID — read directly from DB columns
-                gIncludeId: groomHasId,
-                gIdType: app.groom?.valid_id_type || '',
-                gIdNo: app.groom?.valid_id_number || '',
-                gGiverIncludeId: groomGiverHasId,
-                gGiverIdType: app.groom?.giver_id_type || '',
-                gGiverIdNo: app.groom?.giver_id_number || '',
 
                 bFirst: app.bride?.first_name || '',
                 bMiddle: app.bride?.middle_name || '',
@@ -224,13 +210,6 @@ export default function GlobalOversightClient({
                 bGiverM: brideGiver.middle,
                 bGiverL: brideGiver.last,
                 bGiverRelation: app.bride?.giver_relationship || '',
-                // Bride Valid ID — read directly from DB columns
-                bIncludeId: brideHasId,
-                bIdType: app.bride?.valid_id_type || '',
-                bIdNo: app.bride?.valid_id_number || '',
-                bGiverIncludeId: brideGiverHasId,
-                bGiverIdType: app.bride?.giver_id_type || '',
-                bGiverIdNo: app.bride?.giver_id_number || '',
             };
 
             const response = await fetch('/api/generate-excel', {
