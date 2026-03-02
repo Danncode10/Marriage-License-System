@@ -17,6 +17,7 @@ import ApplicationTable from "./components/ApplicationTable";
 import ApplicationDetailModal from "./components/ApplicationDetailModal";
 import RowManualUpdateModal from "./components/RowManualUpdateModal";
 import ManualStatusUpdateForm from "./components/ManualStatusUpdateForm";
+import EditApplicationModal from "../../../marriage/components/EditApplicationModal";
 
 // ── Main Component ──────────────────────────────────────────────────────────
 export default function GlobalOversightClient({
@@ -63,6 +64,10 @@ export default function GlobalOversightClient({
 
     // Admin marriage form modal state
     const [showAdminForm, setShowAdminForm] = useState(false);
+
+    // Edit application modal state
+    const [showEditForm, setShowEditForm] = useState(false);
+    const [appToEdit, setAppToEdit] = useState<any | null>(null);
 
     const handleRefresh = () => {
         window.location.reload();
@@ -397,7 +402,23 @@ export default function GlobalOversightClient({
             <ApplicationDetailModal
                 selectedApp={selectedApp}
                 onClose={() => setSelectedApp(null)}
+                onEdit={(app) => {
+                    setAppToEdit(app);
+                    setShowEditForm(true);
+                }}
             />
+
+            {showEditForm && appToEdit && (
+                <EditApplicationModal
+                    isOpen={showEditForm}
+                    onClose={() => {
+                        setShowEditForm(false);
+                        setAppToEdit(null);
+                    }}
+                    onSuccess={handleRefresh}
+                    selectedApp={appToEdit}
+                />
+            )}
 
             <RowManualUpdateModal
                 rowManualApp={rowManualApp}

@@ -13,10 +13,12 @@ import {
     Download,
     Calendar,
     MapPin,
-    PenSquare
+    PenSquare,
+    Edit2
 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import EditApplicationModal from "../../marriage/components/EditApplicationModal";
 
 interface Application {
     id: string;
@@ -245,6 +247,15 @@ export default function UserDashboard() {
     }, []);
 
     const [selectedApp, setSelectedApp] = useState<Application | null>(null);
+    const [showEditForm, setShowEditForm] = useState(false);
+    const [appToEdit, setAppToEdit] = useState<any | null>(null);
+
+    const handleEditSuccess = () => {
+        const supabase = createClient();
+        if (user) {
+            fetchApplications(supabase, (user as any).id);
+        }
+    };
 
     return (
         <div className="max-w-5xl mx-auto space-y-8">
@@ -409,9 +420,22 @@ export default function UserDashboard() {
                                 <h2 className="text-2xl font-black text-slate-900 tracking-tight">Application Review</h2>
                                 <p className="text-sm text-zinc-500 font-medium">#{selectedApp.application_code} • {new Date(selectedApp.created_at).toLocaleDateString()}</p>
                             </div>
-                            <Button variant="ghost" className="rounded-full w-10 h-10 p-0" onClick={() => setSelectedApp(null)}>
-                                <span className="text-2xl">&times;</span>
-                            </Button>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    className="flex items-center gap-2 rounded-xl border-blue-200 text-blue-600 hover:bg-blue-50"
+                                    onClick={() => {
+                                        setAppToEdit(selectedApp);
+                                        setShowEditForm(true);
+                                    }}
+                                >
+                                    <Edit2 className="h-4 w-4" />
+                                    Edit Info
+                                </Button>
+                                <Button variant="ghost" className="rounded-full w-10 h-10 p-0" onClick={() => setSelectedApp(null)}>
+                                    <span className="text-2xl">&times;</span>
+                                </Button>
+                            </div>
                         </div>
 
                         <div className="p-8 space-y-8 bg-zinc-50/50">
@@ -475,6 +499,17 @@ export default function UserDashboard() {
                         </div>
                     </Card>
                 </div>
+            )}
+            {showEditForm && appToEdit && (
+                <EditApplicationModal
+                    isOpen={showEditForm}
+                    onClose={() => {
+                        setShowEditForm(false);
+                        setAppToEdit(null);
+                    }}
+                    onSuccess={handleEditSuccess}
+                    selectedApp={appToEdit}
+                />
             )}
         </div>
     );

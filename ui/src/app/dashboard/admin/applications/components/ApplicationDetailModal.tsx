@@ -1,15 +1,16 @@
 "use client";
 
-import { X } from "lucide-react";
+import { X, Edit2 } from "lucide-react";
 import StatusBadge from "./StatusBadge";
 import { DetailItem } from "./ApplicationActions";
 
 interface ApplicationDetailModalProps {
     selectedApp: any;
     onClose: () => void;
+    onEdit?: (app: any) => void;
 }
 
-export default function ApplicationDetailModal({ selectedApp, onClose }: ApplicationDetailModalProps) {
+export default function ApplicationDetailModal({ selectedApp, onClose, onEdit }: ApplicationDetailModalProps) {
     if (!selectedApp) return null;
 
     return (
@@ -30,12 +31,23 @@ export default function ApplicationDetailModal({ selectedApp, onClose }: Applica
                             {selectedApp.contact_number && ` · ${selectedApp.contact_number}`}
                         </p>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="h-10 w-10 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center transition-all"
-                    >
-                        <X className="h-5 w-5 text-zinc-600" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        {onEdit && (
+                            <button
+                                onClick={() => onEdit(selectedApp)}
+                                className="flex items-center gap-2 h-10 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-blue-200"
+                            >
+                                <Edit2 className="h-4 w-4" />
+                                Edit Info
+                            </button>
+                        )}
+                        <button
+                            onClick={onClose}
+                            className="h-10 w-10 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center transition-all"
+                        >
+                            <X className="h-5 w-5 text-zinc-600" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Modal Body */}
