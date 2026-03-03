@@ -56,8 +56,15 @@ export default function EditApplicationModal({ isOpen, onClose, onSuccess, selec
         if (selectedApp) {
             const initialData = mapAppToFormData(selectedApp);
             setFormData(initialData);
+
+            // Check if birth place is same as address to set the toggle correctly
+            const gAddr = initialData.gTown && initialData.gProv ? `${initialData.gTown}, ${initialData.gProv}` : "";
+            const bAddr = initialData.bTown && initialData.bProv ? `${initialData.bTown}, ${initialData.bProv}` : "";
+
+            setGSameAsAddress(initialData.gBirthPlace === gAddr);
+            setBSameAsAddress(initialData.bBirthPlace === bAddr);
         }
-    }, [selectedApp, setFormData]);
+    }, [selectedApp, setFormData, setGSameAsAddress, setBSameAsAddress]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

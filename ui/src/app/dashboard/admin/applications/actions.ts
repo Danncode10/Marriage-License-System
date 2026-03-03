@@ -380,10 +380,12 @@ export async function updateApplicationDetails(applicationId: string, formData: 
                     suffix: formData[`${prefix}Suffix`] === "Others" ? formData[`${prefix}CustomSuffix`] : formData[`${prefix}Suffix`],
                     birth_date: formData[`${prefix}Bday`],
                     age: formData[`${prefix}Age`],
+                    birth_place: formData[`${prefix}BirthPlace`],
                     religion: formData[`${prefix}Religion`] === "Others" ? formData[`${prefix}CustomReligion`] : formData[`${prefix}Religion`],
                     father_name: `${formData[`${prefix}FathF`]} ${formData[`${prefix}FathM`]} ${formData[`${prefix}FathL`]}`.trim(),
                     mother_name: `${formData[`${prefix}MothF`]} ${formData[`${prefix}MothM`]} ${formData[`${prefix}MothL`]}`.trim(),
                     giver_name: `${formData[`${prefix}GiverF`]} ${formData[`${prefix}GiverM`]} ${formData[`${prefix}GiverL`]}`.trim(),
+                    giver_suffix: formData[`${prefix}GiverSuffix`] === "Others" ? formData[`${prefix}GiverCustomSuffix`] : formData[`${prefix}GiverSuffix`],
                     giver_relationship: formData[`${prefix}GiverRelation`] === "Other" ? formData[`${prefix}GiverOtherTitle`] : formData[`${prefix}GiverRelation`],
 
                     // ID fields

@@ -100,7 +100,38 @@ export function useMarriageForm() {
         } else if (formData.bTown && bTownOptions.length === 0) {
             initializeOptions();
         }
-    }, [formData.gProv, formData.gTown, formData.bProv, formData.bTown, provincesList.length]);
+
+        // --- NEW: Initialize Birth Place Options ---
+        const initializeBirthOptions = async () => {
+            if (provincesList.length === 0) return;
+
+            // Groom Birth
+            const gBirthParts = (formData.gBirthPlace || "").split(',');
+            const gBirthProvName = gBirthParts.pop()?.trim();
+            if (gBirthProvName) {
+                const prov = provincesList.find(p => p.province_name === gBirthProvName);
+                if (prov) {
+                    const towns = await cities(prov.province_code);
+                    setGBirthTownOptions(towns);
+                }
+            }
+
+            // Bride Birth
+            const bBirthParts = (formData.bBirthPlace || "").split(',');
+            const bBirthProvName = bBirthParts.pop()?.trim();
+            if (bBirthProvName) {
+                const prov = provincesList.find(p => p.province_name === bBirthProvName);
+                if (prov) {
+                    const towns = await cities(prov.province_code);
+                    setBBirthTownOptions(towns);
+                }
+            }
+        };
+
+        if ((formData.gBirthPlace && gBirthTownOptions.length === 0) || (formData.bBirthPlace && bBirthTownOptions.length === 0)) {
+            initializeBirthOptions();
+        }
+    }, [formData.gProv, formData.gTown, formData.bProv, formData.bTown, formData.gBirthPlace, formData.bBirthPlace, provincesList.length]);
 
     const handleAgeChange = (prefix: 'g' | 'b', ageValue: string) => {
         const age = parseInt(ageValue) || 0;
