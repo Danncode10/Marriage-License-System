@@ -29,6 +29,7 @@ export const mapAppToFormData = (app: any) => {
         gCustomSuffix: isCustomSuffix(groom.suffix) ? groom.suffix : "",
         gBday: groom.birth_date || "",
         gAge: groom.age || 0,
+        gBirthPlace: groom.birth_place || (groom.addresses ? `${groom.addresses.municipality}, ${groom.addresses.province}` : ""),
         gBrgy: groom.addresses?.barangay || "",
         gTown: groom.addresses?.municipality || "",
         gProv: groom.addresses?.province || "Nueva Vizcaya",
@@ -43,7 +44,10 @@ export const mapAppToFormData = (app: any) => {
         gGiverF: groomGiver.first,
         gGiverM: groomGiver.middle,
         gGiverL: groomGiver.last,
+        gGiverSuffix: isCustomSuffix(groom.giver_suffix) ? "Others" : (groom.giver_suffix || ""),
+        gGiverCustomSuffix: isCustomSuffix(groom.giver_suffix) ? groom.giver_suffix : "",
         gGiverRelation: groom.giver_relationship || "",
+        gGiverOtherTitle: (groom.giver_relationship && groom.giver_relationship !== "Father" && groom.giver_relationship !== "Mother") ? groom.giver_relationship : "",
         // Groom ID
         gIdType: isCustomValidId(groom.id_type) ? "Others" : (groom.id_type || ""),
         gIdNo: groom.id_no || "",
@@ -62,6 +66,7 @@ export const mapAppToFormData = (app: any) => {
         bCustomSuffix: isCustomSuffix(bride.suffix) ? bride.suffix : "",
         bBday: bride.birth_date || "",
         bAge: bride.age || 0,
+        bBirthPlace: bride.birth_place || (bride.addresses ? `${bride.addresses.municipality}, ${bride.addresses.province}` : ""),
         bBrgy: bride.addresses?.barangay || "",
         bTown: bride.addresses?.municipality || "",
         bProv: bride.addresses?.province || "Nueva Vizcaya",
@@ -76,7 +81,10 @@ export const mapAppToFormData = (app: any) => {
         bGiverF: brideGiver.first,
         bGiverM: brideGiver.middle,
         bGiverL: brideGiver.last,
+        bGiverSuffix: isCustomSuffix(bride.giver_suffix) ? "Others" : (bride.giver_suffix || ""),
+        bGiverCustomSuffix: isCustomSuffix(bride.giver_suffix) ? bride.giver_suffix : "",
         bGiverRelation: bride.giver_relationship || "",
+        bGiverOtherTitle: (bride.giver_relationship && bride.giver_relationship !== "Father" && bride.giver_relationship !== "Mother") ? bride.giver_relationship : "",
 
         // Bride ID
         bIdType: isCustomValidId(bride.id_type) ? "Others" : (bride.id_type || ""),

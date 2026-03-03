@@ -7,6 +7,7 @@ export interface ExcelData {
     gCustomSuffix?: string;
     gBday: string;
     gAge: number;
+    gBirthPlace?: string;
     gTown: string;
     gProv: string;
     gBrgy: string;
@@ -51,6 +52,7 @@ export interface ExcelData {
     bCustomSuffix?: string;
     bBday: string;
     bAge: number;
+    bBirthPlace?: string;
     bTown: string;
     bProv: string;
     bBrgy: string;

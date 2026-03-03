@@ -31,53 +31,57 @@ export function AddressSection({
     const finalTownOptions = currentTownOptions.length > 0 ? currentTownOptions : townOptions;
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-100">
-            <Field label="Province" required>
-                <select
-                    className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
-                    value={provincesList.find(p => p.province_name === formData[`${prefix}Prov`])?.province_code || ""}
-                    onChange={(e) => {
-                        const prov = provincesList.find(p => p.province_code === e.target.value);
-                        handleProvinceChange(prefix, e.target.value, prov?.province_name || "");
-                    }}
-                >
-                    <option value="" disabled hidden>Select Province</option>
-                    {provincesList.map((p, idx) => (
-                        <option key={`${prefix}prov-${p.province_code}-${idx}`} value={p.province_code}>
-                            {p.province_name}
-                        </option>
-                    ))}
-                </select>
-            </Field>
-            <Field label="Town/Municipality" required>
-                <select
-                    className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
-                    value={finalTownOptions.find((t: any) => t.city_name === formData[`${prefix}Town`])?.city_code || ""}
-                    onChange={(e) => {
-                        const town = finalTownOptions.find((t: any) => t.city_code === e.target.value);
-                        handleTownChange(prefix, e.target.value, town?.city_name || "");
-                    }}
-                >
-                    <option value="" disabled hidden>Select Town</option>
-                    {finalTownOptions.map((t: any) => (
-                        <option key={t.city_code} value={t.city_code}>{t.city_name}</option>
-                    ))}
-                </select>
-            </Field>
-            <Field label="Barangay" required>
-                <select
-                    className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm disabled:opacity-50 focus:ring-2 focus:ring-primary outline-none"
-                    value={formData[`${prefix}Brgy`]}
-                    disabled={!brgyOptions.length}
-                    onChange={(e) => handleBrgyChange(prefix, e.target.value)}
-                >
-                    <option value="" disabled hidden>Select Barangay</option>
-                    {brgyOptions.map((b: any) => (
-                        <option key={b.brgy_code} value={b.brgy_name}>{b.brgy_name}</option>
-                    ))}
-                </select>
-            </Field>
+        <div className="space-y-4">
+            <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-bold text-slate-600 ml-1 uppercase tracking-tight">Current Address</label>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-0 border-t border-slate-100">
+                <Field label="Province" required>
+                    <select
+                        className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+                        value={provincesList.find(p => p.province_name === formData[`${prefix}Prov`])?.province_code || ""}
+                        onChange={(e) => {
+                            const prov = provincesList.find(p => p.province_code === e.target.value);
+                            handleProvinceChange(prefix, e.target.value, prov?.province_name || "");
+                        }}
+                    >
+                        <option value="" disabled hidden>Select Province</option>
+                        {provincesList.map((p, idx) => (
+                            <option key={`${prefix}prov-${p.province_code}-${idx}`} value={p.province_code}>
+                                {p.province_name}
+                            </option>
+                        ))}
+                    </select>
+                </Field>
+                <Field label="Town/Municipality" required>
+                    <select
+                        className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+                        value={finalTownOptions.find((t: any) => t.city_name === formData[`${prefix}Town`])?.city_code || ""}
+                        onChange={(e) => {
+                            const town = finalTownOptions.find((t: any) => t.city_code === e.target.value);
+                            handleTownChange(prefix, e.target.value, town?.city_name || "");
+                        }}
+                    >
+                        <option value="" disabled hidden>Select Town</option>
+                        {finalTownOptions.map((t: any) => (
+                            <option key={t.city_code} value={t.city_code}>{t.city_name}</option>
+                        ))}
+                    </select>
+                </Field>
+                <Field label="Barangay" required>
+                    <select
+                        className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm disabled:opacity-50 focus:ring-2 focus:ring-primary outline-none"
+                        value={formData[`${prefix}Brgy`]}
+                        disabled={!brgyOptions.length}
+                        onChange={(e) => handleBrgyChange(prefix, e.target.value)}
+                    >
+                        <option value="" disabled hidden>Select Barangay</option>
+                        {brgyOptions.map((b: any) => (
+                            <option key={b.brgy_code} value={b.brgy_name}>{b.brgy_name}</option>
+                        ))}
+                    </select>
+                </Field>
+            </div>
         </div>
     );
 }
-

@@ -8,7 +8,6 @@ interface BirthPlaceSectionProps {
     setFormData: (data: any) => void;
     provincesList: any[];
     birthTownOptions: any[];
-    birthBrgyOptions: any[];
     handleBirthProvinceChange: (prefix: 'g' | 'b', provinceCode: string, provinceName: string) => void;
     handleBirthTownChange: (prefix: 'g' | 'b', cityCode: string, cityName: string, provinceName: string) => void;
 }
@@ -21,7 +20,6 @@ export function BirthPlaceSection({
     setFormData,
     provincesList,
     birthTownOptions,
-    birthBrgyOptions,
     handleBirthProvinceChange,
     handleBirthTownChange
 }: BirthPlaceSectionProps) {
@@ -36,7 +34,7 @@ export function BirthPlaceSection({
                     type="button"
                     onClick={() => {
                         setSameAsAddress(true);
-                        const place = `${formData[`${prefix}Brgy`] ? formData[`${prefix}Brgy`] + ', ' : ''}${formData[`${prefix}Town`]}, ${formData[`${prefix}Prov`]}`;
+                        const place = `${formData[`${prefix}Town`]}, ${formData[`${prefix}Prov`]}`;
                         setFormData((prev: any) => ({ ...prev, [`${prefix}BirthPlace`]: place }));
                     }}
                     className={`flex-1 py-2 text-[10px] font-black rounded-lg transition-all flex items-center justify-center gap-2 ${sameAsAddress ? 'bg-white shadow-md text-primary' : 'text-slate-400 hover:text-slate-600'}`}
@@ -63,16 +61,17 @@ export function BirthPlaceSection({
                     <p className="text-sm font-bold text-slate-700">{formData[`${prefix}BirthPlace`] || "Select address first..."}</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-1">
                     <Field label="Birth Province">
                         <select
                             className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+                            value={provincesList.find(p => p.province_name === formData[`${prefix}BirthPlace`].split(',').pop()?.trim())?.province_code || ""}
                             onChange={(e) => {
                                 const prov = provincesList.find(p => p.province_code === e.target.value);
                                 handleBirthProvinceChange(prefix, e.target.value, prov?.province_name || "");
                             }}
                         >
-                            <option value="" disabled hidden>Select Province</option>
+                            <option value="" disabled>Select Province</option>
                             {provincesList.map((p, idx) => (
                                 <option key={`${prefix}birth-${p.province_code}-${idx}`} value={p.province_code}>
                                     {p.province_name}
@@ -84,6 +83,7 @@ export function BirthPlaceSection({
                         <select
                             className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm disabled:opacity-50 focus:ring-2 focus:ring-primary outline-none"
                             disabled={!birthTownOptions.length}
+                            value={birthTownOptions.find(t => t.city_name === formData[`${prefix}BirthPlace`].split(',')[0]?.trim())?.city_code || ""}
                             onChange={(e) => {
                                 const town = birthTownOptions.find(t => t.city_code === e.target.value);
                                 const parts = formData[`${prefix}BirthPlace`].split(',');
@@ -91,26 +91,9 @@ export function BirthPlaceSection({
                                 handleBirthTownChange(prefix, e.target.value, town?.city_name || "", prov);
                             }}
                         >
-                            <option value="" disabled hidden>Select Town</option>
+                            <option value="" disabled>Select Town</option>
                             {birthTownOptions.map(t => (
                                 <option key={t.city_code} value={t.city_code}>{t.city_name}</option>
-                            ))}
-                        </select>
-                    </Field>
-                    <Field label="Birth Barangay">
-                        <select
-                            className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm disabled:opacity-50 focus:ring-2 focus:ring-primary outline-none"
-                            disabled={!birthBrgyOptions.length}
-                            onChange={(e) => {
-                                const parts = formData[`${prefix}BirthPlace`].split(',');
-                                const townName = parts.length >= 2 ? parts[parts.length - 2].trim() : "";
-                                const prov = parts[parts.length - 1]?.trim() || "";
-                                setFormData({ ...formData, [`${prefix}BirthPlace`]: `${e.target.value}, ${townName}, ${prov}` });
-                            }}
-                        >
-                            <option value="" disabled hidden>Select Barangay</option>
-                            {birthBrgyOptions.map(b => (
-                                <option key={b.brgy_code} value={b.brgy_name}>{b.brgy_name}</option>
                             ))}
                         </select>
                     </Field>

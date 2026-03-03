@@ -205,6 +205,7 @@ export default function GlobalOversightClient({
                 gCustomSuffix: app.groom?.suffix || '', // If it's custom, it's already the value
                 gBday: app.groom?.birth_date ? new Date(app.groom.birth_date).toLocaleDateString('en-US') : '',
                 gAge: app.groom?.age || 0,
+                gBirthPlace: app.groom?.birth_place || (app.groom?.addresses ? `${app.groom.addresses.municipality}, ${app.groom.addresses.province}` : ""),
                 gTown: app.groom?.addresses?.municipality || '',
                 gProv: app.groom?.addresses?.province || 'Nueva Vizcaya',
                 gBrgy: app.groom?.addresses?.barangay || '',
@@ -232,6 +233,7 @@ export default function GlobalOversightClient({
                 bCustomSuffix: app.bride?.suffix || '',
                 bBday: app.bride?.birth_date ? new Date(app.bride.birth_date).toLocaleDateString('en-US') : '',
                 bAge: app.bride?.age || 0,
+                bBirthPlace: app.bride?.birth_place || (app.bride?.addresses ? `${app.bride.addresses.municipality}, ${app.bride.addresses.province}` : ""),
                 bTown: app.bride?.addresses?.municipality || '',
                 bProv: app.bride?.addresses?.province || 'Nueva Vizcaya',
                 bBrgy: app.bride?.addresses?.barangay || '',
