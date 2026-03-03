@@ -19,14 +19,20 @@ export const mapAppToFormData = (app: any) => {
     const isCustomSuffix = (suffix: string) => suffix && !SUFFIX_OPTIONS.includes(suffix) && suffix !== "";
     const isCustomReligion = (religion: string) => religion && !RELIGIONS.includes(religion) && religion !== "";
 
-    // Determine if birth place matches address (Town and Province only)
+    // Determine if birth place matches address (Municipality and Province only — no barangay)
     const normalize = (s: string) => (s || "").trim().toLowerCase().replace(/\(capital\)/gi, "").trim();
     const gAddrShort = groom.addresses ? `${groom.addresses.municipality}, ${groom.addresses.province}` : "";
     const bAddrShort = bride.addresses ? `${bride.addresses.municipality}, ${bride.addresses.province}` : "";
 
-    // If birth place exists and is NOT equal to address, sameAsAddress should be FALSE
-    const gSameAsAddress = groom.birth_place && gAddrShort ? normalize(groom.birth_place) === normalize(gAddrShort) : true;
-    const bSameAsAddress = bride.birth_place && bAddrShort ? normalize(bride.birth_place) === normalize(bAddrShort) : true;
+    // If birth_place exists and differs from address, show "different address"; otherwise same as address
+    const gSameAsAddress =
+        groom.birth_place != null && groom.birth_place.trim() !== ""
+            ? normalize(groom.birth_place) === normalize(gAddrShort)
+            : true;
+    const bSameAsAddress =
+        bride.birth_place != null && bride.birth_place.trim() !== ""
+            ? normalize(bride.birth_place) === normalize(bAddrShort)
+            : true;
 
     return {
         ...INITIAL_FORM_STATE,
@@ -38,7 +44,7 @@ export const mapAppToFormData = (app: any) => {
         gCustomSuffix: isCustomSuffix(groom.suffix) ? groom.suffix : "",
         gBday: groom.birth_date || "",
         gAge: groom.age || 0,
-        gBirthPlace: groom.birth_place || gAddrShort,
+        gBirthPlace: (groom.birth_place != null && groom.birth_place.trim() !== "") ? groom.birth_place : gAddrShort,
         gBrgy: groom.addresses?.barangay || "",
         gTown: groom.addresses?.municipality || "",
         gProv: groom.addresses?.province || "Nueva Vizcaya",
@@ -76,7 +82,7 @@ export const mapAppToFormData = (app: any) => {
         bCustomSuffix: isCustomSuffix(bride.suffix) ? bride.suffix : "",
         bBday: bride.birth_date || "",
         bAge: bride.age || 0,
-        bBirthPlace: bride.birth_place || bAddrShort,
+        bBirthPlace: (bride.birth_place != null && bride.birth_place.trim() !== "") ? bride.birth_place : bAddrShort,
         bBrgy: bride.addresses?.barangay || "",
         bTown: bride.addresses?.municipality || "",
         bProv: bride.addresses?.province || "Nueva Vizcaya",

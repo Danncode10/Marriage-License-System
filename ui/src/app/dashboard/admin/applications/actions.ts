@@ -35,6 +35,7 @@ export async function getAllApplications(page: number = 1, limit: number = 50) {
                 type,
                 birth_date,
                 age,
+                birth_place,
                 citizenship,
                 religion,
                 father_name,
