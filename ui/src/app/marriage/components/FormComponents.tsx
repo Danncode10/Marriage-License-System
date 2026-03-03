@@ -210,7 +210,7 @@ export function FamilySubSection({ prefix, person, data, setData, toTitleCase }:
                             value={data[`${prefix}FathSuffix`]}
                             onChange={e => setData({ ...data, [`${prefix}FathSuffix`]: e.target.value })}
                         >
-                            <option value="">Suffix</option>
+                            <option value="">None</option>
                             {SUFFIX_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                         </select>
                     </Field>
@@ -250,7 +250,7 @@ export function FamilySubSection({ prefix, person, data, setData, toTitleCase }:
                             value={data[`${prefix}MothSuffix`]}
                             onChange={e => setData({ ...data, [`${prefix}MothSuffix`]: e.target.value })}
                         >
-                            <option value="">Suffix</option>
+                            <option value="">None</option>
                             {SUFFIX_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                         </select>
                     </Field>
