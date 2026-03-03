@@ -132,8 +132,14 @@ export async function POST(req: NextRequest) {
         });
 
     } catch (error: any) {
-        console.error("Excel Generation Error:", error);
-        console.error("Full Error Stack:", error.stack);
+        console.error("=== Excel Generation CRITICAL ERROR ===");
+        console.error("Error Name:", error.name);
+        console.error("Error Message:", error.message);
+        console.error("Stack Trace:", error.stack);
+
+        // Log environment info that might be relevant
+        console.error("Working Directory:", process.cwd());
+
         return NextResponse.json({
             error: "Excel Generation Failed",
             details: error.message,

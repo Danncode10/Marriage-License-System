@@ -3,7 +3,9 @@ import { Field } from "./FormComponents";
 interface AddressSectionProps {
     prefix: 'g' | 'b';
     provincesList: any[];
-    townOptions: any[];
+    gTownOptions?: any[];
+    bTownOptions?: any[];
+    townOptions?: any[]; // legacy
     brgyOptions: any[];
     formData: any;
 
@@ -15,13 +17,19 @@ interface AddressSectionProps {
 export function AddressSection({
     prefix,
     provincesList,
-    townOptions,
+    gTownOptions = [],
+    bTownOptions = [],
+    townOptions = [],
     brgyOptions,
     formData,
     handleProvinceChange,
     handleTownChange,
     handleBrgyChange
 }: AddressSectionProps) {
+    const currentTownOptions = prefix === 'g' ? gTownOptions : bTownOptions;
+    // Fallback to legacy townOptions if specific ones aren't provided
+    const finalTownOptions = currentTownOptions.length > 0 ? currentTownOptions : townOptions;
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-100">
             <Field label="Province" required>
@@ -44,14 +52,14 @@ export function AddressSection({
             <Field label="Town/Municipality" required>
                 <select
                     className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
-                    value={townOptions.find(t => t.city_name === formData[`${prefix}Town`])?.city_code || ""}
+                    value={finalTownOptions.find((t: any) => t.city_name === formData[`${prefix}Town`])?.city_code || ""}
                     onChange={(e) => {
-                        const town = townOptions.find(t => t.city_code === e.target.value);
+                        const town = finalTownOptions.find((t: any) => t.city_code === e.target.value);
                         handleTownChange(prefix, e.target.value, town?.city_name || "");
                     }}
                 >
                     <option value="" disabled hidden>Select Town</option>
-                    {townOptions.map(t => (
+                    {finalTownOptions.map((t: any) => (
                         <option key={t.city_code} value={t.city_code}>{t.city_name}</option>
                     ))}
                 </select>
@@ -64,7 +72,7 @@ export function AddressSection({
                     onChange={(e) => handleBrgyChange(prefix, e.target.value)}
                 >
                     <option value="" disabled hidden>Select Barangay</option>
-                    {brgyOptions.map(b => (
+                    {brgyOptions.map((b: any) => (
                         <option key={b.brgy_code} value={b.brgy_name}>{b.brgy_name}</option>
                     ))}
                 </select>
@@ -72,3 +80,4 @@ export function AddressSection({
         </div>
     );
 }
+

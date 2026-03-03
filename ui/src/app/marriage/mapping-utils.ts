@@ -1,5 +1,5 @@
 import { splitName } from "./utils";
-import { INITIAL_FORM_STATE, SUFFIX_OPTIONS, RELIGIONS } from "./constants";
+import { INITIAL_FORM_STATE, SUFFIX_OPTIONS, RELIGIONS, VALID_ID_TYPES } from "./constants";
 
 export const mapAppToFormData = (app: any) => {
     // Handle different structures (UserDashboard passes raw app with applicants array, 
@@ -44,6 +44,15 @@ export const mapAppToFormData = (app: any) => {
         gGiverM: groomGiver.middle,
         gGiverL: groomGiver.last,
         gGiverRelation: groom.giver_relationship || "",
+        // Groom ID
+        gIdType: isCustomValidId(groom.id_type) ? "Others" : (groom.id_type || ""),
+        gIdNo: groom.id_no || "",
+        gIdCustomType: isCustomValidId(groom.id_type) ? groom.id_type : "",
+        gIncludeId: !!groom.include_id,
+        gGiverIdType: isCustomValidId(groom.giver_id_type) ? "Others" : (groom.giver_id_type || ""),
+        gGiverIdNo: groom.giver_id_no || "",
+        gGiverIdCustomType: isCustomValidId(groom.giver_id_type) ? groom.giver_id_type : "",
+        gGiverIncludeId: !!groom.giver_include_id,
 
         // Bride
         bFirst: bride.first_name || "",
@@ -69,6 +78,21 @@ export const mapAppToFormData = (app: any) => {
         bGiverL: brideGiver.last,
         bGiverRelation: bride.giver_relationship || "",
 
+        // Bride ID
+        bIdType: isCustomValidId(bride.id_type) ? "Others" : (bride.id_type || ""),
+        bIdNo: bride.id_no || "",
+        bIdCustomType: isCustomValidId(bride.id_type) ? bride.id_type : "",
+        bIncludeId: !!bride.include_id,
+        bGiverIdType: isCustomValidId(bride.giver_id_type) ? "Others" : (bride.giver_id_type || ""),
+        bGiverIdNo: bride.giver_id_no || "",
+        bGiverIdCustomType: isCustomValidId(bride.giver_id_type) ? bride.giver_id_type : "",
+        bGiverIncludeId: !!bride.giver_include_id,
+
         contactNumber: app.contact_number || "",
     };
 };
+
+const isCustomValidId = (idType: string) => {
+    return idType && !VALID_ID_TYPES.includes(idType) && idType !== "";
+};
+

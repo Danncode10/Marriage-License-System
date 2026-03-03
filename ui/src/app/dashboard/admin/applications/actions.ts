@@ -41,6 +41,12 @@ export async function getAllApplications(page: number = 1, limit: number = 50) {
                 mother_name,
                 giver_name,
                 giver_relationship,
+                include_id,
+                id_type,
+                id_no,
+                giver_include_id,
+                giver_id_type,
+                giver_id_no,
                 addresses (
                     barangay,
                     municipality,
@@ -379,6 +385,15 @@ export async function updateApplicationDetails(applicationId: string, formData: 
                     mother_name: `${formData[`${prefix}MothF`]} ${formData[`${prefix}MothM`]} ${formData[`${prefix}MothL`]}`.trim(),
                     giver_name: `${formData[`${prefix}GiverF`]} ${formData[`${prefix}GiverM`]} ${formData[`${prefix}GiverL`]}`.trim(),
                     giver_relationship: formData[`${prefix}GiverRelation`] === "Other" ? formData[`${prefix}GiverOtherTitle`] : formData[`${prefix}GiverRelation`],
+
+                    // ID fields
+                    include_id: formData[`${prefix}IncludeId`],
+                    id_type: formData[`${prefix}IdType`] === "Others" ? formData[`${prefix}IdCustomType`] : formData[`${prefix}IdType`],
+                    id_no: formData[`${prefix}IdNo`],
+                    giver_include_id: formData[`${prefix}GiverIncludeId`],
+                    giver_id_type: formData[`${prefix}GiverIdType`] === "Others" ? formData[`${prefix}GiverIdCustomType`] : formData[`${prefix}GiverIdType`],
+                    giver_id_no: formData[`${prefix}GiverIdNo`],
+
                     updated_at: new Date().toISOString()
                 })
                 .eq("application_id", applicationId)

@@ -6,8 +6,15 @@ import { calculateAge } from "../utils";
 
 export function useMarriageForm() {
     const [formData, setFormData] = useState(INITIAL_FORM_STATE);
-    const [townOptions, setTownOptions] = useState<any[]>([]);
+
+    // Independent Town Options
+    const [gTownOptions, setGTownOptions] = useState<any[]>([]);
+    const [bTownOptions, setBTownOptions] = useState<any[]>([]);
+
+    // Independent Province List (can be shared as it's static)
     const [provincesList, setProvincesList] = useState<any[]>([]);
+
+    // Independent Barangay Options
     const [gBrgyOptions, setGBrgyOptions] = useState<any[]>([]);
     const [bBrgyOptions, setBBrgyOptions] = useState<any[]>([]);
 
@@ -26,22 +33,74 @@ export function useMarriageForm() {
 
     const [showClearAlert, setShowClearAlert] = useState(false);
 
+    // Initial load: Fetch provinces
     useEffect(() => {
-        // Fetch all provinces across all regions and deduplicate
         regions().then(async (regs: any) => {
             const allProvs = await Promise.all(regs.map((r: any) => provinces(r.region_code)));
             const flatProvs = allProvs.flat();
-
-            // Deduplicate by province_code
             const uniqueProvs = Array.from(
                 new Map(flatProvs.map((p: any) => [p.province_code, p])).values()
             );
+            const sortedProvs = uniqueProvs.sort((a, b) => a.province_name.localeCompare(b.province_name));
+            setProvincesList(sortedProvs);
 
-            setProvincesList(uniqueProvs.sort((a, b) => a.province_name.localeCompare(b.province_name)));
+            // Default Town Options (Nueva Vizcaya)
+            cities(NUEVA_VIZCAYA_CODE).then((res: any) => {
+                setGTownOptions(res);
+                setBTownOptions(res);
+            });
         });
-
-        cities(NUEVA_VIZCAYA_CODE).then((res: any) => setTownOptions(res));
     }, []);
+
+    // CRITICAL: Effect to handle initialization of options when formData is set (e.g. from Edit mode)
+    // This prevents Town/Barangay from resetting to empty
+    useEffect(() => {
+        const initializeOptions = async () => {
+            if (provincesList.length === 0) return;
+
+            // Handle Groom
+            if (formData.gProv) {
+                const prov = provincesList.find(p => p.province_name === formData.gProv);
+                if (prov) {
+                    const towns = await cities(prov.province_code);
+                    setGTownOptions(towns);
+
+                    if (formData.gTown) {
+                        const town = towns.find((t: any) => t.city_name === formData.gTown);
+                        if (town) {
+                            const brgys = await barangays(town.city_code);
+                            setGBrgyOptions(brgys);
+                        }
+                    }
+                }
+            }
+
+            // Handle Bride
+            if (formData.bProv) {
+                const prov = provincesList.find(p => p.province_name === formData.bProv);
+                if (prov) {
+                    const towns = await cities(prov.province_code);
+                    setBTownOptions(towns);
+
+                    if (formData.bTown) {
+                        const town = towns.find((t: any) => t.city_name === formData.bTown);
+                        if (town) {
+                            const brgys = await barangays(town.city_code);
+                            setBBrgyOptions(brgys);
+                        }
+                    }
+                }
+            }
+        };
+
+        // We only want to run this deep initialization if the options are currently empty 
+        // and we have data in formData (which happens during Edit mode)
+        if (formData.gTown && gTownOptions.length === 0) {
+            initializeOptions();
+        } else if (formData.bTown && bTownOptions.length === 0) {
+            initializeOptions();
+        }
+    }, [formData.gProv, formData.gTown, formData.bProv, formData.bTown, provincesList.length]);
 
     const handleAgeChange = (prefix: 'g' | 'b', ageValue: string) => {
         const age = parseInt(ageValue) || 0;
@@ -66,7 +125,8 @@ export function useMarriageForm() {
             return newData;
         });
         const res = await cities(provinceCode);
-        setTownOptions(res);
+        if (prefix === 'g') setGTownOptions(res);
+        else setBTownOptions(res);
     };
 
     const handleTownChange = async (prefix: 'g' | 'b', cityCode: string, cityName: string) => {
@@ -229,7 +289,8 @@ export function useMarriageForm() {
     return {
         formData,
         setFormData,
-        townOptions,
+        gTownOptions,
+        bTownOptions,
         provincesList,
         gBrgyOptions,
         bBrgyOptions,
@@ -261,3 +322,4 @@ export function useMarriageForm() {
         isFormValid: isFormValid(),
     };
 }
+

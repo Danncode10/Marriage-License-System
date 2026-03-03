@@ -165,9 +165,12 @@ export default function GlobalOversightClient({
             const brideGiver = splitName(app.bride?.giver_name);
 
             const excelData = {
+                // Groom
                 gFirst: app.groom?.first_name || '',
                 gMiddle: app.groom?.middle_name || '',
                 gLast: app.groom?.last_name || '',
+                gSuffix: app.groom?.suffix || '',
+                gCustomSuffix: app.groom?.suffix || '', // If it's custom, it's already the value
                 gBday: app.groom?.birth_date ? new Date(app.groom.birth_date).toLocaleDateString('en-US') : '',
                 gAge: app.groom?.age || 0,
                 gTown: app.groom?.addresses?.municipality || '',
@@ -176,6 +179,7 @@ export default function GlobalOversightClient({
                 gCountry: 'Philippines',
                 gCitizen: app.groom?.citizenship || 'Filipino',
                 gReligion: app.groom?.religion || '',
+                gCustomReligion: app.groom?.religion || '',
                 gStatus: 'Single',
                 gFathF: groomFather.first,
                 gFathM: groomFather.middle,
@@ -188,9 +192,12 @@ export default function GlobalOversightClient({
                 gGiverL: groomGiver.last,
                 gGiverRelation: app.groom?.giver_relationship || '',
 
+                // Bride
                 bFirst: app.bride?.first_name || '',
                 bMiddle: app.bride?.middle_name || '',
                 bLast: app.bride?.last_name || '',
+                bSuffix: app.bride?.suffix || '',
+                bCustomSuffix: app.bride?.suffix || '',
                 bBday: app.bride?.birth_date ? new Date(app.bride.birth_date).toLocaleDateString('en-US') : '',
                 bAge: app.bride?.age || 0,
                 bTown: app.bride?.addresses?.municipality || '',
@@ -199,6 +206,7 @@ export default function GlobalOversightClient({
                 bCountry: 'Philippines',
                 bCitizen: app.bride?.citizenship || 'Filipino',
                 bReligion: app.bride?.religion || '',
+                bCustomReligion: app.bride?.religion || '',
                 bStatus: 'Single',
                 bFathF: brideFather.first,
                 bFathM: brideFather.middle,
@@ -210,6 +218,26 @@ export default function GlobalOversightClient({
                 bGiverM: brideGiver.middle,
                 bGiverL: brideGiver.last,
                 bGiverRelation: app.bride?.giver_relationship || '',
+
+                // Groom ID fields
+                gIdType: app.groom?.id_type || '',
+                gIdNo: app.groom?.id_no || '',
+                gIdCustomType: app.groom?.id_type || '',
+                gIncludeId: !!app.groom?.include_id,
+                gGiverIdType: app.groom?.giver_id_type || '',
+                gGiverIdNo: app.groom?.giver_id_no || '',
+                gGiverIdCustomType: app.groom?.giver_id_type || '',
+                gGiverIncludeId: !!app.groom?.giver_include_id,
+
+                // Bride ID fields
+                bIdType: app.bride?.id_type || '',
+                bIdNo: app.bride?.id_no || '',
+                bIdCustomType: app.bride?.id_type || '',
+                bIncludeId: !!app.bride?.include_id,
+                bGiverIdType: app.bride?.giver_id_type || '',
+                bGiverIdNo: app.bride?.giver_id_no || '',
+                bGiverIdCustomType: app.bride?.giver_id_type || '',
+                bGiverIncludeId: !!app.bride?.giver_include_id,
             };
 
             const response = await fetch('/api/generate-excel', {
@@ -234,14 +262,24 @@ export default function GlobalOversightClient({
                 window.URL.revokeObjectURL(url);
                 document.body.removeChild(a);
                 setDownloadMessage({ type: 'success', text: `Successfully downloaded Excel for ${app.application_code}.` });
-                // Clear success message after 3 seconds
                 setTimeout(() => setDownloadMessage(null), 3000);
             } else {
-                const errorData = await response.json().catch(() => ({}));
-                console.error('Failed to generate Excel file:', errorData);
+                // Determine if the error is JSON or text
+                const contentType = response.headers.get("content-type");
+                let errorMessage = "Server error";
+
+                if (contentType && contentType.includes("application/json")) {
+                    const errorData = await response.json();
+                    errorMessage = errorData.details || errorData.error || errorMessage;
+                } else {
+                    const errorText = await response.text();
+                    console.error("Non-JSON error response:", errorText);
+                    errorMessage = "Server returned an invalid response (500). Please check server logs.";
+                }
+
                 setDownloadMessage({
                     type: 'error',
-                    text: `Download failed: ${errorData.details || errorData.error || 'Server error'}`
+                    text: `Download failed: ${errorMessage}`
                 });
             }
         } catch (error) {
