@@ -11,6 +11,7 @@ interface ApplicationTableProps {
     onManualUpdate: (app: any) => void;
     updatingId: string | null;
     downloadingId: string | null;
+    onDelete: (app: any) => void;
     onRefresh: () => void;
 }
 
@@ -21,6 +22,7 @@ export default function ApplicationTable({
     onManualUpdate,
     updatingId,
     downloadingId,
+    onDelete,
     onRefresh
 }: ApplicationTableProps) {
     return (
@@ -90,6 +92,7 @@ export default function ApplicationTable({
                                     onView={() => onView(app)}
                                     onDownloadExcel={onDownloadExcel}
                                     onManualUpdate={onManualUpdate}
+                                    onDelete={onDelete}
                                     isUpdating={updatingId === app.id}
                                     isDownloading={downloadingId === app.id}
                                 />
@@ -166,6 +169,7 @@ export default function ApplicationTable({
                                             onView={() => onView(app)}
                                             onDownloadExcel={onDownloadExcel}
                                             onManualUpdate={onManualUpdate}
+                                            onDelete={onDelete}
                                             isUpdating={updatingId === app.id}
                                             isDownloading={downloadingId === app.id}
                                         />

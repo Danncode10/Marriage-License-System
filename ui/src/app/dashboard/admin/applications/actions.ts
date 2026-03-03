@@ -411,3 +411,27 @@ export async function updateApplicationDetails(applicationId: string, formData: 
         return { success: false, error: error.message };
     }
 }
+
+export async function deleteApplication(applicationId: string) {
+    console.log("deleteApplication called with:", { applicationId });
+
+    const supabase = createAdminClient();
+
+    // The tables related to marriage_applications should have ON DELETE CASCADE.
+    // However, for safety and to ensure clean state, we explicitly delete the main record.
+    // If ON DELETE CASCADE is not set, this will fail if there are dependent records.
+
+    const { error } = await supabase
+        .from("marriage_applications")
+        .delete()
+        .eq("id", applicationId);
+
+    if (error) {
+        console.error("Error deleting application:", error);
+        return { success: false, error: error.message };
+    }
+
+    revalidatePath("/dashboard/admin/applications");
+    revalidatePath("/dashboard/admin");
+    return { success: true };
+}

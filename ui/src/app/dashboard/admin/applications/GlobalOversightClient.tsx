@@ -6,9 +6,10 @@ import {
     FileText, Search, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Loader2, X
 } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
-import { updateApplicationStatus } from "./actions";
+import { updateApplicationStatus, deleteApplication } from "./actions";
 import PhotoCaptureModal from "@/components/PhotoCaptureModal";
 import AdminMarriageForm from "./AdminMarriageForm";
+import DeleteApplicationModal from "./components/DeleteApplicationModal";
 
 import { toTitleCase, calculateAge, splitName } from "../../../marriage/utils";
 
@@ -68,6 +69,10 @@ export default function GlobalOversightClient({
     // Edit application modal state
     const [showEditForm, setShowEditForm] = useState(false);
     const [appToEdit, setAppToEdit] = useState<any | null>(null);
+
+    // Delete application state
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [appToDelete, setAppToDelete] = useState<any | null>(null);
 
     const handleRefresh = () => {
         window.location.reload();
@@ -136,6 +141,27 @@ export default function GlobalOversightClient({
             setRowManualMessage({ type: 'error', text: 'An error occurred while updating the status.' });
         } finally {
             setRowManualUpdating(false);
+        }
+    }
+
+    async function handleDeleteApplication() {
+        if (!appToDelete) return;
+
+        try {
+            const result = await deleteApplication(appToDelete.id);
+            if (result.success) {
+                setApps(prev => prev.filter(a => a.id !== appToDelete.id));
+                setDownloadMessage({ type: 'success', text: `Application ${appToDelete.application_code} deleted successfully.` });
+                setTimeout(() => setDownloadMessage(null), 3000);
+            } else {
+                setDownloadMessage({ type: 'error', text: `Failed to delete application: ${result.error}` });
+            }
+        } catch (error) {
+            console.error("Delete error:", error);
+            setDownloadMessage({ type: 'error', text: 'An error occurred while deleting the application.' });
+        } finally {
+            setShowDeleteModal(false);
+            setAppToDelete(null);
         }
     }
 
@@ -383,6 +409,10 @@ export default function GlobalOversightClient({
                     setRowManualStatus(app.status || "approved");
                     setRowManualMessage(null);
                 }}
+                onDelete={(app) => {
+                    setAppToDelete(app);
+                    setShowDeleteModal(true);
+                }}
                 updatingId={updatingId}
                 downloadingId={downloadingId}
                 onRefresh={handleRefresh}
@@ -481,6 +511,18 @@ export default function GlobalOversightClient({
                     isOpen={showAdminForm}
                     onClose={() => setShowAdminForm(false)}
                     onSuccess={handleRefresh}
+                />
+            )}
+
+            {showDeleteModal && appToDelete && (
+                <DeleteApplicationModal
+                    isOpen={showDeleteModal}
+                    onClose={() => {
+                        setShowDeleteModal(false);
+                        setAppToDelete(null);
+                    }}
+                    onConfirm={handleDeleteApplication}
+                    applicationCode={appToDelete.application_code}
                 />
             )}
         </div>

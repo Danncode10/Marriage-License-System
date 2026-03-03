@@ -1,12 +1,13 @@
 "use client";
 
-import { Eye, FileDown, MoreHorizontal, Loader2 } from "lucide-react";
+import { Eye, FileDown, MoreHorizontal, Loader2, Trash2 } from "lucide-react";
 
 interface ActionDropdownProps {
     app: any;
     onView: () => void;
     onDownloadExcel: (app: any) => void;
     onManualUpdate: (app: any) => void;
+    onDelete?: (app: any) => void;
     isUpdating: boolean;
     isDownloading: boolean;
 }
@@ -16,6 +17,7 @@ export function ActionDropdown({
     onView,
     onDownloadExcel,
     onManualUpdate,
+    onDelete,
     isUpdating,
     isDownloading,
 }: ActionDropdownProps) {
@@ -51,6 +53,16 @@ export function ActionDropdown({
                     : <MoreHorizontal className="h-4 w-4" />
                 }
             </button>
+
+            {onDelete && (
+                <button
+                    title="Delete Application"
+                    onClick={() => onDelete(app)}
+                    className="h-9 w-9 rounded-xl bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-500 flex items-center justify-center transition-all duration-200 shadow-sm active:scale-90"
+                >
+                    <Trash2 className="h-4 w-4" />
+                </button>
+            )}
         </div>
     );
 }
