@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 // @ts-ignore
 import { barangays, cities, provinces, regions } from "select-philippines-address";
-import { NUEVA_VIZCAYA_CODE, INITIAL_FORM_STATE } from "../constants";
+import { INITIAL_FORM_STATE, NUEVA_VIZCAYA_CODE } from "../constants";
 import { calculateAge } from "../utils";
 
 export function useMarriageForm() {
@@ -64,7 +64,11 @@ export function useMarriageForm() {
                     setGTownOptions(towns);
 
                     if (formData.gTown) {
-                        const town = towns.find((t: any) => t.city_name === formData.gTown);
+                        const town = towns.find((t: any) => {
+                            const n1 = (t.city_name || "").toLowerCase().replace(/\(capital\)/gi, "").trim();
+                            const n2 = formData.gTown.toLowerCase().replace(/\(capital\)/gi, "").trim();
+                            return n1 === n2;
+                        });
                         if (town) {
                             const brgys = await barangays(town.city_code);
                             setGBrgyOptions(brgys);
@@ -81,7 +85,11 @@ export function useMarriageForm() {
                     setBTownOptions(towns);
 
                     if (formData.bTown) {
-                        const town = towns.find((t: any) => t.city_name === formData.bTown);
+                        const town = towns.find((t: any) => {
+                            const n1 = (t.city_name || "").toLowerCase().replace(/\(capital\)/gi, "").trim();
+                            const n2 = formData.bTown.toLowerCase().replace(/\(capital\)/gi, "").trim();
+                            return n1 === n2;
+                        });
                         if (town) {
                             const brgys = await barangays(town.city_code);
                             setBBrgyOptions(brgys);
@@ -91,11 +99,16 @@ export function useMarriageForm() {
             }
         };
 
-        // We only want to run this deep initialization if the options are currently empty 
-        // and we have data in formData (which happens during Edit mode)
-        if (formData.gTown && gTownOptions.length === 0) {
-            initializeOptions();
-        } else if (formData.bTown && bTownOptions.length === 0) {
+        // Deep initialization logic:
+        // We run this if formData has values but the respective options are empty OR 
+        // if they contain defaults (Nueva Vizcaya) but formData points elsewhere.
+        const isGroomExternal = formData.gProv && formData.gProv !== "Nueva Vizcaya";
+        const isBrideExternal = formData.bProv && formData.bProv !== "Nueva Vizcaya";
+
+        const needsGroomInit = formData.gTown && (gTownOptions.length === 0 || isGroomExternal);
+        const needsBrideInit = formData.bTown && (bTownOptions.length === 0 || isBrideExternal);
+
+        if (needsGroomInit || needsBrideInit) {
             initializeOptions();
         }
 
@@ -133,23 +146,6 @@ export function useMarriageForm() {
             initializeBirthOptions();
         }
     }, [formData.gProv, formData.gTown, formData.bProv, formData.bTown, formData.gBirthPlace, formData.bBirthPlace, provincesList.length]);
-
-    useEffect(() => {
-        const normalize = (s: string) => (s || "").trim().toLowerCase().replace(/\(capital\)/gi, "").trim();
-        const gAddr = normalize(`${formData.gTown}, ${formData.gProv}`);
-        const bAddr = normalize(`${formData.bTown}, ${formData.bProv}`);
-        const gBirth = normalize(formData.gBirthPlace);
-        const bBirth = normalize(formData.bBirthPlace);
-
-        // Update the toggle state based on the content
-        // If they match, it's "Same As Address". If they don't, it's "Different".
-        if (gBirth && gAddr) {
-            setGSameAsAddress(gBirth === gAddr);
-        }
-        if (bBirth && bAddr) {
-            setBSameAsAddress(bBirth === bAddr);
-        }
-    }, [formData.gTown, formData.gProv, formData.gBirthPlace, formData.bTown, formData.bProv, formData.bBirthPlace]);
 
     const handleAgeChange = (prefix: 'g' | 'b', ageValue: string) => {
         const age = parseInt(ageValue) || 0;

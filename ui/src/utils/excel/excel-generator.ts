@@ -107,7 +107,7 @@ export class ExcelGenerator {
             appSheet.getCell('B10').value = groom.l;
             appSheet.getCell('B11').value = this.sanitize(data.gBday);
             appSheet.getCell('N11').value = data.gAge || 0;
-            appSheet.getCell('B12').value = this.sanitize(data.gBirthPlace);
+            appSheet.getCell('B12').value = this.sanitize(data.gBirthPlace).toUpperCase();
 
             const gCountryVal = this.sanitize(data.gCountry) || 'Philippines';
             appSheet.getCell('L12').value = gCountryVal;
@@ -156,7 +156,7 @@ export class ExcelGenerator {
             appSheet.getCell('U10').value = bride.l;
             appSheet.getCell('U11').value = this.sanitize(data.bBday);
             appSheet.getCell('AF11').value = data.bAge || 0;
-            appSheet.getCell('U12').value = this.sanitize(data.bBirthPlace);
+            appSheet.getCell('U12').value = this.sanitize(data.bBirthPlace).toUpperCase();
 
             const bCountryVal = this.sanitize(data.bCountry) || 'Philippines';
             appSheet.getCell('AE12').value = bCountryVal;

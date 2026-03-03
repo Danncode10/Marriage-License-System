@@ -25,8 +25,15 @@ export function BirthPlaceSection({
 }: BirthPlaceSectionProps) {
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-bold text-slate-600 ml-1 uppercase tracking-tight">Place of Birth</label>
+            <div className="flex items-center gap-3 mb-2 px-1">
+                <div className="p-2 rounded-xl bg-amber-50 text-amber-600">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Place of Birth</h3>
+                </div>
             </div>
 
             <div className="flex bg-slate-100/80 p-1 rounded-xl w-full border border-slate-200/50">
@@ -66,17 +73,21 @@ export function BirthPlaceSection({
                         <select
                             className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
                             value={(() => {
-                                const parts = (formData[`${prefix}BirthPlace`] || "").split(',').map((s: string) => s.trim());
-                                const provName = parts.length > 1 ? parts.pop() : parts[0];
+                                const fullBirth = formData[`${prefix}BirthPlace`] || "";
+                                if (!fullBirth) return "";
+                                const parts = fullBirth.split(',').map((s: string) => s.trim());
+                                const provName = parts.length > 1 ? parts[parts.length - 1] : parts[0];
                                 if (!provName) return "";
-                                return provincesList.find(p => p.province_name === provName)?.province_code || "";
+                                const found = provincesList.find(p => p.province_name === provName);
+                                return found ? found.province_code : "";
                             })()}
                             onChange={(e) => {
+                                if (e.target.value === "") return;
                                 const prov = provincesList.find(p => p.province_code === e.target.value);
                                 handleBirthProvinceChange(prefix, e.target.value, prov?.province_name || "");
                             }}
                         >
-                            <option value="" disabled hidden>Select Province</option>
+                            <option value="" disabled>Select Province</option>
                             {provincesList.map((p, idx) => (
                                 <option key={`${prefix}birth-${p.province_code}-${idx}`} value={p.province_code}>
                                     {p.province_name}
@@ -105,11 +116,11 @@ export function BirthPlaceSection({
                                 if (e.target.value === "") return;
                                 const town = birthTownOptions.find(t => t.city_code === e.target.value);
                                 const parts = (formData[`${prefix}BirthPlace`] || "").split(',').map((s: string) => s.trim());
-                                const prov = parts.length > 1 ? parts[parts.length - 1] : parts[0];
-                                handleBirthTownChange(prefix, e.target.value, town?.city_name || "", prov || "");
+                                const provName = parts.length > 1 ? parts[parts.length - 1] : parts[0];
+                                handleBirthTownChange(prefix, e.target.value, town?.city_name || "", provName || "");
                             }}
                         >
-                            <option value="" disabled hidden>Select Town</option>
+                            <option value="" disabled>Select Town</option>
                             {birthTownOptions.map(t => (
                                 <option key={t.city_code} value={t.city_code}>{t.city_name}</option>
                             ))}

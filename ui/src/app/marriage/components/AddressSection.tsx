@@ -31,17 +31,19 @@ export function AddressSection({
     const finalTownOptions = currentTownOptions.length > 0 ? currentTownOptions : townOptions;
 
     return (
-        <div className="space-y-4 pt-4">
-            <div className="flex items-center gap-2 mb-1 px-1">
-                <div className="p-1.5 rounded-lg bg-blue-100/50">
-                    <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="space-y-4 pt-6 border-t border-slate-100">
+            <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 rounded-xl bg-blue-50 text-blue-600">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                 </div>
-                <label className="text-[10px] font-black text-blue-700 uppercase tracking-[0.2em]">Current Address</label>
+                <div>
+                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Current Address</h3>
+                </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-100">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Field label="Province" required>
                     <select
                         className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
