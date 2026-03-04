@@ -229,32 +229,26 @@ export class ExcelGenerator {
             }
         }
 
-        // --- 4. NOTICE SHEET FILTERING ---
+        // --- 4. NOTICE SHEET FILTERING (E44, E45, E46) ---
         const noticeSheet = workbook.getWorksheet('Notice');
         if (noticeSheet) {
-            const gIsSolano = gCleanTown.toLowerCase().includes("solano");
-            const bIsSolano = bCleanTown.toLowerCase().includes("solano");
+            const isSolano = (s: string) => (s || "").toLowerCase().includes("solano");
 
-            const gNonSolano = !gIsSolano;
-            const bNonSolano = !bIsSolano;
+            const candidates = [
+                gTownProv,          // Groom Current
+                data.gBirthPlace,   // Groom Birth
+                bTownProv,          // Bride Current
+                data.bBirthPlace    // Bride Birth
+            ]
+                .filter(s => s && typeof s === 'string' && s.trim() !== "" && !isSolano(s))
+                .map(s => this.sanitize(s).trim());
 
-            if (bNonSolano && gNonSolano) {
-                // Both NOT from Solano
-                noticeSheet.getCell('E44').value = this.sanitize(`${bCleanTown}, ${data.bProv || 'Nueva Vizcaya'}`);
-                noticeSheet.getCell('E45').value = this.sanitize(`${gCleanTown}, ${data.gProv || 'Nueva Vizcaya'}`);
-            } else if (bNonSolano) {
-                // Only Bride NOT from Solano
-                noticeSheet.getCell('E44').value = this.sanitize(`${bCleanTown}, ${data.bProv || 'Nueva Vizcaya'}`);
-                noticeSheet.getCell('E45').value = "";
-            } else if (gNonSolano) {
-                // Only Groom NOT from Solano
-                noticeSheet.getCell('E44').value = this.sanitize(`${gCleanTown}, ${data.gProv || 'Nueva Vizcaya'}`);
-                noticeSheet.getCell('E45').value = "";
-            } else {
-                // Both ARE from Solano
-                noticeSheet.getCell('E44').value = "";
-                noticeSheet.getCell('E45').value = "";
-            }
+            // Deduplicate while preserving order
+            const uniqueCandidates = candidates.filter((item, index) => candidates.indexOf(item) === index);
+
+            noticeSheet.getCell('E44').value = uniqueCandidates[0] ?? "";
+            noticeSheet.getCell('E45').value = uniqueCandidates[1] ?? "";
+            noticeSheet.getCell('E46').value = uniqueCandidates[2] ?? "";
         }
 
         // --- 5. HANDLE IMAGE REPLACEMENT ---
