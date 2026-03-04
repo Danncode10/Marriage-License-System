@@ -301,10 +301,8 @@ export function useMarriageForm() {
             // Religion validation for "Others"
             if (formData[`${prefix}Religion`] === "Others" && (!formData[`${prefix}CustomReligion`] || formData[`${prefix}CustomReligion`].trim() === "")) return false;
 
-            // Parents (First and Last are required)
+            // Parents: Mother's First and Last are required; Father's name is optional
             const parentFields = [
-                formData[`${prefix}FathF`],
-                formData[`${prefix}FathL`],
                 formData[`${prefix}MothF`],
                 formData[`${prefix}MothL`],
             ];
