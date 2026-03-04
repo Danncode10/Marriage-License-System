@@ -30,7 +30,7 @@ export const INITIAL_FORM_STATE = {
     bIsForeigner: false,
     gIsNotBornInPh: false,
     bIsNotBornInPh: false,
-    gSameAsAddress: true,
+    gSameAsAddress: null as boolean | null,
 
     contactNumber: "",
 
@@ -46,5 +46,5 @@ export const INITIAL_FORM_STATE = {
     // Bride ID
     bIdType: "", bIdNo: "", bIdCustomType: "", bIncludeId: false,
     bGiverIdType: "", bGiverIdNo: "", bGiverIdCustomType: "", bGiverIncludeId: false,
-    bSameAsAddress: true,
+    bSameAsAddress: null as boolean | null,
 };

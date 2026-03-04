@@ -3,6 +3,11 @@ import path from 'path';
 import fs from 'fs';
 import { ExcelData } from './types';
 
+const clean = (s: any) => {
+    if (typeof s !== 'string') return s;
+    return s.replace(/\(capital\)/gi, "").replace(/\s+/g, " ").replace(/\s+,/g, ",").trim();
+};
+
 export class ExcelGenerator {
     private templatePath: string;
 
@@ -65,8 +70,8 @@ export class ExcelGenerator {
 
         const gCleanTown = this.cleanTown(data.gTown);
         const bCleanTown = this.cleanTown(data.bTown);
-        const gTownProv = `${gCleanTown}, ${data.gProv || 'Nueva Vizcaya'}`;
-        const bTownProv = `${bCleanTown}, ${data.bProv || 'Nueva Vizcaya'}`;
+        const gTownProv = `${gCleanTown}, ${clean(data.gProv || 'Nueva Vizcaya')}`;
+        const bTownProv = `${bCleanTown}, ${clean(data.bProv || 'Nueva Vizcaya')}`;
         const gFullAddr = `Brgy., ${data.gBrgy || ''}, ${gTownProv}`;
         const bFullAddr = `Brgy., ${data.bBrgy || ''}, ${bTownProv}`;
 
@@ -119,7 +124,7 @@ export class ExcelGenerator {
             appSheet.getCell('B10').value = groom.l;
             appSheet.getCell('B11').value = this.formatBirthday(data.gBday);
             appSheet.getCell('N11').value = data.gAge || 0;
-            appSheet.getCell('B12').value = this.sanitize(data.gBirthPlace || "");
+            appSheet.getCell('B12').value = clean(this.sanitize(data.gBirthPlace || ""));
 
             const gCountryVal = this.sanitize(data.gCountry) || 'Philippines';
             const gBirthCountryVal = this.sanitize(data.gBirthCountry) || 'Philippines';
@@ -169,7 +174,7 @@ export class ExcelGenerator {
             appSheet.getCell('U10').value = bride.l;
             appSheet.getCell('U11').value = this.formatBirthday(data.bBday);
             appSheet.getCell('AF11').value = data.bAge || 0;
-            appSheet.getCell('U12').value = this.sanitize(data.bBirthPlace || "");
+            appSheet.getCell('U12').value = clean(this.sanitize(data.bBirthPlace || ""));
 
             const bCountryVal = this.sanitize(data.bCountry) || 'Philippines';
             const bBirthCountryVal = this.sanitize(data.bBirthCountry) || 'Philippines';
@@ -265,7 +270,7 @@ export class ExcelGenerator {
                 data.bBirthPlace    // Bride Birth
             ]
                 .filter(s => s && typeof s === 'string' && s.trim() !== "" && !isSolano(s))
-                .map(s => this.sanitize(s).trim());
+                .map(s => clean(this.sanitize(s)).trim());
 
             // Deduplicate while preserving order
             const uniqueCandidates = candidates.filter((item, index) => candidates.indexOf(item) === index);
