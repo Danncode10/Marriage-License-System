@@ -81,7 +81,7 @@ export class ExcelGenerator {
         const bGiver = this.formatName(data.bGiverF, data.bGiverM, data.bGiverL, data.bGiverSuffix, data.bGiverCustomSuffix);
 
         // LOGIC FOR SHEETS
-        const sheetsToKeep = ["APPLICATION", "Notice"];
+        const sheetsToKeep = ["APPLICATION", "Notice", "PMOC"];
         const gAge = data.gAge;
         const bAge = data.bAge;
 
@@ -219,6 +219,61 @@ export class ExcelGenerator {
             appSheet.getCell('B38').value = "Solano, Nueva Vizcaya";
             appSheet.getCell('U38').value = "Solano, Nueva Vizcaya";
             appSheet.getCell('F4').value = (data.employeeName || "").toUpperCase();
+        }
+
+        // --- 6. PMOC SHEET (PLACEHOLDER REPLACEMENT) ---
+        const pmocSheet = workbook.getWorksheet('PMOC');
+        if (pmocSheet) {
+            const formattedCurrentDate = `${dayNow}-${monthNow}-${yearNow}`;
+            const gFullName = `${data.gFirst} ${data.gLast}`.toUpperCase();
+            const bFullName = `${data.bFirst} ${data.bLast}`.toUpperCase();
+            const yearToday = `${yearNow}-`;
+            const appCode = (data.applicationCode || "").toUpperCase();
+
+            // The user requested a very specific letter content with precise spacing/indentation
+            const letterContent = `	have successfully completed the mandatory Pre-Marriage Orientation and Counseling
+	session held on ${formattedCurrentDate} at the Municipal Hall, Solano, Nueva Vizcaya. This session 	covered:`;
+
+            const substitutions: Record<string, string> = {
+                'groomNAME': gFullName,
+                'brideNAME': bFullName,
+                'letter': letterContent,
+                'yearToday': yearToday,
+                'controlNumber': appCode,
+                'date': formattedCurrentDate,
+                'yerdeyt': yearToday, // Copy of yearToday
+                'cN': appCode          // Copy of controlNumber
+            };
+
+            // Scan all cells in PMOC for placeholders in formats like "name" or "(name)"
+            pmocSheet.eachRow(row => {
+                row.eachCell(cell => {
+                    const val = cell.value;
+                    if (typeof val === 'string') {
+                        let cellStr = val.trim();
+                        Object.entries(substitutions).forEach(([key, replacement]) => {
+                            // Check for "key" or "(key)"
+                            if (cellStr === key || cellStr === `(${key})`) {
+                                cell.value = this.sanitize(replacement);
+                            }
+                        });
+                    }
+                });
+            });
+        }
+
+        // --- 7. PMOC DETAILS (INTERNAL DATA SHEET) ---
+        const detailsSheet = workbook.getWorksheet('PMOCdetails');
+        if (detailsSheet) {
+            const formattedCurrentDate = `${dayNow}-${monthNow}-${yearNow}`;
+            const gFullName = `${data.gFirst} ${data.gLast}`.toUpperCase();
+            const bFullName = `${data.bFirst} ${data.bLast}`.toUpperCase();
+            const appCode = (data.applicationCode || "").toUpperCase();
+
+            detailsSheet.getCell('B1').value = this.sanitize(bFullName);
+            detailsSheet.getCell('B2').value = this.sanitize(gFullName);
+            detailsSheet.getCell('A2').value = this.sanitize(appCode);
+            detailsSheet.getCell('A3').value = this.sanitize(formattedCurrentDate);
         }
 
         // --- 3. FILL EXTRA SHEET IDs ---
