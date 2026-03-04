@@ -1,5 +1,5 @@
+import { INITIAL_FORM_STATE, RELIGIONS, SUFFIX_OPTIONS, VALID_ID_TYPES } from "./constants";
 import { splitName } from "./utils";
-import { INITIAL_FORM_STATE, SUFFIX_OPTIONS, RELIGIONS, VALID_ID_TYPES } from "./constants";
 
 export const mapAppToFormData = (app: any) => {
     // Handle different structures (UserDashboard passes raw app with applicants array, 
@@ -19,6 +19,24 @@ export const mapAppToFormData = (app: any) => {
     const isCustomSuffix = (suffix: string) => suffix && !SUFFIX_OPTIONS.includes(suffix) && suffix !== "";
     const isCustomReligion = (religion: string) => religion && !RELIGIONS.includes(religion) && religion !== "";
 
+    // Determine if birth place matches address (Municipality and Province only — no barangay)
+    const normalize = (s: string) => (s || "").trim().toLowerCase().replace(/\(capital\)/gi, "").trim();
+    const gAddrShort = groom.addresses ? `${groom.addresses.municipality}, ${groom.addresses.province}` : "";
+    const bAddrShort = bride.addresses ? `${bride.addresses.municipality}, ${bride.addresses.province}` : "";
+
+    // If birth_place exists and differs from address, show "different address"; otherwise same as address
+    const gSameAsAddress =
+        groom.birth_place != null && groom.birth_place.trim() !== ""
+            ? normalize(groom.birth_place) === normalize(gAddrShort)
+            : true;
+    const bSameAsAddress =
+        bride.birth_place != null && bride.birth_place.trim() !== ""
+            ? normalize(bride.birth_place) === normalize(bAddrShort)
+            : true;
+
+    const gAddrCountry = groom.addresses?.country || "Philippines";
+    const bAddrCountry = bride.addresses?.country || "Philippines";
+
     return {
         ...INITIAL_FORM_STATE,
         // Groom
@@ -29,11 +47,18 @@ export const mapAppToFormData = (app: any) => {
         gCustomSuffix: isCustomSuffix(groom.suffix) ? groom.suffix : "",
         gBday: groom.birth_date || "",
         gAge: groom.age || 0,
+        gBirthPlace: (groom.birth_place != null && groom.birth_place.trim() !== "") ? groom.birth_place : gAddrShort,
         gBrgy: groom.addresses?.barangay || "",
         gTown: groom.addresses?.municipality || "",
         gProv: groom.addresses?.province || "Nueva Vizcaya",
         gReligion: isCustomReligion(groom.religion) ? "Others" : (groom.religion || ""),
         gCustomReligion: isCustomReligion(groom.religion) ? groom.religion : "",
+        gCountry: gAddrCountry,
+        gIsForeigner: !!groom.addresses?.is_foreigner,
+        gIsNotBornInPh: !!groom.is_not_born_in_ph,
+        gBirthCountry: groom.birth_country || "Philippines",
+        gCitizen: groom.citizenship || "",
+        gSameAsAddress: !!gSameAsAddress,
         gFathF: groomFather.first,
         gFathM: groomFather.middle,
         gFathL: groomFather.last,
@@ -43,7 +68,10 @@ export const mapAppToFormData = (app: any) => {
         gGiverF: groomGiver.first,
         gGiverM: groomGiver.middle,
         gGiverL: groomGiver.last,
+        gGiverSuffix: isCustomSuffix(groom.giver_suffix) ? "Others" : (groom.giver_suffix || ""),
+        gGiverCustomSuffix: isCustomSuffix(groom.giver_suffix) ? groom.giver_suffix : "",
         gGiverRelation: groom.giver_relationship || "",
+        gGiverOtherTitle: (groom.giver_relationship && groom.giver_relationship !== "Father" && groom.giver_relationship !== "Mother") ? groom.giver_relationship : "",
         // Groom ID
         gIdType: isCustomValidId(groom.id_type) ? "Others" : (groom.id_type || ""),
         gIdNo: groom.id_no || "",
@@ -62,11 +90,18 @@ export const mapAppToFormData = (app: any) => {
         bCustomSuffix: isCustomSuffix(bride.suffix) ? bride.suffix : "",
         bBday: bride.birth_date || "",
         bAge: bride.age || 0,
+        bBirthPlace: (bride.birth_place != null && bride.birth_place.trim() !== "") ? bride.birth_place : bAddrShort,
         bBrgy: bride.addresses?.barangay || "",
         bTown: bride.addresses?.municipality || "",
         bProv: bride.addresses?.province || "Nueva Vizcaya",
         bReligion: isCustomReligion(bride.religion) ? "Others" : (bride.religion || ""),
         bCustomReligion: isCustomReligion(bride.religion) ? bride.religion : "",
+        bCountry: bAddrCountry,
+        bIsForeigner: !!bride.addresses?.is_foreigner,
+        bIsNotBornInPh: !!bride.is_not_born_in_ph,
+        bBirthCountry: bride.birth_country || "Philippines",
+        bCitizen: bride.citizenship || "",
+        bSameAsAddress: !!bSameAsAddress,
         bFathF: brideFather.first,
         bFathM: brideFather.middle,
         bFathL: brideFather.last,
@@ -76,7 +111,10 @@ export const mapAppToFormData = (app: any) => {
         bGiverF: brideGiver.first,
         bGiverM: brideGiver.middle,
         bGiverL: brideGiver.last,
+        bGiverSuffix: isCustomSuffix(bride.giver_suffix) ? "Others" : (bride.giver_suffix || ""),
+        bGiverCustomSuffix: isCustomSuffix(bride.giver_suffix) ? bride.giver_suffix : "",
         bGiverRelation: bride.giver_relationship || "",
+        bGiverOtherTitle: (bride.giver_relationship && bride.giver_relationship !== "Father" && bride.giver_relationship !== "Mother") ? bride.giver_relationship : "",
 
         // Bride ID
         bIdType: isCustomValidId(bride.id_type) ? "Others" : (bride.id_type || ""),

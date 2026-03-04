@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 // @ts-ignore
 import { barangays, cities, provinces, regions } from "select-philippines-address";
-import { NUEVA_VIZCAYA_CODE, INITIAL_FORM_STATE } from "../constants";
+import { INITIAL_FORM_STATE, NUEVA_VIZCAYA_CODE } from "../constants";
 import { calculateAge } from "../utils";
 
 export function useMarriageForm() {
@@ -21,15 +21,13 @@ export function useMarriageForm() {
     // Birth Place Options
     const [gBirthTownOptions, setGBirthTownOptions] = useState<any[]>([]);
     const [bBirthTownOptions, setBBirthTownOptions] = useState<any[]>([]);
-    const [gBirthBrgyOptions, setGBirthBrgyOptions] = useState<any[]>([]);
-    const [bBirthBrgyOptions, setBBirthBrgyOptions] = useState<any[]>([]);
 
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [applicationCode, setApplicationCode] = useState("");
     const [loading, setLoading] = useState(false);
 
-    const [gSameAsAddress, setGSameAsAddress] = useState(true);
-    const [bSameAsAddress, setBSameAsAddress] = useState(true);
+    const [gSameAsAddress, setGSameAsAddress] = useState(INITIAL_FORM_STATE.gSameAsAddress);
+    const [bSameAsAddress, setBSameAsAddress] = useState(INITIAL_FORM_STATE.bSameAsAddress);
 
     const [showClearAlert, setShowClearAlert] = useState(false);
 
@@ -66,7 +64,11 @@ export function useMarriageForm() {
                     setGTownOptions(towns);
 
                     if (formData.gTown) {
-                        const town = towns.find((t: any) => t.city_name === formData.gTown);
+                        const town = towns.find((t: any) => {
+                            const n1 = (t.city_name || "").toLowerCase().replace(/\(capital\)/gi, "").trim();
+                            const n2 = formData.gTown.toLowerCase().replace(/\(capital\)/gi, "").trim();
+                            return n1 === n2;
+                        });
                         if (town) {
                             const brgys = await barangays(town.city_code);
                             setGBrgyOptions(brgys);
@@ -83,7 +85,11 @@ export function useMarriageForm() {
                     setBTownOptions(towns);
 
                     if (formData.bTown) {
-                        const town = towns.find((t: any) => t.city_name === formData.bTown);
+                        const town = towns.find((t: any) => {
+                            const n1 = (t.city_name || "").toLowerCase().replace(/\(capital\)/gi, "").trim();
+                            const n2 = formData.bTown.toLowerCase().replace(/\(capital\)/gi, "").trim();
+                            return n1 === n2;
+                        });
                         if (town) {
                             const brgys = await barangays(town.city_code);
                             setBBrgyOptions(brgys);
@@ -93,14 +99,53 @@ export function useMarriageForm() {
             }
         };
 
-        // We only want to run this deep initialization if the options are currently empty 
-        // and we have data in formData (which happens during Edit mode)
-        if (formData.gTown && gTownOptions.length === 0) {
-            initializeOptions();
-        } else if (formData.bTown && bTownOptions.length === 0) {
+        // Deep initialization logic:
+        // We run this if formData has values but the respective options are empty OR 
+        // if they contain defaults (Nueva Vizcaya) but formData points elsewhere.
+        const isGroomExternal = formData.gProv && formData.gProv !== "Nueva Vizcaya";
+        const isBrideExternal = formData.bProv && formData.bProv !== "Nueva Vizcaya";
+
+        const needsGroomInit = formData.gTown && (gTownOptions.length === 0 || isGroomExternal);
+        const needsBrideInit = formData.bTown && (bTownOptions.length === 0 || isBrideExternal);
+
+        if (needsGroomInit || needsBrideInit) {
             initializeOptions();
         }
-    }, [formData.gProv, formData.gTown, formData.bProv, formData.bTown, provincesList.length]);
+
+        // --- NEW: Initialize Birth Place Options ---
+        const initializeBirthOptions = async () => {
+            if (provincesList.length === 0) return;
+
+            // Groom Birth
+            const gBirthParts = (formData.gBirthPlace || "").split(',').map(s => s.trim());
+            const gBirthProvName = gBirthParts.length > 1 ? gBirthParts[gBirthParts.length - 1] : gBirthParts[0];
+            if (gBirthProvName) {
+                const prov = provincesList.find(p => p.province_name === gBirthProvName);
+                if (prov) {
+                    const towns = await cities(prov.province_code);
+                    setGBirthTownOptions(towns);
+                }
+            }
+
+            // Bride Birth
+            const bBirthParts = (formData.bBirthPlace || "").split(',').map(s => s.trim());
+            const bBirthProvName = bBirthParts.length > 1 ? bBirthParts[bBirthParts.length - 1] : bBirthParts[0];
+            if (bBirthProvName) {
+                const prov = provincesList.find(p => p.province_name === bBirthProvName);
+                if (prov) {
+                    const towns = await cities(prov.province_code);
+                    setBBirthTownOptions(towns);
+                }
+            }
+        };
+
+        if (formData.gBirthPlace && gBirthTownOptions.length === 0) {
+            initializeBirthOptions();
+        }
+        if (formData.bBirthPlace && bBirthTownOptions.length === 0) {
+            initializeBirthOptions();
+        }
+    }, [formData.gProv, formData.gTown, formData.bProv, formData.bTown, formData.gBirthPlace, formData.bBirthPlace, provincesList.length]);
 
     const handleAgeChange = (prefix: 'g' | 'b', ageValue: string) => {
         const age = parseInt(ageValue) || 0;
@@ -151,7 +196,7 @@ export function useMarriageForm() {
             if (isSame) {
                 const town = newData[`${prefix}Town`];
                 const prov = newData[`${prefix}Prov`];
-                newData[`${prefix}BirthPlace`] = `${brgyName}, ${town}, ${prov}`;
+                newData[`${prefix}BirthPlace`] = `${town}, ${prov}`;
             }
 
             return newData;
@@ -162,18 +207,14 @@ export function useMarriageForm() {
         const res = await cities(provinceCode);
         if (prefix === 'g') {
             setGBirthTownOptions(res);
-            setGBirthBrgyOptions([]);
         } else {
             setBBirthTownOptions(res);
-            setBBirthBrgyOptions([]);
         }
         setFormData(prev => ({ ...prev, [`${prefix}BirthPlace`]: provinceName }));
     };
 
     const handleBirthTownChange = async (prefix: 'g' | 'b', cityCode: string, cityName: string, provinceName: string) => {
-        const res = await barangays(cityCode);
-        if (prefix === 'g') setGBirthBrgyOptions(res);
-        else setBBirthBrgyOptions(res);
+        // No more birth barangay logic
 
         setFormData(prev => ({ ...prev, [`${prefix}BirthPlace`]: `${cityName}, ${provinceName}` }));
     };
@@ -188,7 +229,7 @@ export function useMarriageForm() {
             return;
         }
 
-        const fullAddress = `${brgy}, ${town}, ${prov}`;
+        const fullAddress = `${town}, ${prov}`;
         setFormData(prev => ({ ...prev, [`${prefix}BirthPlace`]: fullAddress }));
     };
 
@@ -237,13 +278,25 @@ export function useMarriageForm() {
                 formData[`${prefix}First`],
                 formData[`${prefix}Last`],
                 formData[`${prefix}Bday`],
-                formData[`${prefix}Brgy`],
                 formData[`${prefix}Town`],
                 formData[`${prefix}Prov`],
                 formData[`${prefix}Religion`],
+                formData[`${prefix}Citizen`],
+                formData[`${prefix}BirthPlace`],
             ];
 
+            // If not foreigner, Brgy is required
+            if (!formData[`${prefix}IsForeigner`]) {
+                mainFields.push(formData[`${prefix}Brgy`]);
+            }
+
             if (mainFields.some(f => !f || f.toString().trim() === "")) return false;
+
+            // Country validation if foreigner
+            if (formData[`${prefix}IsForeigner`] && !formData[`${prefix}Country`]) return false;
+
+            // Birth Country validation if not born in PH
+            if (formData[`${prefix}IsNotBornInPh`] && !formData[`${prefix}BirthCountry`]) return false;
 
             // Religion validation for "Others"
             if (formData[`${prefix}Religion`] === "Others" && (!formData[`${prefix}CustomReligion`] || formData[`${prefix}CustomReligion`].trim() === "")) return false;
@@ -296,8 +349,6 @@ export function useMarriageForm() {
         bBrgyOptions,
         gBirthTownOptions,
         bBirthTownOptions,
-        gBirthBrgyOptions,
-        bBirthBrgyOptions,
         isSubmitted,
         setIsSubmitted,
         applicationCode,

@@ -14,6 +14,7 @@ import { RELIGIONS, SUFFIX_OPTIONS } from "../../../marriage/constants";
 import { useMarriageForm } from "../../../marriage/hooks/useMarriageForm";
 import { toTitleCase } from "../../../marriage/utils";
 import { createClient } from "@/utils/supabase/client";
+import { COUNTRY_OPTIONS } from "@/utils/countries";
 
 interface AdminMarriageFormProps {
     isOpen: boolean;
@@ -36,8 +37,6 @@ export default function AdminMarriageForm({ isOpen, onClose, onSuccess }: AdminM
         bBrgyOptions,
         gBirthTownOptions,
         bBirthTownOptions,
-        gBirthBrgyOptions,
-        bBirthBrgyOptions,
         loading,
         gSameAsAddress,
         setGSameAsAddress,
@@ -216,8 +215,8 @@ export default function AdminMarriageForm({ isOpen, onClose, onSuccess }: AdminM
                                                     </motion.div>
                                                 )}
                                             </AnimatePresence>
-                                            <AddressSection prefix="g" provincesList={provincesList} gTownOptions={gTownOptions} bTownOptions={bTownOptions} brgyOptions={gBrgyOptions} formData={formData} handleProvinceChange={handleProvinceChange} handleTownChange={handleTownChange} handleBrgyChange={handleBrgyChange} />
-                                            <BirthPlaceSection prefix="g" sameAsAddress={gSameAsAddress} setSameAsAddress={setGSameAsAddress} formData={formData} setFormData={setFormData} provincesList={provincesList} birthTownOptions={gBirthTownOptions} birthBrgyOptions={gBirthBrgyOptions} handleBirthProvinceChange={handleBirthProvinceChange} handleBirthTownChange={handleBirthTownChange} />
+                                            <AddressSection prefix="g" provincesList={provincesList} gTownOptions={gTownOptions} bTownOptions={bTownOptions} brgyOptions={gBrgyOptions} formData={formData} setFormData={setFormData} handleProvinceChange={handleProvinceChange} handleTownChange={handleTownChange} handleBrgyChange={handleBrgyChange} />
+                                            <BirthPlaceSection prefix="g" sameAsAddress={gSameAsAddress} setSameAsAddress={setGSameAsAddress} formData={formData} setFormData={setFormData} provincesList={provincesList} birthTownOptions={gBirthTownOptions} countryOptions={COUNTRY_OPTIONS} handleBirthProvinceChange={handleBirthProvinceChange} handleBirthTownChange={handleBirthTownChange} />
                                             <FamilySubSection prefix="g" person="Groom" data={formData} setData={setFormData} toTitleCase={toTitleCase} />
                                             <GiverSubSection prefix="g" age={formData.gAge} data={formData} setData={setFormData} toTitleCase={toTitleCase} />
                                         </SectionCard>
@@ -305,8 +304,8 @@ export default function AdminMarriageForm({ isOpen, onClose, onSuccess }: AdminM
                                                     </motion.div>
                                                 )}
                                             </AnimatePresence>
-                                            <AddressSection prefix="b" provincesList={provincesList} gTownOptions={gTownOptions} bTownOptions={bTownOptions} brgyOptions={bBrgyOptions} formData={formData} handleProvinceChange={handleProvinceChange} handleTownChange={handleTownChange} handleBrgyChange={handleBrgyChange} />
-                                            <BirthPlaceSection prefix="b" sameAsAddress={bSameAsAddress} setSameAsAddress={setBSameAsAddress} formData={formData} setFormData={setFormData} provincesList={provincesList} birthTownOptions={bBirthTownOptions} birthBrgyOptions={bBirthBrgyOptions} handleBirthProvinceChange={handleBirthProvinceChange} handleBirthTownChange={handleBirthTownChange} />
+                                            <AddressSection prefix="b" provincesList={provincesList} gTownOptions={gTownOptions} bTownOptions={bTownOptions} brgyOptions={bBrgyOptions} formData={formData} setFormData={setFormData} handleProvinceChange={handleProvinceChange} handleTownChange={handleTownChange} handleBrgyChange={handleBrgyChange} />
+                                            <BirthPlaceSection prefix="b" sameAsAddress={bSameAsAddress} setSameAsAddress={setBSameAsAddress} formData={formData} setFormData={setFormData} provincesList={provincesList} birthTownOptions={bBirthTownOptions} countryOptions={COUNTRY_OPTIONS} handleBirthProvinceChange={handleBirthProvinceChange} handleBirthTownChange={handleBirthTownChange} />
                                             <FamilySubSection prefix="b" person="Bride" data={formData} setData={setFormData} toTitleCase={toTitleCase} />
                                             <GiverSubSection prefix="b" age={formData.bAge} data={formData} setData={setFormData} toTitleCase={toTitleCase} />
                                         </SectionCard>

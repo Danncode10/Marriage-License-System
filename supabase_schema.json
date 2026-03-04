@@ -8,8 +8,8 @@
         "nullable": "NO"
       },
       {
-        "column": "created_at",
-        "type": "timestamptz",
+        "column": "country",
+        "type": "text",
         "nullable": "YES"
       },
       {
@@ -33,7 +33,17 @@
         "nullable": "YES"
       },
       {
+        "column": "is_foreigner",
+        "type": "bool",
+        "nullable": "YES"
+      },
+      {
         "column": "updated_at",
+        "type": "timestamptz",
+        "nullable": "YES"
+      },
+      {
+        "column": "created_at",
         "type": "timestamptz",
         "nullable": "YES"
       }
@@ -65,7 +75,7 @@
     "table_name": "applicants",
     "columns": [
       {
-        "column": "giver_id_type",
+        "column": "suffix",
         "type": "text",
         "nullable": "YES"
       },
@@ -115,18 +125,8 @@
         "nullable": "YES"
       },
       {
-        "column": "mother_citizenship",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "id_no",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "suffix",
-        "type": "text",
+        "column": "is_not_born_in_ph",
+        "type": "bool",
         "nullable": "YES"
       },
       {
@@ -146,6 +146,21 @@
       },
       {
         "column": "valid_id_number",
+        "type": "text",
+        "nullable": "YES"
+      },
+      {
+        "column": "giver_id_type",
+        "type": "text",
+        "nullable": "YES"
+      },
+      {
+        "column": "giver_id_number",
+        "type": "text",
+        "nullable": "YES"
+      },
+      {
+        "column": "id_type",
         "type": "text",
         "nullable": "YES"
       },
@@ -170,12 +185,12 @@
         "nullable": "YES"
       },
       {
-        "column": "giver_id_number",
+        "column": "id_no",
         "type": "text",
         "nullable": "YES"
       },
       {
-        "column": "giver_id_no",
+        "column": "birth_country",
         "type": "text",
         "nullable": "YES"
       },
@@ -195,7 +210,7 @@
         "nullable": "YES"
       },
       {
-        "column": "id_type",
+        "column": "giver_id_no",
         "type": "text",
         "nullable": "YES"
       },
@@ -211,6 +226,21 @@
       },
       {
         "column": "mother_name",
+        "type": "text",
+        "nullable": "YES"
+      },
+      {
+        "column": "mother_citizenship",
+        "type": "text",
+        "nullable": "YES"
+      },
+      {
+        "column": "birth_place",
+        "type": "text",
+        "nullable": "YES"
+      },
+      {
+        "column": "giver_suffix",
         "type": "text",
         "nullable": "YES"
       }
@@ -238,13 +268,13 @@
     ],
     "foreign_keys": [
       {
-        "column": "application_id",
-        "references_table": "marriage_applications",
+        "column": "address_id",
+        "references_table": "addresses",
         "references_column": "id"
       },
       {
-        "column": "address_id",
-        "references_table": "addresses",
+        "column": "application_id",
+        "references_table": "marriage_applications",
         "references_column": "id"
       }
     ]
@@ -252,11 +282,6 @@
   {
     "table_name": "application_photos",
     "columns": [
-      {
-        "column": "photo_type",
-        "type": "varchar",
-        "nullable": "NO"
-      },
       {
         "column": "uploaded_at",
         "type": "timestamptz",
@@ -270,6 +295,11 @@
       {
         "column": "file_size",
         "type": "int4",
+        "nullable": "NO"
+      },
+      {
+        "column": "photo_type",
+        "type": "varchar",
         "nullable": "NO"
       },
       {
@@ -301,13 +331,13 @@
     ],
     "foreign_keys": [
       {
-        "column": "application_id",
-        "references_table": "marriage_applications",
+        "column": "uploaded_by",
+        "references_table": "profiles",
         "references_column": "id"
       },
       {
-        "column": "uploaded_by",
-        "references_table": "profiles",
+        "column": "application_id",
+        "references_table": "marriage_applications",
         "references_column": "id"
       }
     ]
@@ -315,11 +345,6 @@
   {
     "table_name": "audit_logs",
     "columns": [
-      {
-        "column": "application_id",
-        "type": "uuid",
-        "nullable": "YES"
-      },
       {
         "column": "details",
         "type": "jsonb",
@@ -339,6 +364,11 @@
         "column": "id",
         "type": "uuid",
         "nullable": "NO"
+      },
+      {
+        "column": "application_id",
+        "type": "uuid",
+        "nullable": "YES"
       },
       {
         "column": "user_id",
@@ -383,21 +413,6 @@
     "table_name": "generated_documents",
     "columns": [
       {
-        "column": "generated_by",
-        "type": "uuid",
-        "nullable": "YES"
-      },
-      {
-        "column": "id",
-        "type": "uuid",
-        "nullable": "NO"
-      },
-      {
-        "column": "application_id",
-        "type": "uuid",
-        "nullable": "NO"
-      },
-      {
         "column": "file_size",
         "type": "int4",
         "nullable": "NO"
@@ -408,9 +423,24 @@
         "nullable": "YES"
       },
       {
+        "column": "id",
+        "type": "uuid",
+        "nullable": "NO"
+      },
+      {
         "column": "file_path",
         "type": "text",
         "nullable": "NO"
+      },
+      {
+        "column": "application_id",
+        "type": "uuid",
+        "nullable": "NO"
+      },
+      {
+        "column": "generated_by",
+        "type": "uuid",
+        "nullable": "YES"
       }
     ],
     "policies": [
@@ -441,6 +471,11 @@
     "table_name": "marriage_applications",
     "columns": [
       {
+        "column": "updated_at",
+        "type": "timestamptz",
+        "nullable": "YES"
+      },
+      {
         "column": "status",
         "type": "varchar",
         "nullable": "YES"
@@ -456,21 +491,6 @@
         "nullable": "NO"
       },
       {
-        "column": "processed_by",
-        "type": "uuid",
-        "nullable": "YES"
-      },
-      {
-        "column": "updated_at",
-        "type": "timestamptz",
-        "nullable": "YES"
-      },
-      {
-        "column": "created_at",
-        "type": "timestamptz",
-        "nullable": "YES"
-      },
-      {
         "column": "id",
         "type": "uuid",
         "nullable": "NO"
@@ -483,6 +503,16 @@
       {
         "column": "created_by",
         "type": "uuid",
+        "nullable": "YES"
+      },
+      {
+        "column": "processed_by",
+        "type": "uuid",
+        "nullable": "YES"
+      },
+      {
+        "column": "created_at",
+        "type": "timestamptz",
         "nullable": "YES"
       }
     ],
@@ -604,11 +634,6 @@
     "table_name": "notifications",
     "columns": [
       {
-        "column": "related_user_id",
-        "type": "uuid",
-        "nullable": "YES"
-      },
-      {
         "column": "title",
         "type": "text",
         "nullable": "NO"
@@ -634,11 +659,6 @@
         "nullable": "YES"
       },
       {
-        "column": "related_application_id",
-        "type": "uuid",
-        "nullable": "YES"
-      },
-      {
         "column": "created_at",
         "type": "timestamptz",
         "nullable": "YES"
@@ -649,12 +669,22 @@
         "nullable": "YES"
       },
       {
-        "column": "id",
+        "column": "related_user_id",
+        "type": "uuid",
+        "nullable": "YES"
+      },
+      {
+        "column": "related_application_id",
+        "type": "uuid",
+        "nullable": "YES"
+      },
+      {
+        "column": "user_id",
         "type": "uuid",
         "nullable": "NO"
       },
       {
-        "column": "user_id",
+        "column": "id",
         "type": "uuid",
         "nullable": "NO"
       }
@@ -709,12 +739,12 @@
     "table_name": "profiles",
     "columns": [
       {
-        "column": "full_name",
-        "type": "text",
+        "column": "employee_id",
+        "type": "varchar",
         "nullable": "YES"
       },
       {
-        "column": "phone_number",
+        "column": "full_name",
         "type": "text",
         "nullable": "YES"
       },
@@ -734,13 +764,13 @@
         "nullable": "YES"
       },
       {
-        "column": "created_at",
-        "type": "timestamptz",
+        "column": "phone_number",
+        "type": "text",
         "nullable": "YES"
       },
       {
-        "column": "employee_id",
-        "type": "varchar",
+        "column": "created_at",
+        "type": "timestamptz",
         "nullable": "YES"
       }
     ],
@@ -779,19 +809,9 @@
     "table_name": "user_document_uploads",
     "columns": [
       {
-        "column": "application_id",
-        "type": "uuid",
-        "nullable": "NO"
-      },
-      {
-        "column": "id",
-        "type": "uuid",
-        "nullable": "NO"
-      },
-      {
-        "column": "file_size",
-        "type": "int4",
-        "nullable": "NO"
+        "column": "uploaded_at",
+        "type": "timestamptz",
+        "nullable": "YES"
       },
       {
         "column": "uploaded_by",
@@ -799,13 +819,8 @@
         "nullable": "YES"
       },
       {
-        "column": "uploaded_at",
-        "type": "timestamptz",
-        "nullable": "YES"
-      },
-      {
-        "column": "file_path",
-        "type": "text",
+        "column": "id",
+        "type": "uuid",
         "nullable": "NO"
       },
       {
@@ -814,8 +829,23 @@
         "nullable": "NO"
       },
       {
+        "column": "file_path",
+        "type": "text",
+        "nullable": "NO"
+      },
+      {
         "column": "file_name",
         "type": "text",
+        "nullable": "NO"
+      },
+      {
+        "column": "application_id",
+        "type": "uuid",
+        "nullable": "NO"
+      },
+      {
+        "column": "file_size",
+        "type": "int4",
         "nullable": "NO"
       }
     ],

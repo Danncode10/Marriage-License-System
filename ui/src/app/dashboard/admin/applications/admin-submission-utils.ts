@@ -8,6 +8,7 @@ interface MarriageFormData {
     gCustomSuffix: string;
     gBday: string;
     gAge: number;
+    gBirthPlace: string;
     gBrgy: string;
     gProv: string;
     gTown: string;
@@ -26,6 +27,7 @@ interface MarriageFormData {
     bCustomSuffix: string;
     bBday: string;
     bAge: number;
+    bBirthPlace: string;
     bBrgy: string;
     bProv: string;
     bTown: string;
@@ -41,11 +43,15 @@ interface MarriageFormData {
     gGiverF: string;
     gGiverM: string;
     gGiverL: string;
+    gGiverSuffix: string;
+    gGiverCustomSuffix: string;
     gGiverRelation: string;
     gGiverOtherTitle?: string;
     bGiverF: string;
     bGiverM: string;
     bGiverL: string;
+    bGiverSuffix: string;
+    bGiverCustomSuffix: string;
     bGiverRelation: string;
     bGiverOtherTitle?: string;
     // ID fields
@@ -99,6 +105,8 @@ export async function submitAdminApplication(formData: MarriageFormData, generat
             barangay: formData.gBrgy,
             province: formData.gProv,
             municipality: formData.gTown,
+            country: (formData as any).gCountry || "Philippines",
+            is_foreigner: !!(formData as any).gIsForeigner,
         };
 
         console.log('Inserting groom address:', groomAddressPayload);
@@ -124,6 +132,8 @@ export async function submitAdminApplication(formData: MarriageFormData, generat
             barangay: formData.bBrgy,
             province: formData.bProv,
             municipality: formData.bTown,
+            country: (formData as any).bCountry || "Philippines",
+            is_foreigner: !!(formData as any).bIsForeigner,
         };
 
         console.log('Inserting bride address:', brideAddressPayload);
@@ -180,10 +190,14 @@ export async function submitAdminApplication(formData: MarriageFormData, generat
         birth_date: formData.gBday,
         age: formData.gAge,
         citizenship: formData.gCitizen,
+        birth_place: formData.gBirthPlace || null,
+        birth_country: (formData as any).gBirthCountry || "Philippines",
+        is_not_born_in_ph: !!(formData as any).gIsNotBornInPh,
         religion: formData.gReligion || null,
         father_name: [formData.gFathF, formData.gFathM, formData.gFathL].filter(Boolean).join(' ') || null,
         mother_name: [formData.gMothF, formData.gMothM, formData.gMothL].filter(Boolean).join(' ') || null,
         giver_name: [formData.gGiverF, formData.gGiverM, formData.gGiverL].filter(Boolean).join(' ') || null,
+        giver_suffix: formData.gGiverSuffix === "Others" ? formData.gGiverCustomSuffix : (formData.gGiverSuffix || null),
         giver_relationship: formData.gGiverOtherTitle || formData.gGiverRelation || null,
         // ID fields
         include_id: formData.gIncludeId || false,
@@ -216,10 +230,14 @@ export async function submitAdminApplication(formData: MarriageFormData, generat
         birth_date: formData.bBday,
         age: formData.bAge,
         citizenship: formData.bCitizen,
+        birth_place: formData.bBirthPlace || null,
+        birth_country: (formData as any).bBirthCountry || "Philippines",
+        is_not_born_in_ph: !!(formData as any).bIsNotBornInPh,
         religion: formData.bReligion || null,
         father_name: [formData.bFathF, formData.bFathM, formData.bFathL].filter(Boolean).join(' ') || null,
         mother_name: [formData.bMothF, formData.bMothM, formData.bMothL].filter(Boolean).join(' ') || null,
         giver_name: [formData.bGiverF, formData.bGiverM, formData.bGiverL].filter(Boolean).join(' ') || null,
+        giver_suffix: formData.bGiverSuffix === "Others" ? formData.bGiverCustomSuffix : (formData.bGiverSuffix || null),
         giver_relationship: formData.bGiverOtherTitle || formData.bGiverRelation || null,
         // ID fields
         include_id: formData.bIncludeId || false,

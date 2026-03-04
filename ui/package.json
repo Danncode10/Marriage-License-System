@@ -22,7 +22,8 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "select-philippines-address": "^1.0.6",
-    "tailwind-merge": "^3.4.1"
+    "tailwind-merge": "^3.4.1",
+    "world-countries": "^5.1.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

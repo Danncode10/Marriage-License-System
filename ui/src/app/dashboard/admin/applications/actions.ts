@@ -35,22 +35,28 @@ export async function getAllApplications(page: number = 1, limit: number = 50) {
                 type,
                 birth_date,
                 age,
+                birth_place,
                 citizenship,
                 religion,
                 father_name,
                 mother_name,
                 giver_name,
                 giver_relationship,
+                giver_suffix,
                 include_id,
                 id_type,
                 id_no,
                 giver_include_id,
                 giver_id_type,
                 giver_id_no,
+                is_not_born_in_ph,
+                birth_country,
                 addresses (
                     barangay,
                     municipality,
-                    province
+                    province,
+                    country,
+                    is_foreigner
                 )
             )
         `)
@@ -363,6 +369,8 @@ export async function updateApplicationDetails(applicationId: string, formData: 
                         barangay: formData[`${prefix}Brgy`],
                         municipality: formData[`${prefix}Town`],
                         province: formData[`${prefix}Prov`],
+                        country: formData[`${prefix}Country`] || "Philippines",
+                        is_foreigner: !!formData[`${prefix}IsForeigner`],
                         updated_at: new Date().toISOString()
                     })
                     .eq("id", applicant.address_id);
@@ -380,10 +388,15 @@ export async function updateApplicationDetails(applicationId: string, formData: 
                     suffix: formData[`${prefix}Suffix`] === "Others" ? formData[`${prefix}CustomSuffix`] : formData[`${prefix}Suffix`],
                     birth_date: formData[`${prefix}Bday`],
                     age: formData[`${prefix}Age`],
+                    citizenship: formData[`${prefix}Citizen`] ?? null,
+                    birth_place: formData[`${prefix}BirthPlace`],
+                    is_not_born_in_ph: !!formData[`${prefix}IsNotBornInPh`],
+                    birth_country: formData[`${prefix}BirthCountry`] || "Philippines",
                     religion: formData[`${prefix}Religion`] === "Others" ? formData[`${prefix}CustomReligion`] : formData[`${prefix}Religion`],
                     father_name: `${formData[`${prefix}FathF`]} ${formData[`${prefix}FathM`]} ${formData[`${prefix}FathL`]}`.trim(),
                     mother_name: `${formData[`${prefix}MothF`]} ${formData[`${prefix}MothM`]} ${formData[`${prefix}MothL`]}`.trim(),
                     giver_name: `${formData[`${prefix}GiverF`]} ${formData[`${prefix}GiverM`]} ${formData[`${prefix}GiverL`]}`.trim(),
+                    giver_suffix: formData[`${prefix}GiverSuffix`] === "Others" ? formData[`${prefix}GiverCustomSuffix`] : formData[`${prefix}GiverSuffix`],
                     giver_relationship: formData[`${prefix}GiverRelation`] === "Other" ? formData[`${prefix}GiverOtherTitle`] : formData[`${prefix}GiverRelation`],
 
                     // ID fields
@@ -410,4 +423,52 @@ export async function updateApplicationDetails(applicationId: string, formData: 
         console.error("Error updating application details:", error);
         return { success: false, error: error.message };
     }
+}
+
+export async function getCurrentUserRole() {
+    const supabase = await createClient();
+    if (!supabase) return null;
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) return null;
+
+    const adminSupabase = createAdminClient();
+    const { data: profile, error: profileError } = await adminSupabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+    if (profileError || !profile) return null;
+
+    return profile.role;
+}
+
+export async function deleteApplication(applicationId: string) {
+    console.log("deleteApplication called with:", { applicationId });
+
+    const role = await getCurrentUserRole();
+    if (role !== 'admin') {
+        return { success: false, error: "Unauthorized: Only ADMIN can delete applications." };
+    }
+
+    const supabase = createAdminClient();
+
+    // The tables related to marriage_applications should have ON DELETE CASCADE.
+    // However, for safety and to ensure clean state, we explicitly delete the main record.
+    // If ON DELETE CASCADE is not set, this will fail if there are dependent records.
+
+    const { error } = await supabase
+        .from("marriage_applications")
+        .delete()
+        .eq("id", applicationId);
+
+    if (error) {
+        console.error("Error deleting application:", error);
+        return { success: false, error: error.message };
+    }
+
+    revalidatePath("/dashboard/admin/applications");
+    revalidatePath("/dashboard/admin");
+    return { success: true };
 }

@@ -16,6 +16,7 @@ import { useMarriageForm } from "./hooks/useMarriageForm";
 import ReviewSuccessView from "./components/ReviewSuccessView";
 import { toTitleCase } from "./utils";
 import { createClient } from "@/utils/supabase/client";
+import { COUNTRY_OPTIONS } from "@/utils/countries";
 
 export const SUFFIX_OPTIONS = ["Jr.", "Sr.", "I", "II", "III", "IV", "V", "Others"];
 
@@ -46,8 +47,6 @@ export default function MarriageForm() {
         bBrgyOptions,
         gBirthTownOptions,
         bBirthTownOptions,
-        gBirthBrgyOptions,
-        bBirthBrgyOptions,
         isSubmitted,
         setIsSubmitted,
         applicationCode,
@@ -335,6 +334,16 @@ export default function MarriageForm() {
                                                     </select>
                                                 </Field>
                                             </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <Field label="Nationality" required>
+                                                    <Input
+                                                        placeholder="e.g. Filipino"
+                                                        className="bg-white"
+                                                        value={formData.gCitizen}
+                                                        onChange={e => setFormData({ ...formData, gCitizen: toTitleCase(e.target.value) })}
+                                                    />
+                                                </Field>
+                                            </div>
                                             <AnimatePresence>
                                                 {formData.gReligion === "Others" && (
                                                     <motion.div
@@ -355,8 +364,8 @@ export default function MarriageForm() {
                                                     </motion.div>
                                                 )}
                                             </AnimatePresence>
-                                            <AddressSection prefix="g" provincesList={provincesList} gTownOptions={gTownOptions} bTownOptions={bTownOptions} brgyOptions={gBrgyOptions} formData={formData} handleProvinceChange={handleProvinceChange} handleTownChange={handleTownChange} handleBrgyChange={handleBrgyChange} />
-                                            <BirthPlaceSection prefix="g" sameAsAddress={gSameAsAddress} setSameAsAddress={setGSameAsAddress} formData={formData} setFormData={setFormData} provincesList={provincesList} birthTownOptions={gBirthTownOptions} birthBrgyOptions={gBirthBrgyOptions} handleBirthProvinceChange={handleBirthProvinceChange} handleBirthTownChange={handleBirthTownChange} />
+                                            <AddressSection prefix="g" provincesList={provincesList} gTownOptions={gTownOptions} bTownOptions={bTownOptions} brgyOptions={gBrgyOptions} formData={formData} setFormData={setFormData} handleProvinceChange={handleProvinceChange} handleTownChange={handleTownChange} handleBrgyChange={handleBrgyChange} countryOptions={COUNTRY_OPTIONS} />
+                                            <BirthPlaceSection prefix="g" sameAsAddress={gSameAsAddress} setSameAsAddress={setGSameAsAddress} formData={formData} setFormData={setFormData} provincesList={provincesList} birthTownOptions={gBirthTownOptions} countryOptions={COUNTRY_OPTIONS} handleBirthProvinceChange={handleBirthProvinceChange} handleBirthTownChange={handleBirthTownChange} />
                                             <FamilySubSection prefix="g" person="Groom" data={formData} setData={setFormData} toTitleCase={toTitleCase} />
                                             <GiverSubSection prefix="g" age={formData.gAge} data={formData} setData={setFormData} toTitleCase={toTitleCase}
                                             />
@@ -426,6 +435,16 @@ export default function MarriageForm() {
                                                     </select>
                                                 </Field>
                                             </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <Field label="Nationality" required>
+                                                    <Input
+                                                        placeholder="e.g. Filipino"
+                                                        className="bg-white"
+                                                        value={formData.bCitizen}
+                                                        onChange={e => setFormData({ ...formData, bCitizen: toTitleCase(e.target.value) })}
+                                                    />
+                                                </Field>
+                                            </div>
                                             <AnimatePresence>
                                                 {formData.bReligion === "Others" && (
                                                     <motion.div
@@ -446,8 +465,8 @@ export default function MarriageForm() {
                                                     </motion.div>
                                                 )}
                                             </AnimatePresence>
-                                            <AddressSection prefix="b" provincesList={provincesList} gTownOptions={gTownOptions} bTownOptions={bTownOptions} brgyOptions={bBrgyOptions} formData={formData} handleProvinceChange={handleProvinceChange} handleTownChange={handleTownChange} handleBrgyChange={handleBrgyChange} />
-                                            <BirthPlaceSection prefix="b" sameAsAddress={bSameAsAddress} setSameAsAddress={setBSameAsAddress} formData={formData} setFormData={setFormData} provincesList={provincesList} birthTownOptions={bBirthTownOptions} birthBrgyOptions={bBirthBrgyOptions} handleBirthProvinceChange={handleBirthProvinceChange} handleBirthTownChange={handleBirthTownChange} />
+                                            <AddressSection prefix="b" provincesList={provincesList} gTownOptions={gTownOptions} bTownOptions={bTownOptions} brgyOptions={bBrgyOptions} formData={formData} setFormData={setFormData} handleProvinceChange={handleProvinceChange} handleTownChange={handleTownChange} handleBrgyChange={handleBrgyChange} countryOptions={COUNTRY_OPTIONS} />
+                                            <BirthPlaceSection prefix="b" sameAsAddress={bSameAsAddress} setSameAsAddress={setBSameAsAddress} formData={formData} setFormData={setFormData} provincesList={provincesList} birthTownOptions={bBirthTownOptions} countryOptions={COUNTRY_OPTIONS} handleBirthProvinceChange={handleBirthProvinceChange} handleBirthTownChange={handleBirthTownChange} />
                                             <FamilySubSection prefix="b" person="Bride" data={formData} setData={setFormData} toTitleCase={toTitleCase} />
                                             <GiverSubSection prefix="b" age={formData.bAge} data={formData} setData={setFormData} toTitleCase={toTitleCase} />
                                         </SectionCard>
@@ -494,7 +513,7 @@ export default function MarriageForm() {
                                         </Button>
                                         {!isFormValid && (
                                             <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest animate-pulse">
-                                                Please complete all mandatory fields to proceed
+                                                Please fill up the form above
                                             </p>
                                         )}
                                         <button type="button" onClick={() => setShowClearAlert(true)} className="flex items-center gap-2 text-slate-400 hover:text-red-500 transition-colors text-sm font-bold uppercase tracking-widest">

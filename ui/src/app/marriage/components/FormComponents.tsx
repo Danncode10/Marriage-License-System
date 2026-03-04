@@ -31,8 +31,12 @@ export function ValidationFeedback({ data, prefix }: { data: any, prefix: 'g' | 
         { key: `${prefix}Last`, label: 'Last Name' },
         { key: `${prefix}Bday`, label: 'Birthday' },
         { key: `${prefix}Religion`, label: 'Religion' },
-        { key: `${prefix}Brgy`, label: 'Barangay' },
-        { key: `${prefix}Town`, label: 'Municipality' },
+        // Only require Barangay if NOT a foreigner
+        ...(data[`${prefix}IsForeigner`] ? [] : [{ key: `${prefix}Brgy`, label: 'Barangay' }]),
+        { key: `${prefix}Town`, label: 'Town' },
+        { key: `${prefix}Prov`, label: 'Province' },
+        { key: `${prefix}Citizen`, label: 'Nationality' },
+        { key: `${prefix}BirthPlace`, label: 'Birth Place' },
         { key: `${prefix}FathF`, label: 'Father First Name' },
         { key: `${prefix}FathL`, label: 'Father Last Name' },
         { key: `${prefix}MothF`, label: 'Mother First Name' },
@@ -49,16 +53,20 @@ export function ValidationFeedback({ data, prefix }: { data: any, prefix: 'g' | 
     }
 
     const age = data[`${prefix}Age`];
+    if (data[`${prefix}IncludeId`]) {
+        if (!data[`${prefix}IdType`]) missingFields.push('ID Type');
+        if (!data[`${prefix}IdNo`]) missingFields.push('ID Number');
+        if (data[`${prefix}IdType`] === "Others" && !data[`${prefix}IdCustomType`]) missingFields.push('Specify ID Type');
+    }
+
     if (age && age >= 18 && age <= 24) {
         if (!data[`${prefix}GiverRelation`]) missingFields.push('Giver Relationship');
         if (!data[`${prefix}GiverF`] || !data[`${prefix}GiverL`]) missingFields.push('Giver Name');
-        if (data[`${prefix}GiverIncludeId`] && data[`${prefix}GiverIdType`] === "Others" && !data[`${prefix}GiverIdCustomType`]) {
-            missingFields.push('Specify Giver ID Type');
+        if (data[`${prefix}GiverIncludeId`]) {
+            if (!data[`${prefix}GiverIdType`]) missingFields.push('Giver ID Type');
+            if (!data[`${prefix}GiverIdNo`]) missingFields.push('Giver ID Number');
+            if (data[`${prefix}GiverIdType`] === "Others" && !data[`${prefix}GiverIdCustomType`]) missingFields.push('Specify Giver ID Type');
         }
-    }
-
-    if (data[`${prefix}IncludeId`] && data[`${prefix}IdType`] === "Others" && !data[`${prefix}IdCustomType`]) {
-        missingFields.push('Specify ID Type');
     }
 
     if (missingFields.length === 0) return null;

@@ -107,10 +107,11 @@ export class ExcelGenerator {
             appSheet.getCell('B10').value = groom.l;
             appSheet.getCell('B11').value = this.sanitize(data.gBday);
             appSheet.getCell('N11').value = data.gAge || 0;
-            appSheet.getCell('B12').value = this.sanitize(gTownProv);
+            appSheet.getCell('B12').value = this.sanitize(data.gBirthPlace || "");
 
             const gCountryVal = this.sanitize(data.gCountry) || 'Philippines';
-            appSheet.getCell('L12').value = gCountryVal;
+            const gBirthCountryVal = this.sanitize(data.gBirthCountry) || 'Philippines';
+            appSheet.getCell('L12').value = gBirthCountryVal;
             appSheet.getCell('B13').value = "Male";
             appSheet.getCell('H13').value = this.sanitize(data.gCitizen) || 'Filipino';
             appSheet.getCell('B15').value = this.sanitize(gFullAddr);
@@ -156,10 +157,11 @@ export class ExcelGenerator {
             appSheet.getCell('U10').value = bride.l;
             appSheet.getCell('U11').value = this.sanitize(data.bBday);
             appSheet.getCell('AF11').value = data.bAge || 0;
-            appSheet.getCell('U12').value = this.sanitize(bTownProv);
+            appSheet.getCell('U12').value = this.sanitize(data.bBirthPlace || "");
 
             const bCountryVal = this.sanitize(data.bCountry) || 'Philippines';
-            appSheet.getCell('AE12').value = bCountryVal;
+            const bBirthCountryVal = this.sanitize(data.bBirthCountry) || 'Philippines';
+            appSheet.getCell('AE12').value = bBirthCountryVal;
             appSheet.getCell('U13').value = "Female";
             appSheet.getCell('Z13').value = this.sanitize(data.bCitizen) || 'Filipino';
             appSheet.getCell('U15').value = this.sanitize(bFullAddr);
@@ -227,32 +229,26 @@ export class ExcelGenerator {
             }
         }
 
-        // --- 4. NOTICE SHEET FILTERING ---
+        // --- 4. NOTICE SHEET FILTERING (E44, E45, E46) ---
         const noticeSheet = workbook.getWorksheet('Notice');
         if (noticeSheet) {
-            const gIsSolano = gCleanTown.toLowerCase().includes("solano");
-            const bIsSolano = bCleanTown.toLowerCase().includes("solano");
+            const isSolano = (s: string) => (s || "").toLowerCase().includes("solano");
 
-            const gNonSolano = !gIsSolano;
-            const bNonSolano = !bIsSolano;
+            const candidates = [
+                gTownProv,          // Groom Current
+                data.gBirthPlace,   // Groom Birth
+                bTownProv,          // Bride Current
+                data.bBirthPlace    // Bride Birth
+            ]
+                .filter(s => s && typeof s === 'string' && s.trim() !== "" && !isSolano(s))
+                .map(s => this.sanitize(s).trim());
 
-            if (bNonSolano && gNonSolano) {
-                // Both NOT from Solano
-                noticeSheet.getCell('E44').value = this.sanitize(`${bCleanTown}, ${data.bProv || 'Nueva Vizcaya'}`);
-                noticeSheet.getCell('E45').value = this.sanitize(`${gCleanTown}, ${data.gProv || 'Nueva Vizcaya'}`);
-            } else if (bNonSolano) {
-                // Only Bride NOT from Solano
-                noticeSheet.getCell('E44').value = this.sanitize(`${bCleanTown}, ${data.bProv || 'Nueva Vizcaya'}`);
-                noticeSheet.getCell('E45').value = "";
-            } else if (gNonSolano) {
-                // Only Groom NOT from Solano
-                noticeSheet.getCell('E44').value = this.sanitize(`${gCleanTown}, ${data.gProv || 'Nueva Vizcaya'}`);
-                noticeSheet.getCell('E45').value = "";
-            } else {
-                // Both ARE from Solano
-                noticeSheet.getCell('E44').value = "";
-                noticeSheet.getCell('E45').value = "";
-            }
+            // Deduplicate while preserving order
+            const uniqueCandidates = candidates.filter((item, index) => candidates.indexOf(item) === index);
+
+            noticeSheet.getCell('E44').value = uniqueCandidates[0] ?? "";
+            noticeSheet.getCell('E45').value = uniqueCandidates[1] ?? "";
+            noticeSheet.getCell('E46').value = uniqueCandidates[2] ?? "";
         }
 
         // --- 5. HANDLE IMAGE REPLACEMENT ---

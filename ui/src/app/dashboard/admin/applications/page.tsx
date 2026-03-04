@@ -1,4 +1,4 @@
-import { getAllApplications } from "./actions";
+import { getAllApplications, getCurrentUserRole } from "./actions";
 import GlobalOversightClient from "./GlobalOversightClient";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +19,10 @@ export default async function GlobalApplicationsPage({
     const limit = typeof sParams.limit === 'string' ? Math.max(1, parseInt(sParams.limit) || 50) : 50;
 
     try {
-        const result = await getAllApplications(page, limit);
+        const [result, role] = await Promise.all([
+            getAllApplications(page, limit),
+            getCurrentUserRole()
+        ]);
 
         return (
             <div className="space-y-8 animate-in fade-in duration-700">
@@ -29,6 +32,7 @@ export default async function GlobalApplicationsPage({
                     totalPages={result.totalPages || 0}
                     currentPage={result.currentPage || 1}
                     limit={result.limit || 50}
+                    userRole={role}
                 />
             </div>
         );
@@ -37,12 +41,12 @@ export default async function GlobalApplicationsPage({
         return (
             <div className="p-12 text-center bg-zinc-50 rounded-[3rem] border-2 border-dashed border-zinc-200">
                 <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">Error loading applications</p>
-                <button
-                    onClick={() => window.location.reload()}
-                    className="mt-4 px-6 py-2 bg-zinc-900 text-white rounded-xl font-bold text-sm"
+                <a
+                    href="/dashboard/admin/applications"
+                    className="mt-4 inline-block px-6 py-2 bg-zinc-900 text-white rounded-xl font-bold text-sm"
                 >
                     Retry Connection
-                </button>
+                </a>
             </div>
         );
     }

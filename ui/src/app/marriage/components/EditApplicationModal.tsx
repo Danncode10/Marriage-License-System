@@ -1,20 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { AnimatePresence, motion } from 'framer-motion';
-import { X, Heart, Edit2, Save, ArrowRight } from 'lucide-react';
+import { ArrowRight, Edit2, Save, X } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { updateApplicationDetails } from "../../dashboard/admin/applications/actions";
+import { RELIGIONS, SUFFIX_OPTIONS } from "../constants";
+import { useMarriageForm } from "../hooks/useMarriageForm";
+import { mapAppToFormData } from "../mapping-utils";
+import { toTitleCase } from "../utils";
 import { AddressSection } from "./AddressSection";
 import { BirthPlaceSection } from "./BirthPlaceSection";
 import { FamilySubSection, Field, GiverSubSection } from "./FormComponents";
 import { SectionCard } from "./SectionCard";
-import { RELIGIONS, SUFFIX_OPTIONS } from "../constants";
-import { useMarriageForm } from "../hooks/useMarriageForm";
-import { toTitleCase } from "../utils";
-import { updateApplicationDetails } from "../../dashboard/admin/applications/actions";
-import { mapAppToFormData } from "../mapping-utils";
+import { COUNTRY_OPTIONS } from "@/utils/countries";
 
 interface EditApplicationModalProps {
     isOpen: boolean;
@@ -36,8 +36,6 @@ export default function EditApplicationModal({ isOpen, onClose, onSuccess, selec
         bBrgyOptions,
         gBirthTownOptions,
         bBirthTownOptions,
-        gBirthBrgyOptions,
-        bBirthBrgyOptions,
         gSameAsAddress,
         setGSameAsAddress,
         bSameAsAddress,
@@ -56,8 +54,12 @@ export default function EditApplicationModal({ isOpen, onClose, onSuccess, selec
         if (selectedApp) {
             const initialData = mapAppToFormData(selectedApp);
             setFormData(initialData);
+
+            // Use the pre-calculated flags from mapAppToFormData
+            setGSameAsAddress(!!initialData.gSameAsAddress);
+            setBSameAsAddress(!!initialData.bSameAsAddress);
         }
-    }, [selectedApp, setFormData]);
+    }, [selectedApp, setFormData, setGSameAsAddress, setBSameAsAddress]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -181,6 +183,16 @@ export default function EditApplicationModal({ isOpen, onClose, onSuccess, selec
                                         </select>
                                     </Field>
                                 </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <Field label="Nationality" required>
+                                        <Input
+                                            placeholder="e.g. Filipino"
+                                            className="bg-white"
+                                            value={formData.gCitizen}
+                                            onChange={e => setFormData({ ...formData, gCitizen: toTitleCase(e.target.value) })}
+                                        />
+                                    </Field>
+                                </div>
                                 <AnimatePresence>
                                     {formData.gReligion === "Others" && (
                                         <motion.div
@@ -201,8 +213,8 @@ export default function EditApplicationModal({ isOpen, onClose, onSuccess, selec
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
-                                <AddressSection prefix="g" provincesList={provincesList} gTownOptions={gTownOptions} bTownOptions={bTownOptions} brgyOptions={gBrgyOptions} formData={formData} handleProvinceChange={handleProvinceChange} handleTownChange={handleTownChange} handleBrgyChange={handleBrgyChange} />
-                                <BirthPlaceSection prefix="g" sameAsAddress={gSameAsAddress} setSameAsAddress={setGSameAsAddress} formData={formData} setFormData={setFormData} provincesList={provincesList} birthTownOptions={gBirthTownOptions} birthBrgyOptions={gBirthBrgyOptions} handleBirthProvinceChange={handleBirthProvinceChange} handleBirthTownChange={handleBirthTownChange} />
+                                <AddressSection prefix="g" provincesList={provincesList} gTownOptions={gTownOptions} bTownOptions={bTownOptions} brgyOptions={gBrgyOptions} formData={formData} setFormData={setFormData} handleProvinceChange={handleProvinceChange} handleTownChange={handleTownChange} handleBrgyChange={handleBrgyChange} countryOptions={COUNTRY_OPTIONS} />
+                                <BirthPlaceSection prefix="g" sameAsAddress={gSameAsAddress} setSameAsAddress={setGSameAsAddress} formData={formData} setFormData={setFormData} provincesList={provincesList} birthTownOptions={gBirthTownOptions} countryOptions={COUNTRY_OPTIONS} handleBirthProvinceChange={handleBirthProvinceChange} handleBirthTownChange={handleBirthTownChange} />
                                 <FamilySubSection prefix="g" person="Groom" data={formData} setData={setFormData} toTitleCase={toTitleCase} />
                                 <GiverSubSection prefix="g" age={formData.gAge} data={formData} setData={setFormData} toTitleCase={toTitleCase} />
                             </SectionCard>
@@ -270,6 +282,16 @@ export default function EditApplicationModal({ isOpen, onClose, onSuccess, selec
                                         </select>
                                     </Field>
                                 </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <Field label="Nationality" required>
+                                        <Input
+                                            placeholder="e.g. Filipino"
+                                            className="bg-white"
+                                            value={formData.bCitizen}
+                                            onChange={e => setFormData({ ...formData, bCitizen: toTitleCase(e.target.value) })}
+                                        />
+                                    </Field>
+                                </div>
                                 <AnimatePresence>
                                     {formData.bReligion === "Others" && (
                                         <motion.div
@@ -290,8 +312,8 @@ export default function EditApplicationModal({ isOpen, onClose, onSuccess, selec
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
-                                <AddressSection prefix="b" provincesList={provincesList} gTownOptions={gTownOptions} bTownOptions={bTownOptions} brgyOptions={bBrgyOptions} formData={formData} handleProvinceChange={handleProvinceChange} handleTownChange={handleTownChange} handleBrgyChange={handleBrgyChange} />
-                                <BirthPlaceSection prefix="b" sameAsAddress={bSameAsAddress} setSameAsAddress={setBSameAsAddress} formData={formData} setFormData={setFormData} provincesList={provincesList} birthTownOptions={bBirthTownOptions} birthBrgyOptions={bBirthBrgyOptions} handleBirthProvinceChange={handleBirthProvinceChange} handleBirthTownChange={handleBirthTownChange} />
+                                <AddressSection prefix="b" provincesList={provincesList} gTownOptions={gTownOptions} bTownOptions={bTownOptions} brgyOptions={bBrgyOptions} formData={formData} setFormData={setFormData} handleProvinceChange={handleProvinceChange} handleTownChange={handleTownChange} handleBrgyChange={handleBrgyChange} countryOptions={COUNTRY_OPTIONS} />
+                                <BirthPlaceSection prefix="b" sameAsAddress={bSameAsAddress} setSameAsAddress={setBSameAsAddress} formData={formData} setFormData={setFormData} provincesList={provincesList} birthTownOptions={bBirthTownOptions} countryOptions={COUNTRY_OPTIONS} handleBirthProvinceChange={handleBirthProvinceChange} handleBirthTownChange={handleBirthTownChange} />
                                 <FamilySubSection prefix="b" person="Bride" data={formData} setData={setFormData} toTitleCase={toTitleCase} />
                                 <GiverSubSection prefix="b" age={formData.bAge} data={formData} setData={setFormData} toTitleCase={toTitleCase} />
                             </SectionCard>
@@ -334,7 +356,7 @@ export default function EditApplicationModal({ isOpen, onClose, onSuccess, selec
                             </Button>
                             {!isFormValid && (
                                 <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest animate-pulse">
-                                    Please complete all mandatory fields to proceed
+                                    Please fill up the form above
                                 </p>
                             )}
                         </div>

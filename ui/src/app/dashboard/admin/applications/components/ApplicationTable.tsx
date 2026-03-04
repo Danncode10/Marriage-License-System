@@ -11,6 +11,7 @@ interface ApplicationTableProps {
     onManualUpdate: (app: any) => void;
     updatingId: string | null;
     downloadingId: string | null;
+    onDelete: (app: any) => void;
     onRefresh: () => void;
 }
 
@@ -21,6 +22,7 @@ export default function ApplicationTable({
     onManualUpdate,
     updatingId,
     downloadingId,
+    onDelete,
     onRefresh
 }: ApplicationTableProps) {
     return (
@@ -37,6 +39,7 @@ export default function ApplicationTable({
                         onClick={onRefresh}
                         className="h-9 w-9 rounded-xl bg-zinc-100 hover:bg-zinc-900 hover:text-white text-zinc-500 flex items-center justify-center transition-all duration-200 shadow-sm active:scale-90"
                         title="Refresh Applications"
+                        suppressHydrationWarning
                     >
                         <RefreshCw className="h-4 w-4" />
                     </button>
@@ -90,6 +93,7 @@ export default function ApplicationTable({
                                     onView={() => onView(app)}
                                     onDownloadExcel={onDownloadExcel}
                                     onManualUpdate={onManualUpdate}
+                                    onDelete={onDelete}
                                     isUpdating={updatingId === app.id}
                                     isDownloading={downloadingId === app.id}
                                 />
@@ -166,6 +170,7 @@ export default function ApplicationTable({
                                             onView={() => onView(app)}
                                             onDownloadExcel={onDownloadExcel}
                                             onManualUpdate={onManualUpdate}
+                                            onDelete={onDelete}
                                             isUpdating={updatingId === app.id}
                                             isDownloading={downloadingId === app.id}
                                         />

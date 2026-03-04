@@ -6,9 +6,11 @@ import {
     FileText, Search, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Loader2, X
 } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
-import { updateApplicationStatus } from "./actions";
+import { updateApplicationStatus, deleteApplication } from "./actions";
 import PhotoCaptureModal from "@/components/PhotoCaptureModal";
 import AdminMarriageForm from "./AdminMarriageForm";
+import DeleteApplicationModal from "./components/DeleteApplicationModal";
+import AdminOnlyModal from "./components/AdminOnlyModal";
 
 import { toTitleCase, calculateAge, splitName } from "../../../marriage/utils";
 
@@ -25,13 +27,15 @@ export default function GlobalOversightClient({
     totalCount,
     totalPages,
     currentPage,
-    limit
+    limit,
+    userRole
 }: {
     apps: any[];
     totalCount: number;
     totalPages: number;
     currentPage: number;
     limit: number;
+    userRole: string | null;
 }) {
     const router = useRouter();
     const [apps, setApps] = useState<any[]>(initialApps || []);
@@ -68,6 +72,13 @@ export default function GlobalOversightClient({
     // Edit application modal state
     const [showEditForm, setShowEditForm] = useState(false);
     const [appToEdit, setAppToEdit] = useState<any | null>(null);
+
+    // Delete application state
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [appToDelete, setAppToDelete] = useState<any | null>(null);
+
+    // Admin only restriction modal
+    const [showAdminOnlyModal, setShowAdminOnlyModal] = useState(false);
 
     const handleRefresh = () => {
         window.location.reload();
@@ -139,6 +150,27 @@ export default function GlobalOversightClient({
         }
     }
 
+    async function handleDeleteApplication() {
+        if (!appToDelete) return;
+
+        try {
+            const result = await deleteApplication(appToDelete.id);
+            if (result.success) {
+                setApps(prev => prev.filter(a => a.id !== appToDelete.id));
+                setDownloadMessage({ type: 'success', text: `Application ${appToDelete.application_code} deleted successfully.` });
+                setTimeout(() => setDownloadMessage(null), 3000);
+            } else {
+                setDownloadMessage({ type: 'error', text: `Failed to delete application: ${result.error}` });
+            }
+        } catch (error) {
+            console.error("Delete error:", error);
+            setDownloadMessage({ type: 'error', text: 'An error occurred while deleting the application.' });
+        } finally {
+            setShowDeleteModal(false);
+            setAppToDelete(null);
+        }
+    }
+
     const handleDownloadExcel = async (app: any) => {
         if (downloadingId) return;
 
@@ -173,11 +205,13 @@ export default function GlobalOversightClient({
                 gCustomSuffix: app.groom?.suffix || '', // If it's custom, it's already the value
                 gBday: app.groom?.birth_date ? new Date(app.groom.birth_date).toLocaleDateString('en-US') : '',
                 gAge: app.groom?.age || 0,
-                gTown: app.groom?.addresses?.municipality || '',
-                gProv: app.groom?.addresses?.province || 'Nueva Vizcaya',
-                gBrgy: app.groom?.addresses?.barangay || '',
-                gCountry: 'Philippines',
-                gCitizen: app.groom?.citizenship || 'Filipino',
+                gBirthPlace: app.groom?.birth_place || (app.groom?.addresses ? `${app.groom.addresses.municipality}, ${app.groom.addresses.province}` : ""),
+                gBirthCountry: app.groom?.birth_country || (app.groom?.is_not_born_in_ph ? "" : "Philippines"),
+                gTown: (Array.isArray(app.groom?.addresses) ? app.groom.addresses[0]?.municipality : app.groom?.addresses?.municipality) || '',
+                gProv: (Array.isArray(app.groom?.addresses) ? app.groom.addresses[0]?.province : app.groom?.addresses?.province) || 'Nueva Vizcaya',
+                gBrgy: (Array.isArray(app.groom?.addresses) ? app.groom.addresses[0]?.barangay : app.groom?.addresses?.barangay) || '',
+                gCountry: (Array.isArray(app.groom?.addresses) ? app.groom.addresses[0]?.country : app.groom?.addresses?.country) || 'Philippines',
+                gCitizen: app.groom?.citizenship || '',
                 gReligion: app.groom?.religion || '',
                 gCustomReligion: app.groom?.religion || '',
                 gStatus: 'Single',
@@ -200,11 +234,13 @@ export default function GlobalOversightClient({
                 bCustomSuffix: app.bride?.suffix || '',
                 bBday: app.bride?.birth_date ? new Date(app.bride.birth_date).toLocaleDateString('en-US') : '',
                 bAge: app.bride?.age || 0,
-                bTown: app.bride?.addresses?.municipality || '',
-                bProv: app.bride?.addresses?.province || 'Nueva Vizcaya',
-                bBrgy: app.bride?.addresses?.barangay || '',
-                bCountry: 'Philippines',
-                bCitizen: app.bride?.citizenship || 'Filipino',
+                bBirthPlace: app.bride?.birth_place || (app.bride?.addresses ? `${app.bride.addresses.municipality}, ${app.bride.addresses.province}` : ""),
+                bBirthCountry: app.bride?.birth_country || (app.bride?.is_not_born_in_ph ? "" : "Philippines"),
+                bTown: (Array.isArray(app.bride?.addresses) ? app.bride.addresses[0]?.municipality : app.bride?.addresses?.municipality) || '',
+                bProv: (Array.isArray(app.bride?.addresses) ? app.bride.addresses[0]?.province : app.bride?.addresses?.province) || 'Nueva Vizcaya',
+                bBrgy: (Array.isArray(app.bride?.addresses) ? app.bride.addresses[0]?.barangay : app.bride?.addresses?.barangay) || '',
+                bCountry: (Array.isArray(app.bride?.addresses) ? app.bride.addresses[0]?.country : app.bride?.addresses?.country) || 'Philippines',
+                bCitizen: app.bride?.citizenship || '',
                 bReligion: app.bride?.religion || '',
                 bCustomReligion: app.bride?.religion || '',
                 bStatus: 'Single',
@@ -305,7 +341,7 @@ export default function GlobalOversightClient({
     }, [apps, search]);
 
     return (
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10" suppressHydrationWarning>
             {/* ── Header ── */}
             <div className="flex flex-col gap-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -316,6 +352,7 @@ export default function GlobalOversightClient({
                     <button
                         onClick={() => setShowAdminForm(true)}
                         className="h-12 px-6 bg-zinc-900 hover:bg-zinc-800 text-white rounded-2xl font-bold text-sm transition-all shadow-xl shadow-zinc-900/10 flex items-center justify-center gap-2 md:w-auto w-full"
+                        suppressHydrationWarning
                     >
                         <FileText className="h-4 w-4" />
                         Create Application
@@ -329,6 +366,7 @@ export default function GlobalOversightClient({
                         onChange={e => setSearch(e.target.value)}
                         placeholder="Search by Code or Name..."
                         className="h-14 w-full bg-white border border-zinc-100 rounded-2xl pl-12 pr-4 text-sm font-bold placeholder:text-zinc-400 focus:outline-none focus:ring-4 focus:ring-zinc-900/5 transition-all shadow-xl shadow-zinc-200/20"
+                        suppressHydrationWarning
                     />
                 </div>
 
@@ -356,6 +394,7 @@ export default function GlobalOversightClient({
                     <button
                         onClick={() => setShowPhotoModal(true)}
                         className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 text-white rounded-2xl font-bold text-sm transition-all shadow-xl shadow-zinc-200/20"
+                        suppressHydrationWarning
                     >
                         Open Photo Capture
                     </button>
@@ -382,6 +421,14 @@ export default function GlobalOversightClient({
                     setRowManualApp(app);
                     setRowManualStatus(app.status || "approved");
                     setRowManualMessage(null);
+                }}
+                onDelete={(app) => {
+                    if (userRole !== 'admin') {
+                        setShowAdminOnlyModal(true);
+                        return;
+                    }
+                    setAppToDelete(app);
+                    setShowDeleteModal(true);
                 }}
                 updatingId={updatingId}
                 downloadingId={downloadingId}
@@ -483,6 +530,23 @@ export default function GlobalOversightClient({
                     onSuccess={handleRefresh}
                 />
             )}
+
+            {showDeleteModal && appToDelete && (
+                <DeleteApplicationModal
+                    isOpen={showDeleteModal}
+                    onClose={() => {
+                        setShowDeleteModal(false);
+                        setAppToDelete(null);
+                    }}
+                    onConfirm={handleDeleteApplication}
+                    applicationCode={appToDelete.application_code}
+                />
+            )}
+
+            <AdminOnlyModal
+                isOpen={showAdminOnlyModal}
+                onClose={() => setShowAdminOnlyModal(false)}
+            />
         </div>
     );
 }

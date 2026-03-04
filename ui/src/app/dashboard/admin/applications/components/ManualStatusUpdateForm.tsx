@@ -34,6 +34,7 @@ export default function ManualStatusUpdateForm({
                         className="w-full h-12 bg-white border border-zinc-100 rounded-2xl px-4 text-sm font-bold placeholder:text-zinc-400 focus:outline-none focus:ring-4 focus:ring-zinc-900/5 transition-all shadow-xl shadow-zinc-200/20"
                         value={manualAppCode}
                         onChange={(e) => setManualAppCode(e.target.value.toUpperCase())}
+                        suppressHydrationWarning
                     />
                 </div>
 
@@ -43,6 +44,7 @@ export default function ManualStatusUpdateForm({
                         className="w-full h-12 bg-white border border-zinc-100 rounded-2xl px-4 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-zinc-900/5 transition-all shadow-xl shadow-zinc-200/20"
                         value={manualStatus}
                         onChange={(e) => setManualStatus(e.target.value)}
+                        suppressHydrationWarning
                     >
                         <option value="approved">Approved</option>
                         <option value="rejected">Rejected</option>
@@ -55,6 +57,7 @@ export default function ManualStatusUpdateForm({
                     onClick={onUpdate}
                     disabled={manualUpdating || !manualAppCode.trim()}
                     className="h-12 px-8 bg-zinc-900 hover:bg-zinc-800 disabled:bg-zinc-400 text-white rounded-2xl font-bold text-sm transition-all shadow-xl shadow-zinc-200/20 disabled:cursor-not-allowed"
+                    suppressHydrationWarning
                 >
                     {manualUpdating ? (
                         <div className="flex items-center gap-2">
@@ -69,8 +72,8 @@ export default function ManualStatusUpdateForm({
 
             {manualMessage && (
                 <div className={`mt-4 p-4 rounded-2xl text-sm font-bold ${manualMessage.type === 'success'
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : 'bg-red-50 text-red-700 border border-red-200'
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                    : 'bg-red-50 text-red-700 border border-red-200'
                     }`}>
                     {manualMessage.text}
                 </div>

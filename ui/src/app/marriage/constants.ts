@@ -16,8 +16,8 @@ export const VALID_ID_TYPES = [
 export const INITIAL_FORM_STATE = {
     // Groom
     gFirst: "", gMiddle: "", gLast: "", gSuffix: "", gCustomSuffix: "", gBday: "", gAge: 0,
-    gBirthPlace: "", gBrgy: "", gTown: "", gProv: "Nueva Vizcaya", gCountry: "Philippines",
-    gCitizen: "Filipino", gStatus: "Single", gReligion: "", gCustomReligion: "",
+    gBirthPlace: "Philippines", gBirthCountry: "Philippines", gBrgy: "", gTown: "", gProv: "Nueva Vizcaya", gCountry: "Philippines",
+    gCitizen: "", gStatus: "Single", gReligion: "", gCustomReligion: "",
     gFathF: "", gFathM: "", gFathL: "", gFathSuffix: "", gFathCustomSuffix: "",
     gMothF: "", gMothM: "", gMothL: "", gMothSuffix: "", gMothCustomSuffix: "",
     gGiverF: "", gGiverM: "", gGiverL: "", gGiverSuffix: "", gGiverCustomSuffix: "",
@@ -26,13 +26,18 @@ export const INITIAL_FORM_STATE = {
     // Groom ID
     gIdType: "", gIdNo: "", gIdCustomType: "", gIncludeId: false,
     gGiverIdType: "", gGiverIdNo: "", gGiverIdCustomType: "", gGiverIncludeId: false,
+    gIsForeigner: false,
+    bIsForeigner: false,
+    gIsNotBornInPh: false,
+    bIsNotBornInPh: false,
+    gSameAsAddress: true,
 
     contactNumber: "",
 
     // Bride
     bFirst: "", bMiddle: "", bLast: "", bSuffix: "", bCustomSuffix: "", bBday: "", bAge: 0,
-    bBirthPlace: "", bBrgy: "", bTown: "", bProv: "Nueva Vizcaya", bCountry: "Philippines",
-    bCitizen: "Filipino", bStatus: "Single", bReligion: "", bCustomReligion: "",
+    bBirthPlace: "Philippines", bBirthCountry: "Philippines", bBrgy: "", bTown: "", bProv: "Nueva Vizcaya", bCountry: "Philippines",
+    bCitizen: "", bStatus: "Single", bReligion: "", bCustomReligion: "",
     bFathF: "", bFathM: "", bFathL: "", bFathSuffix: "", bFathCustomSuffix: "",
     bMothF: "", bMothM: "", bMothL: "", bMothSuffix: "", bMothCustomSuffix: "",
     bGiverF: "", bGiverM: "", bGiverL: "", bGiverSuffix: "", bGiverCustomSuffix: "",
@@ -41,4 +46,5 @@ export const INITIAL_FORM_STATE = {
     // Bride ID
     bIdType: "", bIdNo: "", bIdCustomType: "", bIncludeId: false,
     bGiverIdType: "", bGiverIdNo: "", bGiverIdCustomType: "", bGiverIncludeId: false,
+    bSameAsAddress: true,
 };
