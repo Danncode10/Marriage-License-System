@@ -161,62 +161,70 @@ export function useMarriageForm() {
     };
 
     const handleProvinceChange = async (prefix: 'g' | 'b', provinceCode: string, provinceName: string) => {
-        setFormData(prev => {
-            const newData = { ...prev, [`${prefix}Prov`]: provinceName, [`${prefix}Town`]: "", [`${prefix}Brgy`]: "" };
-            const isSame = prefix === 'g' ? gSameAsAddress : bSameAsAddress;
-            if (isSame) {
-                newData[`${prefix}BirthPlace`] = provinceName;
-            }
-            return newData;
-        });
+        const cleanProvinceName = provinceName.replace(/\(capital\)/gi, "").replace(/\s+/g, " ").replace(/\s+,/g, ",").trim();
+
+        // Reset same as address choice
+        if (prefix === 'g') setGSameAsAddress(null);
+        else setBSameAsAddress(null);
+
+        setFormData(prev => ({
+            ...prev,
+            [`${prefix}Prov`]: cleanProvinceName,
+            [`${prefix}Town`]: "",
+            [`${prefix}Brgy`]: ""
+        }));
+
         const res = await cities(provinceCode);
         if (prefix === 'g') setGTownOptions(res);
         else setBTownOptions(res);
     };
 
     const handleTownChange = async (prefix: 'g' | 'b', cityCode: string, cityName: string) => {
-        setFormData(prev => {
-            const newData = { ...prev, [`${prefix}Town`]: cityName, [`${prefix}Brgy`]: "" };
-            const isSame = prefix === 'g' ? gSameAsAddress : bSameAsAddress;
-            if (isSame) {
-                newData[`${prefix}BirthPlace`] = `${cityName}, ${newData[`${prefix}Prov`]}`;
-            }
-            return newData;
-        });
+        const cleanCityName = cityName.replace(/\(capital\)/gi, "").replace(/\s+/g, " ").replace(/\s+,/g, ",").trim();
+
+        // Reset same as address choice
+        if (prefix === 'g') setGSameAsAddress(null);
+        else setBSameAsAddress(null);
+
+        setFormData(prev => ({
+            ...prev,
+            [`${prefix}Town`]: cleanCityName,
+            [`${prefix}Brgy`]: ""
+        }));
+
         const res = await barangays(cityCode);
         if (prefix === 'g') setGBrgyOptions(res);
         else setBBrgyOptions(res);
     };
 
     const handleBrgyChange = (prefix: 'g' | 'b', brgyName: string) => {
-        setFormData(prev => {
-            const newData = { ...prev, [`${prefix}Brgy`]: brgyName };
+        // Reset same as address choice
+        if (prefix === 'g') setGSameAsAddress(null);
+        else setBSameAsAddress(null);
 
-            const isSame = prefix === 'g' ? gSameAsAddress : bSameAsAddress;
-            if (isSame) {
-                const town = newData[`${prefix}Town`];
-                const prov = newData[`${prefix}Prov`];
-                newData[`${prefix}BirthPlace`] = `${town}, ${prov}`;
-            }
-
-            return newData;
-        });
+        setFormData(prev => ({
+            ...prev,
+            [`${prefix}Brgy`]: brgyName
+        }));
     };
 
     const handleBirthProvinceChange = async (prefix: 'g' | 'b', provinceCode: string, provinceName: string) => {
+        const cleanProvinceName = provinceName.replace(/\(capital\)/gi, "").replace(/\s+/g, " ").replace(/\s+,/g, ",").trim();
         const res = await cities(provinceCode);
         if (prefix === 'g') {
             setGBirthTownOptions(res);
         } else {
             setBBirthTownOptions(res);
         }
-        setFormData(prev => ({ ...prev, [`${prefix}BirthPlace`]: provinceName }));
+        setFormData(prev => ({ ...prev, [`${prefix}BirthPlace`]: cleanProvinceName }));
     };
 
     const handleBirthTownChange = async (prefix: 'g' | 'b', cityCode: string, cityName: string, provinceName: string) => {
         // No more birth barangay logic
+        const cleanCityName = cityName.replace(/\(capital\)/gi, "").replace(/\s+/g, " ").replace(/\s+,/g, ",").trim();
+        const cleanProvinceName = provinceName.replace(/\(capital\)/gi, "").replace(/\s+/g, " ").replace(/\s+,/g, ",").trim();
 
-        setFormData(prev => ({ ...prev, [`${prefix}BirthPlace`]: `${cityName}, ${provinceName}` }));
+        setFormData(prev => ({ ...prev, [`${prefix}BirthPlace`]: `${cleanCityName}, ${cleanProvinceName}` }));
     };
 
     const handleCopyAddressToBirthplace = (prefix: 'g' | 'b') => {
@@ -301,10 +309,8 @@ export function useMarriageForm() {
             // Religion validation for "Others"
             if (formData[`${prefix}Religion`] === "Others" && (!formData[`${prefix}CustomReligion`] || formData[`${prefix}CustomReligion`].trim() === "")) return false;
 
-            // Parents (First and Last are required)
+            // Parents: Mother's First and Last are required; Father's name is optional
             const parentFields = [
-                formData[`${prefix}FathF`],
-                formData[`${prefix}FathL`],
                 formData[`${prefix}MothF`],
                 formData[`${prefix}MothL`],
             ];

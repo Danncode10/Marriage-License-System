@@ -1,13 +1,15 @@
 "use client";
 
-import { Eye, FileDown, MoreHorizontal, Loader2, Trash2 } from "lucide-react";
+import { Eye, FileDown, MoreHorizontal, Loader2, Trash2, ClipboardList, RotateCcw } from "lucide-react";
 
 interface ActionDropdownProps {
     app: any;
     onView: () => void;
     onDownloadExcel: (app: any) => void;
     onManualUpdate: (app: any) => void;
+    onRegistry: (app: any) => void;
     onDelete?: (app: any) => void;
+    onRestore?: (appId: string) => void;
     isUpdating: boolean;
     isDownloading: boolean;
 }
@@ -17,10 +19,51 @@ export function ActionDropdown({
     onView,
     onDownloadExcel,
     onManualUpdate,
+    onRegistry,
     onDelete,
+    onRestore,
     isUpdating,
     isDownloading,
 }: ActionDropdownProps) {
+    const isDeleted = app.status === 'deleted';
+
+    if (isDeleted) {
+        return (
+            <div className="flex items-center gap-2 justify-center">
+                <button
+                    title="View Details"
+                    onClick={onView}
+                    className="h-9 w-9 rounded-xl bg-zinc-100 hover:bg-zinc-900 hover:text-white text-zinc-500 flex items-center justify-center transition-all duration-200 shadow-sm active:scale-90"
+                    suppressHydrationWarning
+                >
+                    <Eye className="h-4 w-4" />
+                </button>
+
+                {onRestore && (
+                    <button
+                        title="Restore Application"
+                        onClick={() => onRestore(app.id)}
+                        className="h-9 w-9 rounded-xl bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-600 flex items-center justify-center transition-all duration-200 shadow-sm active:scale-90"
+                        suppressHydrationWarning
+                    >
+                        <RotateCcw className="h-4 w-4" />
+                    </button>
+                )}
+
+                {onDelete && (
+                    <button
+                        title="Permanently Delete"
+                        onClick={() => onDelete(app)}
+                        className="h-9 w-9 rounded-xl bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-500 flex items-center justify-center transition-all duration-200 shadow-sm active:scale-90"
+                        suppressHydrationWarning
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </button>
+                )}
+            </div>
+        );
+    }
+
     return (
         <div className="flex items-center gap-2 justify-center">
             <button
@@ -43,6 +86,15 @@ export function ActionDropdown({
                     ? <Loader2 className="h-4 w-4 animate-spin" />
                     : <FileDown className="h-4 w-4" />
                 }
+            </button>
+
+            <button
+                title="Registry Number"
+                onClick={() => onRegistry(app)}
+                className="h-9 w-9 rounded-xl bg-orange-50 hover:bg-orange-600 hover:text-white text-orange-600 flex items-center justify-center transition-all duration-200 shadow-sm active:scale-90"
+                suppressHydrationWarning
+            >
+                <ClipboardList className="h-4 w-4" />
             </button>
 
             <button

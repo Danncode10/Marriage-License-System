@@ -170,8 +170,8 @@ export default function AdminReportsClient() {
             // Municipality counts
             app.applicants?.forEach(applicant => {
                 if (applicant.addresses?.municipality) {
-                    municipalityCounts[applicant.addresses.municipality] =
-                        (municipalityCounts[applicant.addresses.municipality] || 0) + 1;
+                    const cleanMuni = applicant.addresses.municipality.replace(/\(capital\)/gi, "").trim();
+                    municipalityCounts[cleanMuni] = (municipalityCounts[cleanMuni] || 0) + 1;
                 }
 
                 // Age groups

@@ -8,13 +8,15 @@ interface DeleteApplicationModalProps {
     onClose: () => void;
     onConfirm: () => Promise<void>;
     applicationCode: string;
+    isSoftDelete?: boolean;
 }
 
 export default function DeleteApplicationModal({
     isOpen,
     onClose,
     onConfirm,
-    applicationCode
+    applicationCode,
+    isSoftDelete = false
 }: DeleteApplicationModalProps) {
     const [isDeleting, setIsDeleting] = useState(false);
     const [confirmCode, setConfirmCode] = useState("");
@@ -56,21 +58,29 @@ export default function DeleteApplicationModal({
 
                 <div className="p-8 pt-6 space-y-6">
                     <div className="space-y-2">
-                        <h2 className="text-2xl font-black text-zinc-900 uppercase tracking-tighter">Delete Application</h2>
+                        <h2 className="text-2xl font-black text-zinc-900 uppercase tracking-tighter">
+                            {isSoftDelete ? "Move to Deleted" : "Delete Application"}
+                        </h2>
                         <p className="text-zinc-500 font-medium leading-relaxed">
-                            This action is <span className="text-rose-600 font-bold">permanent</span> and cannot be undone. All data associated with <span className="bg-zinc-100 px-2 py-0.5 rounded text-zinc-900 font-bold tracking-tight">#{applicationCode}</span> will be purged.
+                            {isSoftDelete ? (
+                                <>This application will be moved to the <span className="text-zinc-900 font-bold">Deleted Branch</span>. You can restore it within 7 days before it is purged.</>
+                            ) : (
+                                <>This action is <span className="text-rose-600 font-bold">permanent</span> and cannot be undone. All data associated with <span className="bg-zinc-100 px-2 py-0.5 rounded text-zinc-900 font-bold tracking-tight">#{applicationCode}</span> will be purged.</>
+                            )}
                         </p>
                     </div>
 
-                    <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex gap-4">
-                        <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
-                        <div className="space-y-1">
-                            <p className="text-xs font-black text-amber-800 uppercase tracking-widest">System Warning</p>
-                            <p className="text-[11px] text-amber-700 font-semibold leading-normal">
-                                This includes applicants information, residence data, attached photos, and audit logs.
-                            </p>
+                    {!isSoftDelete && (
+                        <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex gap-4">
+                            <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                            <div className="space-y-1">
+                                <p className="text-xs font-black text-amber-800 uppercase tracking-widest">System Warning</p>
+                                <p className="text-[11px] text-amber-700 font-semibold leading-normal">
+                                    This includes applicants information, residence data, attached photos, and audit logs.
+                                </p>
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     <div className="space-y-3">
                         <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block ml-1">
@@ -81,7 +91,8 @@ export default function DeleteApplicationModal({
                             value={confirmCode}
                             onChange={(e) => setConfirmCode(e.target.value)}
                             placeholder="Enter Code"
-                            className="w-full h-14 bg-zinc-50 border border-zinc-100 rounded-2xl px-6 font-bold text-center tracking-widest placeholder:text-zinc-300 focus:outline-none focus:ring-4 focus:ring-rose-500/5 focus:border-rose-200 transition-all uppercase"
+                            className={`w-full h-14 bg-zinc-50 border border-zinc-100 rounded-2xl px-6 font-bold text-center tracking-widest placeholder:text-zinc-300 focus:outline-none focus:ring-4 transition-all uppercase ${isSoftDelete ? 'focus:ring-zinc-900/5 focus:border-zinc-200' : 'focus:ring-rose-500/5 focus:border-rose-200'
+                                }`}
                         />
                     </div>
 
@@ -89,21 +100,28 @@ export default function DeleteApplicationModal({
                         <button
                             onClick={handleConfirm}
                             disabled={confirmCode !== applicationCode || isDeleting}
-                            className={`h-14 w-full rounded-2xl font-black text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-xl ${confirmCode === applicationCode && !isDeleting
-                                ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-200'
-                                : 'bg-zinc-100 text-zinc-300 cursor-not-allowed shadow-none'
+                            className={`h-14 w-full rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 shadow-xl border-2 transition-transform active:scale-95 ${confirmCode === applicationCode && !isDeleting ? 'cursor-pointer hover:opacity-90' : 'cursor-not-allowed'
                                 }`}
+                            style={{
+                                backgroundColor: confirmCode === applicationCode && !isDeleting
+                                    ? (isSoftDelete ? '#18181b' : '#dc2626') // zinc-900 or red-600
+                                    : '#f4f4f5', // zinc-100 (Visible Grey)
+                                borderColor: confirmCode === applicationCode && !isDeleting
+                                    ? (isSoftDelete ? '#18181b' : '#dc2626')
+                                    : '#e4e4e7', // zinc-200
+                                color: confirmCode === applicationCode && !isDeleting ? '#ffffff' : '#a1a1aa'
+                            }}
                         >
                             {isDeleting ? (
-                                <>
+                                <div className="flex items-center gap-2">
                                     <Loader2 className="h-5 w-5 animate-spin" />
-                                    Purging Records...
-                                </>
+                                    <span>{isSoftDelete ? "Moving..." : "Purging Records..."}</span>
+                                </div>
                             ) : (
-                                <>
+                                <div className="flex items-center gap-2">
                                     <Trash2 className="h-5 w-5" />
-                                    Delete Permanently
-                                </>
+                                    <span>{isSoftDelete ? "Confirm Move" : "Delete Permanently"}</span>
+                                </div>
                             )}
                         </button>
                         <button

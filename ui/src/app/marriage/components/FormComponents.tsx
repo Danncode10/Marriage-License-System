@@ -37,8 +37,6 @@ export function ValidationFeedback({ data, prefix }: { data: any, prefix: 'g' | 
         { key: `${prefix}Prov`, label: 'Province' },
         { key: `${prefix}Citizen`, label: 'Nationality' },
         { key: `${prefix}BirthPlace`, label: 'Birth Place' },
-        { key: `${prefix}FathF`, label: 'Father First Name' },
-        { key: `${prefix}FathL`, label: 'Father Last Name' },
         { key: `${prefix}MothF`, label: 'Mother First Name' },
         { key: `${prefix}MothL`, label: 'Mother Last Name' },
     ];
@@ -203,13 +201,13 @@ export function FamilySubSection({ prefix, person, data, setData, toTitleCase }:
             <div>
                 <LabelWithIcon icon={<GraduationCap className="w-3 h-3" />} text={`${person}'s Father`} />
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-3">
-                    <Field label="First Name" required>
+                    <Field label="First Name">
                         <Input placeholder="First Name" className="bg-white" value={data[`${prefix}FathF`]} onChange={e => setData({ ...data, [`${prefix}FathF`]: toTitleCase(e.target.value) })} />
                     </Field>
                     <Field label="Middle Name">
                         <Input placeholder="Middle Name" className="bg-white" value={data[`${prefix}FathM`]} onChange={e => setData({ ...data, [`${prefix}FathM`]: toTitleCase(e.target.value) })} />
                     </Field>
-                    <Field label="Last Name" required>
+                    <Field label="Last Name">
                         <Input placeholder="Last Name" className="bg-white" value={data[`${prefix}FathL`]} onChange={e => setData({ ...data, [`${prefix}FathL`]: toTitleCase(e.target.value) })} />
                     </Field>
                     <Field label="Suffix">

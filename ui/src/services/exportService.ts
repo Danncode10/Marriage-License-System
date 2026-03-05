@@ -28,7 +28,75 @@ export const generateExcelReport = async (
     try {
         const workbook = new ExcelJS.Workbook();
 
-        // --- 1. Summary Reports Sheet ---
+        // --- 1. Raw Data Sheet ---
+        const worksheet = workbook.addWorksheet('Application Data');
+
+        // Add Metadata block at the top
+        worksheet.addRow(['Report Generation Date:', metadata.generationDate]);
+        worksheet.addRow(['Selected Timeframe:', metadata.timeframe]);
+        worksheet.addRow(['Total Records:', metadata.totalRecords]);
+        worksheet.addRow([]); // Blank row as a separator
+
+        // Get headers from first data item or a predefined list
+        const headers = [
+            'App Code', 'Status', 'Submission Date',
+            'Registry Number',
+            'Groom First', 'Groom Last', 'Groom Age', 'Groom Citizenship', 'Groom Religion', 'Groom Town', 'Groom Brgy',
+            'Bride First', 'Bride Last', 'Bride Age', 'Bride Citizenship', 'Bride Religion', 'Bride Town', 'Bride Brgy'
+        ];
+
+        // Add header row
+        const headerRow = worksheet.addRow(headers);
+        headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        headerRow.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF18181B' } // Dark gray/black like the theme
+        };
+
+        // Freeze the header row (Row 5 because metadata is 1-3, separator 4)
+        worksheet.views = [
+            { state: 'frozen', ySplit: 5 }
+        ];
+
+        // Map data to flat rows
+        data.forEach(item => {
+            const row = worksheet.addRow([
+                item.application_code,
+                item.status,
+                item.submission_date,
+                item.registry_number,
+                item.groom_first_name,
+                item.groom_last_name,
+                item.groom_age, // Numeric
+                item.groom_citizenship,
+                item.groom_religion,
+                item.groom_municipality,
+                item.groom_barangay,
+                item.bride_first_name,
+                item.bride_last_name,
+                item.bride_age, // Numeric
+                item.bride_citizenship,
+                item.bride_religion,
+                item.bride_municipality,
+                item.bride_barangay
+            ]);
+
+            row.getCell(7).numFmt = '#';
+            row.getCell(14).numFmt = '#';
+        });
+
+        // Auto-fit columns
+        worksheet.columns.forEach(column => {
+            let maxLength = 0;
+            column.eachCell!({ includeEmpty: true }, (cell) => {
+                const columnLength = cell.value ? cell.value.toString().length : 10;
+                if (columnLength > maxLength) maxLength = columnLength;
+            });
+            column.width = Math.min(maxLength + 2, 40);
+        });
+
+        // --- 2. Summary Reports Sheet ---
         const summarySheet = workbook.addWorksheet('Reports');
 
         const addTableSection = (title: string, headers: string[], rows: any[][], startRow: number) => {
@@ -38,18 +106,14 @@ export const generateExcelReport = async (
             titleRow.font = { bold: true, size: 12 };
             titleRow.alignment = { horizontal: 'left' };
 
-            const headerRow = summarySheet.getRow(startRow + 1);
-            headerRow.values = headers;
-            headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-            headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF18181B' } };
+            const hRow = summarySheet.getRow(startRow + 1);
+            hRow.values = headers;
+            hRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            hRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF18181B' } };
 
             rows.forEach((row, i) => {
                 const r = summarySheet.getRow(startRow + 2 + i);
                 r.values = row;
-                // Add percentage formatting to the last column if it looks like one
-                if (row.length > 1 && typeof row[row.length - 1] === 'number') {
-                    // This is handled by passing pre-formatted strings or adding logic here
-                }
             });
 
             return startRow + rows.length + 4; // Return next available row
@@ -62,19 +126,17 @@ export const generateExcelReport = async (
         summarySheet.addRow(['Total Sample Size (N):', metadata.totalRecords]);
         currentRow = 6;
 
-        // Status Distribution
         const statusRows = Object.entries(stats.statusCounts).map(([status, count]) => {
             const pct = metadata.totalRecords > 0 ? (count / metadata.totalRecords) * 100 : 0;
             return [status.toUpperCase(), count, `${pct.toFixed(2)}%`];
         });
         currentRow = addTableSection('Application Status Distribution', ['Status', 'Frequency (n)', 'Percentage (%)'], statusRows, currentRow);
 
-        // Top Municipalities
         const muniRows = Object.entries(stats.municipalityCounts)
             .sort(([, a], [, b]) => b - a)
             .slice(0, 10)
             .map(([muni, count]) => {
-                const totalApplicants = metadata.totalRecords * 2; // Groom + Bride
+                const totalApplicants = metadata.totalRecords * 2;
                 const pct = totalApplicants > 0 ? (count / totalApplicants) * 100 : 0;
                 return [muni, count, `${pct.toFixed(2)}%`];
             });
@@ -101,76 +163,35 @@ export const generateExcelReport = async (
 
         summarySheet.columns.forEach(col => { col.width = 25; });
 
-        // --- 2. Raw Data Sheet ---
-        const worksheet = workbook.addWorksheet('Application Data');
+        // --- 3. Completed Applications Sheet ---
+        const completedSheet = workbook.addWorksheet('Completed');
 
-        // Add Metadata block at the top
-        worksheet.addRow(['Report Generation Date:', metadata.generationDate]);
-        worksheet.addRow(['Selected Timeframe:', metadata.timeframe]);
-        worksheet.addRow(['Total Records:', metadata.totalRecords]);
-        worksheet.addRow([]); // Blank row as a separator
-
-        // Get headers from first data item or a predefined list
-        const headers = [
-            'App Code', 'Status', 'Submission Date',
-            'Groom First', 'Groom Last', 'Groom Age', 'Groom Citizenship', 'Groom Religion', 'Groom Town', 'Groom Brgy',
-            'Bride First', 'Bride Last', 'Bride Age', 'Bride Citizenship', 'Bride Religion', 'Bride Town', 'Bride Brgy'
+        const completedHeaders = [
+            'Registry Number', 'App Code', 'Submission Date',
+            'Groom Full Name', 'Bride Full Name', 'Attending Clerk'
         ];
 
-        // Add header row
-        const headerRow = worksheet.addRow(headers);
-        headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-        headerRow.fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FF18181B' } // Dark gray/black like the theme
-        };
+        const compHeadRow = completedSheet.addRow(completedHeaders);
+        compHeadRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        compHeadRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF18181B' } };
 
-        // Freeze the header row (Row 5 because metadata is 1-3, separator 4)
-        worksheet.views = [
-            { state: 'frozen', ySplit: 5 }
-        ];
+        const completedApps = data
+            .filter(app => app.status.toUpperCase() === 'COMPLETED')
+            .sort((a, b) => a.registry_number.localeCompare(b.registry_number));
 
-        // Map data to flat rows
-        data.forEach(item => {
-            const row = worksheet.addRow([
-                item.application_code,
-                item.status,
-                item.submission_date,
-                item.groom_first_name,
-                item.groom_last_name,
-                item.groom_age, // Numeric
-                item.groom_citizenship,
-                item.groom_religion,
-                item.groom_municipality,
-                item.groom_barangay,
-                item.bride_first_name,
-                item.bride_last_name,
-                item.bride_age, // Numeric
-                item.bride_citizenship,
-                item.bride_religion,
-                item.bride_municipality,
-                item.bride_barangay
+        completedApps.forEach(app => {
+            completedSheet.addRow([
+                app.registry_number,
+                app.application_code,
+                app.submission_date,
+                `${app.groom_first_name} ${app.groom_last_name}`,
+                `${app.bride_first_name} ${app.bride_last_name}`,
+                // Since clerk is not in FlattenedApplication, we leave it for now or add it later if needed
+                '-'
             ]);
-
-            // Ensure numeric columns are formatted correctly
-            // (ExcelJS often handles this automatically, but we can set cell type)
-            // Indices for ages are 6 and 13 (1-indexed for row.getCell, 1-17)
-            row.getCell(6).numFmt = '#';
-            row.getCell(13).numFmt = '#';
         });
 
-        // Auto-fit columns (basic implementation)
-        worksheet.columns.forEach(column => {
-            let maxLength = 0;
-            column.eachCell!({ includeEmpty: true }, (cell) => {
-                const columnLength = cell.value ? cell.value.toString().length : 10;
-                if (columnLength > maxLength) {
-                    maxLength = columnLength;
-                }
-            });
-            column.width = Math.min(maxLength + 2, 40); // Cap width at 40
-        });
+        completedSheet.columns.forEach(col => { col.width = 25; });
 
         // Write to buffer and trigger download in browser
         const buffer = await workbook.xlsx.writeBuffer();

@@ -1,10 +1,10 @@
-import { Field } from "./FormComponents";
 import { Input } from "@/components/ui/input";
+import { Field } from "./FormComponents";
 
 interface BirthPlaceSectionProps {
     prefix: 'g' | 'b';
-    sameAsAddress: boolean;
-    setSameAsAddress: (value: boolean) => void;
+    sameAsAddress: boolean | null;
+    setSameAsAddress: (value: boolean | null) => void;
     formData: any;
     setFormData: (data: any) => void;
     provincesList: any[];
@@ -48,9 +48,9 @@ export function BirthPlaceSection({
                         const country = formData[`${prefix}Country`] || "Philippines";
                         setFormData((prev: any) => ({ ...prev, [`${prefix}BirthPlace`]: place, [`${prefix}BirthCountry`]: country }));
                     }}
-                    className={`flex-1 py-2 text-[10px] font-black rounded-lg transition-all flex items-center justify-center gap-2 ${sameAsAddress ? 'bg-white shadow-md text-primary' : 'text-slate-400 hover:text-slate-600'}`}
+                    className={`flex-1 py-2 text-[10px] font-black rounded-lg transition-all flex items-center justify-center gap-2 ${sameAsAddress === true ? 'bg-white shadow-md text-primary' : 'text-slate-400 hover:text-slate-600'}`}
                 >
-                    <div className={`w-2 h-2 rounded-full ${sameAsAddress ? 'bg-primary' : 'bg-slate-300'}`} />
+                    <div className={`w-2 h-2 rounded-full ${sameAsAddress === true ? 'bg-primary' : 'bg-slate-300'}`} />
                     SAME AS ADDRESS
                 </button>
                 <button
@@ -59,9 +59,9 @@ export function BirthPlaceSection({
                         setSameAsAddress(false);
                         setFormData((prev: any) => ({ ...prev, [`${prefix}BirthPlace`]: "", [`${prefix}BirthCountry`]: "Philippines" }));
                     }}
-                    className={`flex-1 py-2 text-[10px] font-black rounded-lg transition-all flex items-center justify-center gap-2 ${!sameAsAddress ? 'bg-white shadow-md text-primary' : 'text-slate-400 hover:text-slate-600'}`}
+                    className={`flex-1 py-2 text-[10px] font-black rounded-lg transition-all flex items-center justify-center gap-2 ${sameAsAddress === false ? 'bg-white shadow-md text-primary' : 'text-slate-400 hover:text-slate-600'}`}
                 >
-                    <div className={`w-2 h-2 rounded-full ${!sameAsAddress ? 'bg-primary' : 'bg-slate-300'}`} />
+                    <div className={`w-2 h-2 rounded-full ${sameAsAddress === false ? 'bg-primary' : 'bg-slate-300'}`} />
                     DIFFERENT ADDRESS
                 </button>
             </div>
@@ -72,8 +72,8 @@ export function BirthPlaceSection({
                         <input
                             type="checkbox"
                             className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-slate-300 transition-all checked:bg-primary checked:border-primary focus:outline-none disabled:cursor-not-allowed"
-                            checked={!!formData[`${prefix}IsNotBornInPh`]}
-                            disabled={sameAsAddress}
+                            checked={formData[`${prefix}IsNotBornInPh`] === true}
+                            disabled={sameAsAddress === true}
                             onChange={(e) => {
                                 const checked = e.target.checked;
                                 setFormData((prev: any) => ({
@@ -88,12 +88,12 @@ export function BirthPlaceSection({
                         </svg>
                     </div>
                     <span className="text-xs font-black text-slate-600 uppercase tracking-wide group-hover:text-primary transition-colors">
-                        Are you not born in the Philippines? {sameAsAddress && <span className="text-[10px] text-primary/50 normal-case font-bold">(Managed by Current Address)</span>}
+                        Are you not born in the Philippines? {sameAsAddress === true && <span className="text-[10px] text-primary/50 normal-case font-bold">(Managed by Current Address)</span>}
                     </span>
                 </label>
             </div>
 
-            {sameAsAddress ? (
+            {sameAsAddress === true ? (
                 <div className="p-4 bg-primary/5 rounded-xl border border-primary/10 animate-in fade-in zoom-in-95 duration-300">
                     <p className="text-[10px] font-bold text-primary/70 mb-1 flex items-center gap-2 uppercase tracking-wider">
                         <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
@@ -102,14 +102,21 @@ export function BirthPlaceSection({
                     <p className="text-sm font-black text-slate-700">{formData[`${prefix}BirthPlace`] || "Please select Current Address first..."}</p>
                     <p className="text-xs text-slate-500 mt-1">Country: {formData[`${prefix}BirthCountry`] || formData[`${prefix}Country`] || "Philippines"}</p>
                 </div>
-            ) : (
+            ) : sameAsAddress === false ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-1">
                     {!!formData[`${prefix}IsNotBornInPh`] && (
-                        <Field label="Birth Country" required>
+                        <Field label="Country" required>
                             <select
                                 className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
                                 value={formData[`${prefix}BirthCountry`] || "Philippines"}
-                                onChange={(e) => setFormData((prev: any) => ({ ...prev, [`${prefix}BirthCountry`]: e.target.value || "Philippines" }))}
+                                onChange={(e) => {
+                                    const newCountry = e.target.value || "Philippines";
+                                    setFormData((prev: any) => ({
+                                        ...prev,
+                                        [`${prefix}BirthCountry`]: newCountry,
+                                        [`${prefix}BirthPlace`]: "",
+                                    }));
+                                }}
                             >
                                 <option value="" disabled hidden>Select Country</option>
                                 {countryOptions.map((c) => (
@@ -120,7 +127,7 @@ export function BirthPlaceSection({
                     )}
                     {(formData[`${prefix}BirthCountry`] || "Philippines") === "Philippines" ? (
                         <>
-                            <Field label="Birth Province">
+                            <Field label="Province">
                                 <select
                                     className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
                                     value={(() => {
@@ -147,7 +154,7 @@ export function BirthPlaceSection({
                                     ))}
                                 </select>
                             </Field>
-                            <Field label="Birth Town/Municipality">
+                            <Field label="Municipality">
                                 <select
                                     className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm disabled:opacity-50 focus:ring-2 focus:ring-primary outline-none"
                                     disabled={!birthTownOptions.length}
@@ -182,7 +189,7 @@ export function BirthPlaceSection({
                         </>
                     ) : (
                         <>
-                            <Field label="Birth Province" required>
+                            <Field label="Province" required>
                                 <Input
                                     placeholder="Type province/state"
                                     className="bg-white"
@@ -204,7 +211,7 @@ export function BirthPlaceSection({
                                     }}
                                 />
                             </Field>
-                            <Field label="Birth Town/Municipality" required>
+                            <Field label="Municipality " required>
                                 <Input
                                     placeholder="Type town/municipality"
                                     className="bg-white"
@@ -229,7 +236,7 @@ export function BirthPlaceSection({
                         </>
                     )}
                 </div>
-            )}
+            ) : null}
         </div>
     );
 }

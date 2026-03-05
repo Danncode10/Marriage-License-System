@@ -7,6 +7,7 @@ export const STATUS_CONFIG: Record<string, { color: string; icon: any; bg: strin
     approved: { color: "text-emerald-700", icon: CheckCircle2, bg: "bg-emerald-50", border: "border-emerald-200", dot: "bg-emerald-400" },
     completed: { color: "text-blue-700", icon: CheckCircle2, bg: "bg-blue-50", border: "border-blue-200", dot: "bg-blue-400" },
     rejected: { color: "text-red-700", icon: XCircle, bg: "bg-red-50", border: "border-red-200", dot: "bg-red-400" },
+    deleted: { color: "text-zinc-500", icon: Clock, bg: "bg-zinc-50", border: "border-zinc-200", dot: "bg-zinc-300" },
 };
 
 export const getStatusConfig = (status?: string) => {

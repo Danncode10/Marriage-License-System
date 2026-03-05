@@ -3,6 +3,11 @@ import path from 'path';
 import fs from 'fs';
 import { ExcelData } from './types';
 
+const clean = (s: any) => {
+    if (typeof s !== 'string') return s;
+    return s.replace(/\(capital\)/gi, "").replace(/\s+/g, " ").replace(/\s+,/g, ",").trim();
+};
+
 export class ExcelGenerator {
     private templatePath: string;
 
@@ -38,6 +43,18 @@ export class ExcelGenerator {
         return town.replace(/\(Capital\)/gi, "").trim();
     }
 
+    private formatBirthday(dateStr: string): string {
+        if (!dateStr) return "";
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return this.sanitize(dateStr);
+
+        const day = date.getDate();
+        const month = date.toLocaleString('default', { month: 'long' });
+        const year = date.getFullYear();
+
+        return `${day}-${month}-${year}`;
+    }
+
     async generate(data: ExcelData): Promise<Buffer> {
         if (!fs.existsSync(this.templatePath)) {
             throw new Error(`Template not found at ${this.templatePath}`);
@@ -53,8 +70,8 @@ export class ExcelGenerator {
 
         const gCleanTown = this.cleanTown(data.gTown);
         const bCleanTown = this.cleanTown(data.bTown);
-        const gTownProv = `${gCleanTown}, ${data.gProv || 'Nueva Vizcaya'}`;
-        const bTownProv = `${bCleanTown}, ${data.bProv || 'Nueva Vizcaya'}`;
+        const gTownProv = `${gCleanTown}, ${clean(data.gProv || 'Nueva Vizcaya')}`;
+        const bTownProv = `${bCleanTown}, ${clean(data.bProv || 'Nueva Vizcaya')}`;
         const gFullAddr = `Brgy., ${data.gBrgy || ''}, ${gTownProv}`;
         const bFullAddr = `Brgy., ${data.bBrgy || ''}, ${bTownProv}`;
 
@@ -105,9 +122,9 @@ export class ExcelGenerator {
             appSheet.getCell('B8').value = groom.f;
             appSheet.getCell('B9').value = groom.m;
             appSheet.getCell('B10').value = groom.l;
-            appSheet.getCell('B11').value = this.sanitize(data.gBday);
+            appSheet.getCell('B11').value = this.formatBirthday(data.gBday);
             appSheet.getCell('N11').value = data.gAge || 0;
-            appSheet.getCell('B12').value = this.sanitize(data.gBirthPlace || "");
+            appSheet.getCell('B12').value = clean(this.sanitize(data.gBirthPlace || ""));
 
             const gCountryVal = this.sanitize(data.gCountry) || 'Philippines';
             const gBirthCountryVal = this.sanitize(data.gBirthCountry) || 'Philippines';
@@ -155,9 +172,9 @@ export class ExcelGenerator {
             appSheet.getCell('U8').value = bride.f;
             appSheet.getCell('U9').value = bride.m;
             appSheet.getCell('U10').value = bride.l;
-            appSheet.getCell('U11').value = this.sanitize(data.bBday);
+            appSheet.getCell('U11').value = this.formatBirthday(data.bBday);
             appSheet.getCell('AF11').value = data.bAge || 0;
-            appSheet.getCell('U12').value = this.sanitize(data.bBirthPlace || "");
+            appSheet.getCell('U12').value = clean(this.sanitize(data.bBirthPlace || ""));
 
             const bCountryVal = this.sanitize(data.bCountry) || 'Philippines';
             const bBirthCountryVal = this.sanitize(data.bBirthCountry) || 'Philippines';
@@ -207,6 +224,18 @@ export class ExcelGenerator {
             appSheet.getCell('B38').value = "Solano, Nueva Vizcaya";
             appSheet.getCell('U38').value = "Solano, Nueva Vizcaya";
             appSheet.getCell('F4').value = (data.employeeName || "").toUpperCase();
+
+            // Registry Number Logic
+            if (data.registryNumber) {
+                const parts = data.registryNumber.split('-');
+                if (parts.length === 2) {
+                    appSheet.getCell('X3').value = parts[0]; // Year (e.g. 2026)
+                    appSheet.getCell('AD3').value = parts[1]; // Code (e.g. 01)
+                } else {
+                    // Fallback if format is unexpected
+                    appSheet.getCell('AD3').value = data.registryNumber;
+                }
+            }
         }
 
         // --- 3. FILL EXTRA SHEET IDs ---
@@ -241,7 +270,7 @@ export class ExcelGenerator {
                 data.bBirthPlace    // Bride Birth
             ]
                 .filter(s => s && typeof s === 'string' && s.trim() !== "" && !isSolano(s))
-                .map(s => this.sanitize(s).trim());
+                .map(s => clean(this.sanitize(s)).trim());
 
             // Deduplicate while preserving order
             const uniqueCandidates = candidates.filter((item, index) => candidates.indexOf(item) === index);

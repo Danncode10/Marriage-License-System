@@ -4,24 +4,57 @@ import { createClient, createAdminClient } from "@/utils/supabase/server-utils";
 import { revalidatePath } from "next/cache";
 import { handleImageReplace } from "@/utils/supabase/storage-utils";
 
-export async function getAllApplications(page: number = 1, limit: number = 50) {
+export async function getAllApplications(page: number = 1, limit: number = 50, statusFilter?: string) {
     const supabase = createAdminClient();
 
     const offset = (page - 1) * limit;
 
-    // Get total count first
-    const { count: totalCount, error: countError } = await supabase
+    // Get counts for all categories for the tabs
+    const { data: countData, error: countError } = await supabase
         .from("marriage_applications")
-        .select("*", { count: "exact", head: true });
+        .select("status");
 
     if (countError) {
-        console.error("Error getting total count:", countError);
-        return { apps: [], totalCount: 0, totalPages: 0 };
+        console.error("Error getting counts:", countError);
     }
 
-    // Get paginated data
-    const { data: apps, error } = await supabase
-        .from("marriage_applications")
+    const allCounts = { all: 0, pending: 0, approved: 0, completed: 0, rejected: 0, deleted: 0 };
+    if (countData) {
+        countData.forEach(row => {
+            const s = (row.status || 'pending').toLowerCase();
+            // Total 'all' should probably exclude deleted records to keep management clean, 
+            // or include them if that's what the user wants. 
+            // User said "i should see 5 branched: all, pending, approve, complete, and rejected" earlier.
+            // Now adding a 6th: Deleted.
+            if (s !== 'deleted') allCounts.all++;
+
+            if (s === "pending" || s === "submitted" || s === "processing" || s === "draft") allCounts.pending++;
+            else if (s === "approved") allCounts.approved++;
+            else if (s === "completed") allCounts.completed++;
+            else if (s === "rejected") allCounts.rejected++;
+            else if (s === "deleted") allCounts.deleted++;
+        });
+    }
+
+    let query = supabase.from("marriage_applications").select("*", { count: "exact" });
+
+    // Auto-purge applications deleted for more than 1 week
+    await purgeDeletedApplications();
+
+    // Handle status filtering
+    if (statusFilter && statusFilter !== 'all') {
+        if (statusFilter === 'pending') {
+            query = query.in('status', ['pending', 'submitted', 'processing', 'draft']);
+        } else {
+            query = query.eq('status', statusFilter);
+        }
+    } else {
+        // By default (All tab), exclude deleted applications
+        query = query.neq('status', 'deleted');
+    }
+
+    // Get table data with count
+    const { data: apps, count: totalCount, error } = await query
         .select(`
             *,
             submitter:profiles!created_by(full_name),
@@ -58,9 +91,10 @@ export async function getAllApplications(page: number = 1, limit: number = 50) {
                     country,
                     is_foreigner
                 )
-            )
+            ),
+            application_photos (id)
         `)
-        .order("created_at", { ascending: false })
+        .order("created_at", { ascending: true })
         .range(offset, offset + limit - 1);
 
     if (error) {
@@ -76,6 +110,9 @@ export async function getAllApplications(page: number = 1, limit: number = 50) {
         // Use the submitter's name if available, otherwise use the processor's name (for walk-ins)
         const submittedBy = (app as any).submitter?.full_name || (app as any).processor?.full_name || 'Walk-in / Anonymous';
 
+        const photos = Array.isArray(app.application_photos) ? app.application_photos : [];
+        const hasPhoto = photos.length > 0;
+
         return {
             ...app,
             groom_name: groom ? `${groom.first_name} ${groom.last_name}` : 'Unknown',
@@ -83,6 +120,7 @@ export async function getAllApplications(page: number = 1, limit: number = 50) {
             submitted_by: submittedBy,
             groom: groom || null,
             bride: bride || null,
+            has_photo: hasPhoto
         };
     });
 
@@ -93,7 +131,8 @@ export async function getAllApplications(page: number = 1, limit: number = 50) {
         totalCount: totalCount || 0,
         totalPages,
         currentPage: page,
-        limit
+        limit,
+        allCounts
     };
 }
 
@@ -118,6 +157,41 @@ export async function updateApplicationStatus(applicationId: string, newStatus: 
     if (fetchError) {
         console.error("Error fetching application:", fetchError);
         return { success: false, error: fetchError.message };
+    }
+
+    // Restriction 1: Cannot mark as "approved" if no photo exists
+    if (newStatus === "approved") {
+        const { count, error: photoError } = await supabase
+            .from("application_photos")
+            .select("id", { count: 'exact', head: true })
+            .eq("application_id", applicationId);
+
+        if (photoError) {
+            console.error("Error checking photo for status update:", photoError);
+            return { success: false, error: "Failed to verify application photo." };
+        }
+
+        if (!count || count === 0) {
+            return { success: false, error: "Application cannot be approved without a couple photo. Use the Camera icon to capture a photo first." };
+        }
+    }
+
+    // Restriction 2: Cannot mark as "completed" if no registry code/number
+    if (newStatus === "completed") {
+        const { data: registryCheck, error: registryError } = await supabase
+            .from("marriage_applications")
+            .select("registry_number")
+            .eq("id", applicationId)
+            .single();
+
+        if (registryError) {
+            console.error("Error checking registry number for status update:", registryError);
+            return { success: false, error: "Failed to verify registry number." };
+        }
+
+        if (!registryCheck.registry_number) {
+            return { success: false, error: "Application cannot be marked as completed without a Registry Number. Use the Registry icon to assign one first." };
+        }
     }
 
     console.log("Application data:", appData);
@@ -160,6 +234,75 @@ export async function updateApplicationStatus(applicationId: string, newStatus: 
     revalidatePath("/dashboard/admin/applications");
     revalidatePath("/dashboard/admin");
     return { success: true };
+}
+
+export async function updateRegistryNumber(applicationId: string, registryCode: string) {
+    console.log("updateRegistryNumber called with:", { applicationId, registryCode });
+
+    const role = await getCurrentUserRole();
+    if (!role || !(['admin', 'employee'].includes(role))) {
+        return { success: false, error: "Unauthorized: Only staff can edit registry numbers." };
+    }
+
+    const supabase = createAdminClient();
+
+    // Verify photo exists before allowing registry number
+    const { count, error: photoCheckError } = await supabase
+        .from("application_photos")
+        .select("id", { count: 'exact', head: true })
+        .eq("application_id", applicationId);
+
+    if (photoCheckError) {
+        console.error("Error checking for photo:", photoCheckError);
+        return { success: false, error: "Failed to verify application photo." };
+    }
+
+    if (!count || count === 0) {
+        return { success: false, error: "Cannot assign registry number: Application photo has not been submitted yet." };
+    }
+
+    // Get current year
+    const year = new Date().getFullYear();
+    const fullRegistryNumber = `${year}-${registryCode}`;
+
+    // Check if registry number already exists
+    const { data: existingApp, error: checkError } = await supabase
+        .from("marriage_applications")
+        .select("application_code")
+        .eq("registry_number", fullRegistryNumber)
+        .neq("id", applicationId)
+        .maybeSingle();
+
+    if (checkError) {
+        console.error("Error checking for duplicate registry number:", checkError);
+    }
+
+    if (existingApp) {
+        return {
+            success: false,
+            error: `Registry Number "${fullRegistryNumber}" is already assigned to application ${existingApp.application_code}. Please use a different code.`
+        };
+    }
+
+    // Update registry number and mark as completed
+    const { data, error } = await supabase
+        .from("marriage_applications")
+        .update({
+            registry_number: fullRegistryNumber,
+            status: 'completed',
+            updated_at: new Date().toISOString()
+        })
+        .eq("id", applicationId)
+        .select();
+
+    if (error) {
+        console.error("Error updating registry number:", error);
+        return { success: false, error: error.message };
+    }
+
+    revalidatePath("/dashboard/admin/applications");
+    revalidatePath("/dashboard/admin");
+    return { success: true, registryNumber: fullRegistryNumber };
 }
 
 export async function uploadApplicationPhoto(formData: FormData) {
@@ -454,21 +597,87 @@ export async function deleteApplication(applicationId: string) {
 
     const supabase = createAdminClient();
 
-    // The tables related to marriage_applications should have ON DELETE CASCADE.
-    // However, for safety and to ensure clean state, we explicitly delete the main record.
-    // If ON DELETE CASCADE is not set, this will fail if there are dependent records.
+    // Check if it's already deleted (for permanent deletion)
+    const { data: currentApp } = await supabase
+        .from("marriage_applications")
+        .select("status")
+        .eq("id", applicationId)
+        .single();
+
+    if (currentApp?.status === 'deleted') {
+        // Permanent deletion if already in deleted status (e.g. from Deleted tab)
+        const { error } = await supabase
+            .from("marriage_applications")
+            .delete()
+            .eq("id", applicationId);
+
+        if (error) {
+            console.error("Error permanently deleting application:", error);
+            return { success: false, error: error.message };
+        }
+    } else {
+        // Soft deletion
+        const { error } = await supabase
+            .from("marriage_applications")
+            .update({
+                status: 'deleted',
+                updated_at: new Date().toISOString()
+            })
+            .eq("id", applicationId);
+
+        if (error) {
+            console.error("Error soft deleting application:", error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    revalidatePath("/dashboard/admin/applications");
+    revalidatePath("/dashboard/admin");
+    return { success: true };
+}
+
+export async function restoreApplication(applicationId: string) {
+    console.log("restoreApplication called with:", { applicationId });
+
+    const role = await getCurrentUserRole();
+    if (role !== 'admin') {
+        return { success: false, error: "Unauthorized: Only ADMIN can restore applications." };
+    }
+
+    const supabase = createAdminClient();
 
     const { error } = await supabase
         .from("marriage_applications")
-        .delete()
+        .update({
+            status: 'pending',
+            updated_at: new Date().toISOString()
+        })
         .eq("id", applicationId);
 
     if (error) {
-        console.error("Error deleting application:", error);
+        console.error("Error restoring application:", error);
         return { success: false, error: error.message };
     }
 
     revalidatePath("/dashboard/admin/applications");
     revalidatePath("/dashboard/admin");
     return { success: true };
+}
+
+export async function purgeDeletedApplications() {
+    const supabase = createAdminClient();
+
+    // Applications in 'deleted' status for more than 7 days
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    const { error } = await supabase
+        .from("marriage_applications")
+        .delete()
+        .eq("status", "deleted")
+        .lt("updated_at", oneWeekAgo.toISOString());
+
+    if (error) {
+        console.error("Error purging old deleted applications:", error);
+    }
 }

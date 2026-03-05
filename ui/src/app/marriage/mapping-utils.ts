@@ -20,7 +20,8 @@ export const mapAppToFormData = (app: any) => {
     const isCustomReligion = (religion: string) => religion && !RELIGIONS.includes(religion) && religion !== "";
 
     // Determine if birth place matches address (Municipality and Province only — no barangay)
-    const normalize = (s: string) => (s || "").trim().toLowerCase().replace(/\(capital\)/gi, "").trim();
+    const clean = (s: string) => (s || "").replace(/\(capital\)/gi, "").replace(/\s+/g, " ").replace(/\s+,/g, ",").trim();
+    const normalize = (s: string) => clean(s).toLowerCase();
     const gAddrShort = groom.addresses ? `${groom.addresses.municipality}, ${groom.addresses.province}` : "";
     const bAddrShort = bride.addresses ? `${bride.addresses.municipality}, ${bride.addresses.province}` : "";
 
@@ -47,10 +48,10 @@ export const mapAppToFormData = (app: any) => {
         gCustomSuffix: isCustomSuffix(groom.suffix) ? groom.suffix : "",
         gBday: groom.birth_date || "",
         gAge: groom.age || 0,
-        gBirthPlace: (groom.birth_place != null && groom.birth_place.trim() !== "") ? groom.birth_place : gAddrShort,
+        gBirthPlace: (groom.birth_place != null && groom.birth_place.trim() !== "") ? clean(groom.birth_place) : clean(gAddrShort),
         gBrgy: groom.addresses?.barangay || "",
-        gTown: groom.addresses?.municipality || "",
-        gProv: groom.addresses?.province || "Nueva Vizcaya",
+        gTown: clean(groom.addresses?.municipality || ""),
+        gProv: clean(groom.addresses?.province || "Nueva Vizcaya"),
         gReligion: isCustomReligion(groom.religion) ? "Others" : (groom.religion || ""),
         gCustomReligion: isCustomReligion(groom.religion) ? groom.religion : "",
         gCountry: gAddrCountry,
@@ -90,10 +91,10 @@ export const mapAppToFormData = (app: any) => {
         bCustomSuffix: isCustomSuffix(bride.suffix) ? bride.suffix : "",
         bBday: bride.birth_date || "",
         bAge: bride.age || 0,
-        bBirthPlace: (bride.birth_place != null && bride.birth_place.trim() !== "") ? bride.birth_place : bAddrShort,
+        bBirthPlace: (bride.birth_place != null && bride.birth_place.trim() !== "") ? clean(bride.birth_place) : clean(bAddrShort),
         bBrgy: bride.addresses?.barangay || "",
-        bTown: bride.addresses?.municipality || "",
-        bProv: bride.addresses?.province || "Nueva Vizcaya",
+        bTown: clean(bride.addresses?.municipality || ""),
+        bProv: clean(bride.addresses?.province || "Nueva Vizcaya"),
         bReligion: isCustomReligion(bride.religion) ? "Others" : (bride.religion || ""),
         bCustomReligion: isCustomReligion(bride.religion) ? bride.religion : "",
         bCountry: bAddrCountry,

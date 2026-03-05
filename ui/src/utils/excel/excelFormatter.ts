@@ -26,6 +26,7 @@ export interface FlattenedApplication {
     bride_religion: string;
     bride_municipality: string;
     bride_barangay: string;
+    registry_number: string;
 }
 
 export const formatApplicationsForExcel = (applications: any[]): FlattenedApplication[] => {
@@ -55,6 +56,7 @@ export const formatApplicationsForExcel = (applications: any[]): FlattenedApplic
             bride_religion: bride.religion || '',
             bride_municipality: bride.addresses?.municipality || '',
             bride_barangay: bride.addresses?.barangay || '',
+            registry_number: app.registry_number || '',
         };
     });
 };

@@ -6,11 +6,12 @@ import {
     FileText, Search, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Loader2, X
 } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
-import { updateApplicationStatus, deleteApplication } from "./actions";
+import { updateApplicationStatus, deleteApplication, updateRegistryNumber, restoreApplication } from "./actions";
 import PhotoCaptureModal from "@/components/PhotoCaptureModal";
 import AdminMarriageForm from "./AdminMarriageForm";
 import DeleteApplicationModal from "./components/DeleteApplicationModal";
 import AdminOnlyModal from "./components/AdminOnlyModal";
+import RegistryNumberModal from "./components/RegistryNumberModal";
 
 import { toTitleCase, calculateAge, splitName } from "../../../marriage/utils";
 
@@ -18,7 +19,6 @@ import { toTitleCase, calculateAge, splitName } from "../../../marriage/utils";
 import ApplicationTable from "./components/ApplicationTable";
 import ApplicationDetailModal from "./components/ApplicationDetailModal";
 import RowManualUpdateModal from "./components/RowManualUpdateModal";
-import ManualStatusUpdateForm from "./components/ManualStatusUpdateForm";
 import EditApplicationModal from "../../../marriage/components/EditApplicationModal";
 
 // ── Main Component ──────────────────────────────────────────────────────────
@@ -28,7 +28,9 @@ export default function GlobalOversightClient({
     totalPages,
     currentPage,
     limit,
-    userRole
+    userRole,
+    allCounts: initialCounts,
+    initialStatus = 'pending'
 }: {
     apps: any[];
     totalCount: number;
@@ -36,6 +38,8 @@ export default function GlobalOversightClient({
     currentPage: number;
     limit: number;
     userRole: string | null;
+    allCounts: { all: number, pending: number, approved: number, completed: number, rejected: number, deleted: number };
+    initialStatus?: string;
 }) {
     const router = useRouter();
     const [apps, setApps] = useState<any[]>(initialApps || []);
@@ -47,15 +51,22 @@ export default function GlobalOversightClient({
 
     const [selectedApp, setSelectedApp] = useState<any | null>(null);
     const [search, setSearch] = useState("");
+
+    // Initialize from the server-passed prop to avoid hydration mismatch
+    const [activeTab, setActiveTab] = useState(initialStatus);
+
+    // Sync activeTab if the initialStatus prop changes (e.g. via navigation)
+    useEffect(() => {
+        setActiveTab(initialStatus);
+    }, [initialStatus]);
+    const [counts, setCounts] = useState(initialCounts || { all: 0, pending: 0, approved: 0, completed: 0, rejected: 0, deleted: 0 });
+
+    useEffect(() => {
+        if (initialCounts) setCounts(initialCounts);
+    }, [initialCounts]);
     const [updatingId, setUpdatingId] = useState<string | null>(null);
     const [downloadingId, setDownloadingId] = useState<string | null>(null);
     const [downloadMessage, setDownloadMessage] = useState<{ type: 'success' | 'error' | 'info', text: string } | null>(null);
-
-    // Manual status update form state
-    const [manualAppCode, setManualAppCode] = useState("");
-    const [manualStatus, setManualStatus] = useState("approved");
-    const [manualUpdating, setManualUpdating] = useState(false);
-    const [manualMessage, setManualMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
     // Row-based manual update modal state
     const [rowManualApp, setRowManualApp] = useState<any | null>(null);
@@ -80,46 +91,12 @@ export default function GlobalOversightClient({
     // Admin only restriction modal
     const [showAdminOnlyModal, setShowAdminOnlyModal] = useState(false);
 
+    // Registry Number modal state
+    const [registryApp, setRegistryApp] = useState<any | null>(null);
+
     const handleRefresh = () => {
         window.location.reload();
     };
-
-    async function handleManualStatusUpdate() {
-        if (!manualAppCode.trim()) return;
-
-        setManualUpdating(true);
-        setManualMessage(null);
-
-        try {
-            // Find the application by code
-            const appToUpdate = apps.find(app => app.application_code?.toUpperCase() === manualAppCode.toUpperCase());
-
-            if (!appToUpdate) {
-                setManualMessage({ type: 'error', text: `Application with code "${manualAppCode}" not found.` });
-                return;
-            }
-
-            const result = await updateApplicationStatus(appToUpdate.id, manualStatus);
-
-            if (result.success) {
-                // Update local state
-                setApps(prev => prev.map(a => a.id === appToUpdate.id ? { ...a, status: manualStatus } : a));
-                if (selectedApp?.id === appToUpdate.id) {
-                    setSelectedApp((prev: any) => ({ ...prev, status: manualStatus }));
-                }
-
-                setManualMessage({ type: 'success', text: `Status updated to "${manualStatus}" for application ${manualAppCode}.` });
-                setManualAppCode(""); // Clear the input
-            } else {
-                setManualMessage({ type: 'error', text: `Failed to update status: ${result.error}` });
-            }
-        } catch (error) {
-            console.error("Manual update error:", error);
-            setManualMessage({ type: 'error', text: 'An error occurred while updating the status.' });
-        } finally {
-            setManualUpdating(false);
-        }
-    }
 
     async function handleRowManualStatusUpdate() {
         if (!rowManualApp) return;
@@ -150,14 +127,45 @@ export default function GlobalOversightClient({
         }
     }
 
+    async function handleRegistryUpdate(appId: string, registryCode: string) {
+        const result = await updateRegistryNumber(appId, registryCode);
+        if (result.success) {
+            // Update local state
+            setApps(prev => prev.map(a => a.id === appId ? {
+                ...a,
+                registry_number: result.registryNumber,
+                status: 'completed'
+            } : a));
+
+            if (selectedApp?.id === appId) {
+                setSelectedApp((prev: any) => ({
+                    ...prev,
+                    registry_number: result.registryNumber,
+                    status: 'completed'
+                }));
+            }
+        }
+        return result;
+    }
+
     async function handleDeleteApplication() {
         if (!appToDelete) return;
 
         try {
             const result = await deleteApplication(appToDelete.id);
             if (result.success) {
-                setApps(prev => prev.filter(a => a.id !== appToDelete.id));
-                setDownloadMessage({ type: 'success', text: `Application ${appToDelete.application_code} deleted successfully.` });
+                // If the app was not in 'deleted' status, it's now 'deleted' (soft delete)
+                // If it was already 'deleted', it's now permanently removed.
+                const isPermanent = appToDelete.status === 'deleted';
+
+                if (isPermanent) {
+                    setApps(prev => prev.filter(a => a.id !== appToDelete.id));
+                    setDownloadMessage({ type: 'success', text: `Application ${appToDelete.application_code} permanently deleted.` });
+                } else {
+                    // Refresh counts or move to deleted tab if we want immediate local update
+                    // For simplicity, just reload or rely on server-side filtering on next tab change
+                    handleRefresh();
+                }
                 setTimeout(() => setDownloadMessage(null), 3000);
             } else {
                 setDownloadMessage({ type: 'error', text: `Failed to delete application: ${result.error}` });
@@ -168,6 +176,21 @@ export default function GlobalOversightClient({
         } finally {
             setShowDeleteModal(false);
             setAppToDelete(null);
+        }
+    }
+
+    async function handleRestoreApplication(appId: string) {
+        try {
+            const result = await restoreApplication(appId);
+            if (result.success) {
+                setDownloadMessage({ type: 'success', text: `Application restored to pending.` });
+                handleRefresh();
+            } else {
+                setDownloadMessage({ type: 'error', text: `Restore failed: ${result.error}` });
+            }
+        } catch (error) {
+            console.error("Restore error:", error);
+            setDownloadMessage({ type: 'error', text: 'An error occurred while restoring.' });
         }
     }
 
@@ -284,6 +307,7 @@ export default function GlobalOversightClient({
                 body: JSON.stringify({
                     ...excelData,
                     applicationCode: app.application_code,
+                    registryNumber: app.registry_number,
                 }),
             });
 
@@ -326,19 +350,42 @@ export default function GlobalOversightClient({
         }
     };
 
-    const filtered = useMemo(() => {
-        const q = search.toLowerCase().trim();
-        if (!q) return apps;
+    const handleTabChange = (status: string) => {
+        setActiveTab(status);
+        const params = new URLSearchParams(window.location.search);
+        params.set('status', status);
+        params.set('page', '1'); // Reset to first page
+        router.push(`/dashboard/admin/applications?${params.toString()}`);
+    };
 
-        return apps.filter(app => {
-            return (
-                (app.application_code?.toLowerCase() || "").includes(q) ||
-                (app.groom_name?.toLowerCase() || "").includes(q) ||
-                (app.bride_name?.toLowerCase() || "").includes(q) ||
-                (app.submitted_by?.toLowerCase() || "").includes(q)
-            );
+    const filtered = useMemo(() => {
+        let result = apps;
+
+        // Note: Server already filters by status, but we keep this for immediate local updates
+        result = result.filter(app => {
+            if (activeTab === 'all') return true;
+            const status = (app.status || 'pending').toLowerCase();
+            if (activeTab === "pending") {
+                return status === "pending" || status === "submitted" || status === "processing" || status === "draft";
+            }
+            return status === activeTab;
         });
-    }, [apps, search]);
+
+        // 2. Filter by Search Query
+        const q = search.toLowerCase().trim();
+        if (q) {
+            result = result.filter(app => {
+                return (
+                    (app.application_code?.toLowerCase() || "").includes(q) ||
+                    (app.groom_name?.toLowerCase() || "").includes(q) ||
+                    (app.bride_name?.toLowerCase() || "").includes(q) ||
+                    (app.submitted_by?.toLowerCase() || "").includes(q)
+                );
+            });
+        }
+
+        return result;
+    }, [apps, search, activeTab]);
 
     return (
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10" suppressHydrationWarning>
@@ -358,6 +405,41 @@ export default function GlobalOversightClient({
                         Create Application
                     </button>
                 </div>
+
+                {/* ── Status Tabs ── */}
+                <div className="flex p-1.5 bg-zinc-100 rounded-[2rem] w-fit border border-zinc-200 shadow-inner overflow-x-auto no-scrollbar">
+                    {[
+                        { id: 'all', label: 'All', count: counts.all, color: 'text-zinc-600', bg: 'bg-zinc-200' },
+                        { id: 'pending', label: 'Pending', count: counts.pending, color: 'text-amber-600', bg: 'bg-amber-100' },
+                        { id: 'approved', label: 'Approve', count: counts.approved, color: 'text-emerald-600', bg: 'bg-emerald-100' },
+                        { id: 'completed', label: 'Complete', count: counts.completed, color: 'text-blue-600', bg: 'bg-blue-100' },
+                        { id: 'rejected', label: 'Rejected', count: counts.rejected, color: 'text-rose-600', bg: 'bg-rose-100' },
+                        { id: 'deleted', label: 'Deleted', count: counts.deleted, color: 'text-zinc-600', bg: 'bg-zinc-100' },
+                    ].map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => handleTabChange(tab.id)}
+                            className={`
+                                relative flex items-center gap-3 px-6 py-3 rounded-[1.5rem] transition-all duration-300
+                                ${activeTab === tab.id ? 'bg-white shadow-xl shadow-zinc-200/50' : 'hover:bg-zinc-200/50'}
+                            `}
+                        >
+                            <span className={`text-xs font-black uppercase tracking-widest ${activeTab === tab.id ? 'text-zinc-900' : 'text-zinc-400'}`}>
+                                {tab.label}
+                            </span>
+                            <span className={`
+                                flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-black
+                                ${activeTab === tab.id ? `${tab.bg} ${tab.color}` : 'bg-zinc-200 text-zinc-500'}
+                            `}>
+                                {tab.count}
+                            </span>
+                            {activeTab === tab.id && (
+                                <div className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-zinc-900 shadow-lg`} />
+                            )}
+                        </button>
+                    ))}
+                </div>
+
                 <div className="relative group">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 group-focus-within:text-zinc-900 transition-colors" />
                     <input
@@ -383,9 +465,8 @@ export default function GlobalOversightClient({
                 )}
             </div>
 
-            {/* ── Photo Capture and Manual Status Update Forms ── */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Photo Capture */}
+            {/* ── Photo Capture Form ── */}
+            {(activeTab === 'pending' || activeTab === 'approved') && (
                 <div className="bg-white rounded-[2.5rem] border border-zinc-100 shadow-2xl shadow-zinc-200/50 p-8">
                     <h3 className="text-xl font-black text-zinc-900 uppercase tracking-tight mb-6">Photo Capture</h3>
                     <p className="text-sm text-zinc-600 mb-6">
@@ -399,18 +480,7 @@ export default function GlobalOversightClient({
                         Open Photo Capture
                     </button>
                 </div>
-
-                {/* Manual Status Update Form */}
-                <ManualStatusUpdateForm
-                    manualAppCode={manualAppCode}
-                    setManualAppCode={setManualAppCode}
-                    manualStatus={manualStatus}
-                    setManualStatus={setManualStatus}
-                    manualUpdating={manualUpdating}
-                    manualMessage={manualMessage}
-                    onUpdate={handleManualStatusUpdate}
-                />
-            </div>
+            )}
 
             {/* ── Table ── */}
             <ApplicationTable
@@ -422,6 +492,9 @@ export default function GlobalOversightClient({
                     setRowManualStatus(app.status || "approved");
                     setRowManualMessage(null);
                 }}
+                onRegistry={(app) => {
+                    setRegistryApp(app);
+                }}
                 onDelete={(app) => {
                     if (userRole !== 'admin') {
                         setShowAdminOnlyModal(true);
@@ -430,6 +503,7 @@ export default function GlobalOversightClient({
                     setAppToDelete(app);
                     setShowDeleteModal(true);
                 }}
+                onRestore={handleRestoreApplication}
                 updatingId={updatingId}
                 downloadingId={downloadingId}
                 onRefresh={handleRefresh}
@@ -443,7 +517,7 @@ export default function GlobalOversightClient({
                     </div>
                     <div className="flex items-center gap-2">
                         <button
-                            onClick={() => router.push(`/dashboard/admin/applications?page=${currentPage - 1}&limit=${limit}`)}
+                            onClick={() => router.push(`/dashboard/admin/applications?page=${currentPage - 1}&limit=${limit}&status=${activeTab}`)}
                             disabled={currentPage <= 1}
                             className="flex items-center gap-2 h-10 px-4 bg-zinc-100 hover:bg-zinc-200 disabled:bg-zinc-50 disabled:text-zinc-400 text-zinc-900 rounded-2xl font-bold text-sm transition-all disabled:cursor-not-allowed"
                         >
@@ -459,7 +533,7 @@ export default function GlobalOversightClient({
                                 return (
                                     <button
                                         key={pageNum}
-                                        onClick={() => router.push(`/dashboard/admin/applications?page=${pageNum}&limit=${limit}`)}
+                                        onClick={() => router.push(`/dashboard/admin/applications?page=${pageNum}&limit=${limit}&status=${activeTab}`)}
                                         className={`h-10 w-10 rounded-2xl font-bold text-sm transition-all ${pageNum === currentPage
                                             ? 'bg-zinc-900 text-white'
                                             : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900'
@@ -472,7 +546,7 @@ export default function GlobalOversightClient({
                         </div>
 
                         <button
-                            onClick={() => router.push(`/dashboard/admin/applications?page=${currentPage + 1}&limit=${limit}`)}
+                            onClick={() => router.push(`/dashboard/admin/applications?page=${currentPage + 1}&limit=${limit}&status=${activeTab}`)}
                             disabled={currentPage >= totalPages}
                             className="flex items-center gap-2 h-10 px-4 bg-zinc-100 hover:bg-zinc-200 disabled:bg-zinc-50 disabled:text-zinc-400 text-zinc-900 rounded-2xl font-bold text-sm transition-all disabled:cursor-not-allowed"
                         >
@@ -540,6 +614,7 @@ export default function GlobalOversightClient({
                     }}
                     onConfirm={handleDeleteApplication}
                     applicationCode={appToDelete.application_code}
+                    isSoftDelete={appToDelete.status !== 'deleted'}
                 />
             )}
 
@@ -547,6 +622,14 @@ export default function GlobalOversightClient({
                 isOpen={showAdminOnlyModal}
                 onClose={() => setShowAdminOnlyModal(false)}
             />
+
+            {registryApp && (
+                <RegistryNumberModal
+                    app={registryApp}
+                    onClose={() => setRegistryApp(null)}
+                    onUpdate={handleRegistryUpdate}
+                />
+            )}
         </div>
     );
 }

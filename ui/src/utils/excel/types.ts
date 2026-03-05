@@ -97,4 +97,5 @@ export interface ExcelData {
     imageExtension?: string;
     contactNumber?: string;
     employeeName?: string;
+    registryNumber?: string;
 }
