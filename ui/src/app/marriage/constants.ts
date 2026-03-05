@@ -2,17 +2,8 @@ export const NUEVA_VIZCAYA_CODE = "0250";
 
 export const RELIGIONS = [
     "Roman Catholic", "Islam", "Iglesia ni Cristo", "Philippine Independent Church (Aglipayan)",
-    "Seventh-day Adventist", "Bible Baptist", "United Church of Christ in the Philippines (UCCP)",
-    "Assemblies of God", "United Methodist Church", "Jesus Is Lord Church (JIL)",
-    "Christ's Commission Fellowship (CCF)", "Victory Christian Fellowship",
-    "Episcopal Church in the Philippines", "Lutheran Church in the Philippines",
-    "Church of the Foursquare Gospel", "Pentecostal Missionary Church of Christ (4th Watch)",
-    "Bread of Life Ministries", "The Church of Jesus Christ of Latter-day Saints (Mormons)",
-    "Jehovah’s Witnesses", "Members Church of God International (MCGI)", "Kingdom of Jesus Christ",
-    "Philippine Benevolent Missionaries Association (PBMA)", "Apostolic Catholic Church",
-    "Anitism (Indigenous Traditions)", "Folk Catholicism", "Mahayana Buddhism",
-    "Theravada Buddhism", "Zen Buddhism", "Hinduism", "Sikhism", "Baháʼí Faith",
-    "Judaism", "Taoism", "Atheism", "Agnosticism", "Humanism", "None", "Others"
+    "Seventh-day Adventist", "The Church of Jesus Christ of Latter-day Saints", "Bible Baptist Church",
+    "United Church of Christ in the Philippines", "Jehovah's Witnesses", "Church of Christ", "None", "Others"
 ];
 
 export const SUFFIX_OPTIONS = ["Jr.", "Sr.", "I", "II", "III", "IV", "V", "Others"];
