@@ -390,6 +390,30 @@ export default function UserDashboard() {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Special Cases */}
+                            <div className="mt-6 pt-6 border-t border-blue-200/50">
+                                <p className="text-blue-800 text-[10px] font-black uppercase tracking-widest mb-3 flex items-center gap-2">
+                                    <AlertCircle className="h-3 w-3" /> For Special Cases
+                                </p>
+                                <div className="space-y-2">
+                                    <div className="bg-amber-100/50 p-3 rounded-xl border border-amber-200/50">
+                                        <p className="text-slate-800 text-[11px] font-bold leading-tight">
+                                            <span className="text-amber-700">If Widowed:</span> Death certificate of past spouse
+                                        </p>
+                                    </div>
+                                    <div className="bg-amber-100/50 p-3 rounded-xl border border-amber-200/50">
+                                        <p className="text-slate-800 text-[11px] font-bold leading-tight">
+                                            <span className="text-amber-700">If Divorced:</span> Court Order
+                                        </p>
+                                    </div>
+                                    <div className="bg-amber-100/50 p-3 rounded-xl border border-amber-200/50">
+                                        <p className="text-slate-800 text-[11px] font-bold leading-tight">
+                                            <span className="text-amber-700">If Foreigner:</span> Legal Capacity
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         </CardContent>
                     </Card>
 

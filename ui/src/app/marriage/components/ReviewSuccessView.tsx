@@ -41,6 +41,30 @@ export default function ReviewSuccessView({ applicationCode, user, onEdit }: Rev
                             <Step number={2} title="Prepare Requirements" desc="Birth Certificate, CENOMAR, and Valid IDs (Original & Photocopy)." />
                             <Step number={3} title="Visit Solano Office" desc="Proceed to the Solano Municipal Office to finalize your application." />
                         </div>
+
+                        {/* Special Cases Info */}
+                        <div className="mt-8 pt-6 border-t border-blue-200/50">
+                            <p className="text-blue-800 text-[10px] font-black uppercase tracking-widest mb-3 flex items-center gap-2">
+                                For Special Cases
+                            </p>
+                            <div className="grid grid-cols-1 gap-2">
+                                <div className="bg-white/40 p-3 rounded-xl border border-blue-100">
+                                    <p className="text-slate-700 text-[11px] font-bold leading-tight">
+                                        <span className="text-blue-700">If Widowed:</span> Death certificate of past spouse
+                                    </p>
+                                </div>
+                                <div className="bg-white/40 p-3 rounded-xl border border-blue-100">
+                                    <p className="text-slate-700 text-[11px] font-bold leading-tight">
+                                        <span className="text-blue-700">If Divorced:</span> Court Order
+                                    </p>
+                                </div>
+                                <div className="bg-white/40 p-3 rounded-xl border border-blue-100">
+                                    <p className="text-slate-700 text-[11px] font-bold leading-tight">
+                                        <span className="text-blue-700">If Foreigner:</span> Legal Capacity
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="flex flex-col gap-4">
