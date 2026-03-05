@@ -33,7 +33,7 @@ export default async function GlobalApplicationsPage({
                     totalPages={result.totalPages || 0}
                     currentPage={result.currentPage || 1}
                     limit={result.limit || 50}
-                    allCounts={result.allCounts || { all: 0, pending: 0, approved: 0, completed: 0, rejected: 0 }}
+                    allCounts={result.allCounts || { all: 0, pending: 0, approved: 0, completed: 0, rejected: 0, deleted: 0 }}
                     initialStatus={status}
                     userRole={role}
                 />
