@@ -112,10 +112,12 @@ export function StaffTable({ initialStaff }: { initialStaff: any[] }) {
                                     <Mail className="h-3 w-3 shrink-0" />
                                     <span className="text-xs font-bold tracking-tight truncate">{member.email}</span>
                                 </div>
-                                <div className="flex items-center gap-2 mt-2">
-                                    <IdCard className="h-3.5 w-3.5 text-zinc-400" />
-                                    <span className="text-xs font-black text-zinc-600 tracking-tight">{member.employee_id || 'NOT-ASSIGNED'}</span>
-                                </div>
+                                {member.employee_id && (
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <IdCard className="h-3.5 w-3.5 text-zinc-400" />
+                                        <span className="text-xs font-black text-zinc-600 tracking-tight">{member.employee_id}</span>
+                                    </div>
+                                )}
                                 <Badge className={`mt-2 ${member.role === 'admin' ? "bg-purple-50 text-purple-700 border-purple-100" : "bg-blue-50 text-blue-700 border-blue-100"} px-2 py-1 text-xs font-black uppercase tracking-wider`}>
                                     {member.role}
                                 </Badge>
@@ -181,10 +183,12 @@ export function StaffTable({ initialStaff }: { initialStaff: any[] }) {
                             </td>
                             <td className="px-4 sm:px-6 py-6">
                                 <div className="space-y-1.5">
-                                    <div className="flex items-center gap-2">
-                                        <IdCard className="h-3.5 w-3.5 text-zinc-400" />
-                                        <span className="text-xs font-black text-zinc-600 tracking-tight">{member.employee_id || 'NOT-ASSIGNED'}</span>
-                                    </div>
+                                    {member.employee_id && (
+                                        <div className="flex items-center gap-2">
+                                            <IdCard className="h-3.5 w-3.5 text-zinc-400" />
+                                            <span className="text-xs font-black text-zinc-600 tracking-tight">{member.employee_id}</span>
+                                        </div>
+                                    )}
                                     <Badge className={member.role === 'admin' ? "bg-purple-50 text-purple-700 border-purple-100 px-2 py-0 text-[10px] font-black uppercase tracking-wider" : "bg-blue-50 text-blue-700 border-blue-100 px-2 py-0 text-[10px] font-black uppercase tracking-wider"}>
                                         {member.role}
                                     </Badge>
