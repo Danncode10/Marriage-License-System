@@ -225,6 +225,24 @@ export class ExcelGenerator {
             appSheet.getCell('U38').value = "Solano, Nueva Vizcaya";
             appSheet.getCell('F4').value = (data.employeeName || "").toUpperCase();
 
+            // Previous Marriage Dissolved Logic (Groom)
+            if (data.gStatus !== "Single") {
+                appSheet.getCell('B18').value = this.sanitize(data.gDissolvedHow).toUpperCase();
+                appSheet.getCell('B19').value = this.sanitize(data.gDissolvedPlace).toUpperCase();
+                appSheet.getCell('L19').value = this.sanitize(data.gDissolvedCountry).toUpperCase();
+                appSheet.getCell('B20').value = this.formatBirthday(data.gDissolvedDate || "");
+                appSheet.getCell('B21').value = this.sanitize(data.gRelationshipDegree).toUpperCase();
+            }
+
+            // Previous Marriage Dissolved Logic (Bride)
+            if (data.bStatus !== "Single") {
+                appSheet.getCell('U18').value = this.sanitize(data.bDissolvedHow).toUpperCase();
+                appSheet.getCell('B19').value = this.sanitize(data.bDissolvedPlace).toUpperCase(); // User said B19 for female too
+                appSheet.getCell('AE19').value = this.sanitize(data.bDissolvedCountry).toUpperCase();
+                appSheet.getCell('U20').value = this.formatBirthday(data.bDissolvedDate || "");
+                appSheet.getCell('U21').value = this.sanitize(data.bRelationshipDegree).toUpperCase();
+            }
+
             // Registry Number Logic
             if (data.registryNumber) {
                 const parts = data.registryNumber.split('-');

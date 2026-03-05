@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { AddressSection } from "./components/AddressSection";
 import { BirthPlaceSection } from "./components/BirthPlaceSection";
-import { FamilySubSection, Field, GiverSubSection } from "./components/FormComponents";
+import { FamilySubSection, Field, GiverSubSection, CivilStatusSection } from "./components/FormComponents";
 import { SectionCard } from "./components/SectionCard";
 import { RELIGIONS } from "./constants";
 import { useMarriageForm } from "./hooks/useMarriageForm";
@@ -344,6 +344,7 @@ export default function MarriageForm() {
                                                     />
                                                 </Field>
                                             </div>
+                                            <CivilStatusSection prefix="g" data={formData} setData={setFormData} toTitleCase={toTitleCase} countryOptions={COUNTRY_OPTIONS} />
                                             <AnimatePresence>
                                                 {formData.gReligion === "Others" && (
                                                     <motion.div
@@ -465,6 +466,7 @@ export default function MarriageForm() {
                                                     </motion.div>
                                                 )}
                                             </AnimatePresence>
+                                            <CivilStatusSection prefix="b" data={formData} setData={setFormData} toTitleCase={toTitleCase} countryOptions={COUNTRY_OPTIONS} />
                                             <AddressSection prefix="b" provincesList={provincesList} gTownOptions={gTownOptions} bTownOptions={bTownOptions} brgyOptions={bBrgyOptions} formData={formData} setFormData={setFormData} handleProvinceChange={handleProvinceChange} handleTownChange={handleTownChange} handleBrgyChange={handleBrgyChange} countryOptions={COUNTRY_OPTIONS} />
                                             <BirthPlaceSection prefix="b" sameAsAddress={bSameAsAddress} setSameAsAddress={setBSameAsAddress} formData={formData} setFormData={setFormData} provincesList={provincesList} birthTownOptions={bBirthTownOptions} countryOptions={COUNTRY_OPTIONS} handleBirthProvinceChange={handleBirthProvinceChange} handleBirthTownChange={handleBirthTownChange} />
                                             <FamilySubSection prefix="b" person="Bride" data={formData} setData={setFormData} toTitleCase={toTitleCase} />

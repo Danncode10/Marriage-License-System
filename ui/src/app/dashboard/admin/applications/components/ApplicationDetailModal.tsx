@@ -96,7 +96,24 @@ export default function ApplicationDetailModal({ selectedApp, onClose, onEdit }:
                                                 <DetailItem label="Citizenship" value={person.citizenship} />
                                                 <DetailItem label="Religion" value={person.religion} />
                                             </div>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <DetailItem label="Civil Status" value={person.civil_status || 'Single'} />
+                                                <DetailItem label="Birth Place" value={person.birth_place} />
+                                            </div>
                                         </section>
+
+                                        {person.civil_status && person.civil_status !== 'Single' && (
+                                            <section className="space-y-3 bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
+                                                <h4 className="text-[10px] font-black uppercase text-zinc-400 tracking-widest border-b pb-1">Previous Marriage Dissolution</h4>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <DetailItem label="How Dissolved" value={person.dissolved_how} />
+                                                    <DetailItem label="Date Dissolved" value={person.dissolved_date ? new Date(person.dissolved_date).toLocaleDateString() : null} />
+                                                </div>
+                                                <DetailItem label="Place Dissolved" value={person.dissolved_place} />
+                                                <DetailItem label="Country" value={person.dissolved_country} />
+                                                <DetailItem label="Relationship Degree" value={person.relationship_degree || 'None'} />
+                                            </section>
+                                        )}
 
                                         {address && (
                                             <section className="space-y-2">

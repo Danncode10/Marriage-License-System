@@ -17,6 +17,11 @@ export interface ExcelData {
     gReligion: string;
     gCustomReligion?: string;
     gStatus: string;
+    gDissolvedHow?: string;
+    gDissolvedPlace?: string;
+    gDissolvedCountry?: string;
+    gDissolvedDate?: string;
+    gRelationshipDegree?: string;
     gFathF: string;
     gFathM: string;
     gFathL: string;
@@ -63,6 +68,11 @@ export interface ExcelData {
     bReligion: string;
     bCustomReligion?: string;
     bStatus: string;
+    bDissolvedHow?: string;
+    bDissolvedPlace?: string;
+    bDissolvedCountry?: string;
+    bDissolvedDate?: string;
+    bRelationshipDegree?: string;
     bFathF: string;
     bFathM: string;
     bFathL: string;

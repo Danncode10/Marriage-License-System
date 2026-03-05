@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { AnimatePresence, motion } from "framer-motion";
-import { FileText, GraduationCap, ShieldCheck } from "lucide-react";
+import { FileText, GraduationCap, ShieldCheck, MapPin } from "lucide-react";
 import React from "react";
 import { SUFFIX_OPTIONS, VALID_ID_TYPES } from "../constants";
 
@@ -65,6 +65,14 @@ export function ValidationFeedback({ data, prefix }: { data: any, prefix: 'g' | 
             if (!data[`${prefix}GiverIdNo`]) missingFields.push('Giver ID Number');
             if (data[`${prefix}GiverIdType`] === "Others" && !data[`${prefix}GiverIdCustomType`]) missingFields.push('Specify Giver ID Type');
         }
+    }
+
+    if (data[`${prefix}Status`] && data[`${prefix}Status`] !== "Single") {
+        if (!data[`${prefix}DissolvedHow`]) missingFields.push('How Dissolved');
+        if (!data[`${prefix}DissolvedDate`]) missingFields.push('Date Dissolved');
+        if (!data[`${prefix}DissolvedPlace`]) missingFields.push('Place Dissolved');
+        if (!data[`${prefix}DissolvedIsPh`] && !data[`${prefix}DissolvedCountry`]) missingFields.push('Dissolution Country');
+        if (!data[`${prefix}RelationshipDegree`]) missingFields.push('Relationship Degree');
     }
 
     if (missingFields.length === 0) return null;
@@ -450,4 +458,118 @@ export function GiverSubSection({ prefix, age, data, setData, toTitleCase }: Giv
             <ValidationFeedback data={data} prefix={prefix} />
         </div>
     );
-}   
+}
+
+export function CivilStatusSection({ prefix, data, setData, toTitleCase, countryOptions }: { prefix: 'g' | 'b', data: any, setData: (d: any) => void, toTitleCase: (s: string) => string, countryOptions: any[] }) {
+    const status = data[`${prefix}Status`] || "Single";
+
+    return (
+        <div className="space-y-4 pt-6 border-t border-slate-100">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Field label="Civil Status" required>
+                    <select
+                        className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+                        value={status}
+                        onChange={e => {
+                            const val = e.target.value;
+                            setData({
+                                ...data,
+                                [`${prefix}Status`]: val,
+                            });
+                        }}
+                    >
+                        <option value="Single">Single</option>
+                        <option value="Widowed">Widowed</option>
+                        <option value="Divorced">Divorced</option>
+                        <option value="Annulled">Annulled</option>
+                    </select>
+                </Field>
+            </div>
+
+            <AnimatePresence>
+                {status !== "Single" && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="space-y-4 bg-slate-50/50 p-4 rounded-2xl border border-slate-100 overflow-hidden"
+                    >
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Field label="How it dissolve?" required>
+                                <Input
+                                    placeholder="e.g. Death, Court Decree"
+                                    value={data[`${prefix}DissolvedHow`] || ""}
+                                    onChange={e => setData({ ...data, [`${prefix}DissolvedHow`]: toTitleCase(e.target.value) })}
+                                />
+                            </Field>
+                            <Field label="Date when Dissolved" required>
+                                <Input
+                                    type="date"
+                                    value={data[`${prefix}DissolvedDate`] || ""}
+                                    onChange={e => setData({ ...data, [`${prefix}DissolvedDate`]: e.target.value })}
+                                />
+                            </Field>
+                        </div>
+
+                        <div className="space-y-4 pt-4 border-t border-slate-200/50">
+                            <div className="flex items-center justify-between">
+                                <LabelWithIcon icon={<MapPin className="w-3 h-3" />} text="Place where it dissolved" />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Field label="Is it dissolved in the Philippines?">
+                                    <select
+                                        className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+                                        value={data[`${prefix}DissolvedIsPh`] ? "Yes" : "No"}
+                                        onChange={e => {
+                                            const isPh = e.target.value === "Yes";
+                                            setData({
+                                                ...data,
+                                                [`${prefix}DissolvedIsPh`]: isPh,
+                                                [`${prefix}DissolvedCountry`]: isPh ? "Philippines" : (data[`${prefix}DissolvedCountry`] === "Philippines" ? "" : data[`${prefix}DissolvedCountry`])
+                                            });
+                                        }}
+                                    >
+                                        <option value="Yes">Yes</option>
+                                        <option value="No">No</option>
+                                    </select>
+                                </Field>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Field label={data[`${prefix}DissolvedIsPh`] ? "Municipality & Province" : "Foreign City/State"} required>
+                                    <Input
+                                        placeholder={data[`${prefix}DissolvedIsPh`] ? "e.g. Solano, Nueva Vizcaya" : "e.g. Los Angeles, California"}
+                                        value={data[`${prefix}DissolvedPlace`] || ""}
+                                        onChange={e => setData({ ...data, [`${prefix}DissolvedPlace`]: toTitleCase(e.target.value) })}
+                                    />
+                                </Field>
+                                {!data[`${prefix}DissolvedIsPh`] && (
+                                    <Field label="Country" required>
+                                        <select
+                                            className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+                                            value={data[`${prefix}DissolvedCountry`] || ""}
+                                            onChange={e => setData({ ...data, [`${prefix}DissolvedCountry`]: e.target.value })}
+                                        >
+                                            <option value="" disabled>Select Country</option>
+                                            {countryOptions.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                                        </select>
+                                    </Field>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="pt-4 border-t border-slate-200/50">
+                            <Field label="Degree of relationship" required>
+                                <Input
+                                    placeholder="Enter relationship degree..."
+                                    value={data[`${prefix}RelationshipDegree`] || ""}
+                                    onChange={e => setData({ ...data, [`${prefix}RelationshipDegree`]: toTitleCase(e.target.value) })}
+                                />
+                            </Field>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}

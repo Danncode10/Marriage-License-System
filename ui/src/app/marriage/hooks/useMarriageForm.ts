@@ -336,6 +336,15 @@ export function useMarriageForm() {
                 if (formData[`${prefix}IdType`] === "Others" && !formData[`${prefix}IdCustomType`]) return false;
             }
 
+            // Dissolution validation
+            if (formData[`${prefix}Status`] && formData[`${prefix}Status`] !== "Single") {
+                if (!formData[`${prefix}DissolvedHow`] || formData[`${prefix}DissolvedHow`].trim() === "") return false;
+                if (!formData[`${prefix}DissolvedDate`]) return false;
+                if (!formData[`${prefix}DissolvedPlace`] || formData[`${prefix}DissolvedPlace`].trim() === "") return false;
+                if (!formData[`${prefix}DissolvedIsPh`] && !formData[`${prefix}DissolvedCountry`]) return false;
+                if (!formData[`${prefix}RelationshipDegree`] || formData[`${prefix}RelationshipDegree`].trim() === "") return false;
+            }
+
             return true;
         };
 

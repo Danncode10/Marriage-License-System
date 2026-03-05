@@ -12,7 +12,7 @@ import { mapAppToFormData } from "../mapping-utils";
 import { toTitleCase } from "../utils";
 import { AddressSection } from "./AddressSection";
 import { BirthPlaceSection } from "./BirthPlaceSection";
-import { FamilySubSection, Field, GiverSubSection } from "./FormComponents";
+import { FamilySubSection, Field, GiverSubSection, CivilStatusSection } from "./FormComponents";
 import { SectionCard } from "./SectionCard";
 import { COUNTRY_OPTIONS } from "@/utils/countries";
 
@@ -193,6 +193,7 @@ export default function EditApplicationModal({ isOpen, onClose, onSuccess, selec
                                         />
                                     </Field>
                                 </div>
+                                <CivilStatusSection prefix="g" data={formData} setData={setFormData} toTitleCase={toTitleCase} countryOptions={COUNTRY_OPTIONS} />
                                 <AnimatePresence>
                                     {formData.gReligion === "Others" && (
                                         <motion.div
@@ -292,6 +293,7 @@ export default function EditApplicationModal({ isOpen, onClose, onSuccess, selec
                                         />
                                     </Field>
                                 </div>
+                                <CivilStatusSection prefix="b" data={formData} setData={setFormData} toTitleCase={toTitleCase} countryOptions={COUNTRY_OPTIONS} />
                                 <AnimatePresence>
                                     {formData.bReligion === "Others" && (
                                         <motion.div

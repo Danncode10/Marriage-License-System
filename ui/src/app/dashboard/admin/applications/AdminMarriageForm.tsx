@@ -8,7 +8,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { X, FileText, Heart, Trash2, ArrowRight, Clock } from 'lucide-react';
 import { AddressSection } from "../../../marriage/components/AddressSection";
 import { BirthPlaceSection } from "../../../marriage/components/BirthPlaceSection";
-import { FamilySubSection, Field, GiverSubSection } from "../../../marriage/components/FormComponents";
+import { FamilySubSection, Field, GiverSubSection, CivilStatusSection } from "../../../marriage/components/FormComponents";
 import { SectionCard } from "../../../marriage/components/SectionCard";
 import { RELIGIONS, SUFFIX_OPTIONS } from "../../../marriage/constants";
 import { useMarriageForm } from "../../../marriage/hooks/useMarriageForm";
@@ -205,6 +205,7 @@ export default function AdminMarriageForm({ isOpen, onClose, onSuccess }: AdminM
                                                     />
                                                 </Field>
                                             </div>
+                                            <CivilStatusSection prefix="g" data={formData} setData={setFormData} toTitleCase={toTitleCase} countryOptions={COUNTRY_OPTIONS} />
                                             <AnimatePresence>
                                                 {formData.gReligion === "Others" && (
                                                     <motion.div
@@ -304,6 +305,7 @@ export default function AdminMarriageForm({ isOpen, onClose, onSuccess }: AdminM
                                                     />
                                                 </Field>
                                             </div>
+                                            <CivilStatusSection prefix="b" data={formData} setData={setFormData} toTitleCase={toTitleCase} countryOptions={COUNTRY_OPTIONS} />
                                             <AnimatePresence>
                                                 {formData.bReligion === "Others" && (
                                                     <motion.div

@@ -84,6 +84,12 @@ export async function getAllApplications(page: number = 1, limit: number = 50, s
                 giver_id_no,
                 is_not_born_in_ph,
                 birth_country,
+                civil_status,
+                dissolved_how,
+                dissolved_place,
+                dissolved_country,
+                dissolved_date,
+                relationship_degree,
                 addresses (
                     barangay,
                     municipality,
@@ -549,6 +555,13 @@ export async function updateApplicationDetails(applicationId: string, formData: 
                     giver_include_id: formData[`${prefix}GiverIncludeId`],
                     giver_id_type: formData[`${prefix}GiverIdType`] === "Others" ? formData[`${prefix}GiverIdCustomType`] : formData[`${prefix}GiverIdType`],
                     giver_id_no: formData[`${prefix}GiverIdNo`],
+
+                    civil_status: formData[`${prefix}Status`],
+                    dissolved_how: formData[`${prefix}Status`] !== 'Single' ? formData[`${prefix}DissolvedHow`] : null,
+                    dissolved_place: formData[`${prefix}Status`] !== 'Single' ? formData[`${prefix}DissolvedPlace`] : null,
+                    dissolved_country: formData[`${prefix}Status`] !== 'Single' ? formData[`${prefix}DissolvedCountry`] : 'Philippines',
+                    dissolved_date: (formData[`${prefix}Status`] !== 'Single' && formData[`${prefix}DissolvedDate`]) ? formData[`${prefix}DissolvedDate`] : null,
+                    relationship_degree: formData[`${prefix}Status`] !== 'Single' ? formData[`${prefix}RelationshipDegree`] : null,
 
                     updated_at: new Date().toISOString()
                 })
