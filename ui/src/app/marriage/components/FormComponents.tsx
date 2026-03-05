@@ -591,7 +591,9 @@ export function DissolutionFields({
                                                     handleDissolvedTownChange(prefix, val, town?.city_name || "", provName || "");
                                                 }}
                                             >
-                                                <option value="" disabled hidden>Select Town</option>
+                                                <option value="" disabled hidden>
+                                                    {!dissolvedTownOptions?.length ? "Loading towns..." : "Select Town"}
+                                                </option>
                                                 {dissolvedTownOptions?.map(t => (
                                                     <option key={`${prefix}dissolve-town-${t.city_code}`} value={t.city_code}>{t.city_name}</option>
                                                 ))}

@@ -209,6 +209,15 @@ export function useMarriageForm() {
         if (prefix === 'g') setGSameAsAddress(null);
         else setBSameAsAddress(null);
 
+        // Immediate clear of dependent options and values
+        if (prefix === 'g') {
+            setGTownOptions([]);
+            setGBrgyOptions([]);
+        } else {
+            setBTownOptions([]);
+            setBBrgyOptions([]);
+        }
+
         setFormData(prev => ({
             ...prev,
             [`${prefix}Prov`]: cleanProvinceName,
@@ -227,6 +236,10 @@ export function useMarriageForm() {
         // Reset same as address choice
         if (prefix === 'g') setGSameAsAddress(null);
         else setBSameAsAddress(null);
+
+        // Clear barangays immediately
+        if (prefix === 'g') setGBrgyOptions([]);
+        else setBBrgyOptions([]);
 
         setFormData(prev => ({
             ...prev,
@@ -252,6 +265,11 @@ export function useMarriageForm() {
 
     const handleBirthProvinceChange = async (prefix: 'g' | 'b', provinceCode: string, provinceName: string) => {
         const cleanProvinceName = provinceName.replace(/\(capital\)/gi, "").replace(/\s+/g, " ").replace(/\s+,/g, ",").trim();
+
+        // Clear town options immediately
+        if (prefix === 'g') setGBirthTownOptions([]);
+        else setBBirthTownOptions([]);
+
         const res = await cities(provinceCode);
         if (prefix === 'g') {
             setGBirthTownOptions(res);
@@ -271,6 +289,11 @@ export function useMarriageForm() {
 
     const handleDissolvedProvinceChange = async (prefix: 'g' | 'b', provinceCode: string, provinceName: string) => {
         const cleanProvinceName = provinceName.replace(/\(capital\)/gi, "").replace(/\s+/g, " ").replace(/\s+,/g, ",").trim();
+
+        // Clear town options immediately
+        if (prefix === 'g') setGDissolvedTownOptions([]);
+        else setBDissolvedTownOptions([]);
+
         const res = await cities(provinceCode);
         if (prefix === 'g') {
             setGDissolvedTownOptions(res);

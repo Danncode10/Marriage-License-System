@@ -180,7 +180,9 @@ export function BirthPlaceSection({
                                         handleBirthTownChange(prefix, val, town?.city_name || "", provName || "");
                                     }}
                                 >
-                                    <option value="" disabled hidden>Select Town</option>
+                                    <option value="" disabled hidden>
+                                        {!birthTownOptions.length ? "Loading towns..." : "Select Town"}
+                                    </option>
                                     {birthTownOptions.map(t => (
                                         <option key={t.city_code} value={t.city_code}>{t.city_name}</option>
                                     ))}

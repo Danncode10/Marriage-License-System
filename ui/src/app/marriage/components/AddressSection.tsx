@@ -131,14 +131,17 @@ export function AddressSection({
                         </Field>
                         <Field label="Municipality" required>
                             <select
-                                className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+                                className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm disabled:opacity-50 focus:ring-2 focus:ring-primary outline-none"
+                                disabled={!finalTownOptions.length}
                                 value={finalTownOptions.find((t: any) => t.city_name === formData[`${prefix}Town`])?.city_code || ""}
                                 onChange={(e) => {
                                     const town = finalTownOptions.find((t: any) => t.city_code === e.target.value);
                                     handleTownChange(prefix, e.target.value, town?.city_name || "");
                                 }}
                             >
-                                <option value="" disabled hidden>Select Town</option>
+                                <option value="" disabled hidden>
+                                    {!finalTownOptions.length ? "Loading towns..." : "Select Town"}
+                                </option>
                                 {finalTownOptions.map((t: any) => (
                                     <option key={t.city_code} value={t.city_code}>{t.city_name}</option>
                                 ))}
