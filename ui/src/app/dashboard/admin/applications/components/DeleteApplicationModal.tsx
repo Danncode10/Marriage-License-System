@@ -100,23 +100,28 @@ export default function DeleteApplicationModal({
                         <button
                             onClick={handleConfirm}
                             disabled={confirmCode !== applicationCode || isDeleting}
-                            className={`h-14 w-full rounded-2xl font-black text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-xl ${confirmCode === applicationCode && !isDeleting
-                                ? isSoftDelete
-                                    ? 'bg-zinc-900 hover:bg-zinc-800 text-white shadow-zinc-900/20'
-                                    : 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-200'
-                                : 'bg-zinc-100 text-zinc-300 cursor-not-allowed shadow-none'
+                            className={`h-14 w-full rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 shadow-xl border-2 transition-transform active:scale-95 ${confirmCode === applicationCode && !isDeleting ? 'cursor-pointer hover:opacity-90' : 'cursor-not-allowed'
                                 }`}
+                            style={{
+                                backgroundColor: confirmCode === applicationCode && !isDeleting
+                                    ? (isSoftDelete ? '#18181b' : '#dc2626') // zinc-900 or red-600
+                                    : '#f4f4f5', // zinc-100 (Visible Grey)
+                                borderColor: confirmCode === applicationCode && !isDeleting
+                                    ? (isSoftDelete ? '#18181b' : '#dc2626')
+                                    : '#e4e4e7', // zinc-200
+                                color: confirmCode === applicationCode && !isDeleting ? '#ffffff' : '#a1a1aa'
+                            }}
                         >
                             {isDeleting ? (
-                                <>
+                                <div className="flex items-center gap-2">
                                     <Loader2 className="h-5 w-5 animate-spin" />
-                                    {isSoftDelete ? "Moving..." : "Purging Records..."}
-                                </>
+                                    <span>{isSoftDelete ? "Moving..." : "Purging Records..."}</span>
+                                </div>
                             ) : (
-                                <>
+                                <div className="flex items-center gap-2">
                                     <Trash2 className="h-5 w-5" />
-                                    {isSoftDelete ? "Confirm Move" : "Delete Permanently"}
-                                </>
+                                    <span>{isSoftDelete ? "Confirm Move" : "Delete Permanently"}</span>
+                                </div>
                             )}
                         </button>
                         <button
