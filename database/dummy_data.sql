@@ -71,59 +71,59 @@ BEGIN
 
     -- 1. AUTHENTIC STAFF SETUP
     -- Admin
-    IF NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'lester.admin@example.com') THEN
-        u_id := gen_random_uuid();
-        INSERT INTO auth.users (
-            id, email, encrypted_password, email_confirmed_at, 
-            raw_user_meta_data, aud, role, created_at, updated_at, 
-            last_sign_in_at, raw_app_meta_data
-        )
-        VALUES (
-            u_id, 'lester.admin@example.com', 
-            crypt('Admin12345', gen_salt('bf')), now(), 
-            jsonb_build_object('full_name', 'Lester Admin'), 'authenticated', 'authenticated', 
-            now(), now(), now(), '{"provider":"email","providers":["email"]}'
-        );
-        
-        -- Link to Identity (Fixed with provider_id)
-        INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)
-        VALUES (
-            gen_random_uuid(), u_id, format('{"sub":"%s","email":"%s"}', u_id, 'lester.admin@example.com')::jsonb, 
-            'email', u_id::text, now(), now(), now()
-        );
+    DELETE FROM auth.users WHERE email = 'lester.admin@example.com';
+    
+    u_id := gen_random_uuid();
+    INSERT INTO auth.users (
+        id, instance_id, email, encrypted_password, email_confirmed_at, 
+        raw_user_meta_data, aud, role, created_at, updated_at, 
+        last_sign_in_at, raw_app_meta_data
+    )
+    VALUES (
+        u_id, '00000000-0000-0000-0000-000000000000', 'lester.admin@example.com', 
+        crypt('Admin12345', gen_salt('bf', 10)), now(), 
+        jsonb_build_object('full_name', 'Lester Admin', 'role', 'admin'), 'authenticated', 'authenticated', 
+        now(), now(), now(), '{"provider":"email","providers":["email"]}'
+    );
+    
+    -- Link to Identity (Required for Dashboard visibility and login)
+    INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)
+    VALUES (
+        u_id, u_id, jsonb_build_object('sub', u_id, 'email', 'lester.admin@example.com', 'email_verified', true, 'phone_verified', false), 
+        'email', u_id::text, now(), now(), now()
+    );
 
-        INSERT INTO public.profiles (id, role, full_name)
-        VALUES (u_id, 'admin', 'Lester Admin')
-        ON CONFLICT (id) DO UPDATE SET role = 'admin', full_name = 'Lester Admin';
-    END IF;
+    INSERT INTO public.profiles (id, role, full_name)
+    VALUES (u_id, 'admin', 'Lester Admin')
+    ON CONFLICT (id) DO UPDATE SET role = 'admin', full_name = 'Lester Admin';
 
     -- Employees
     FOR i IN 1..2 LOOP
         f_name := CASE WHEN i=1 THEN 'Employee One' ELSE 'Dann Employee' END;
-        IF NOT EXISTS (SELECT 1 FROM auth.users WHERE email = format('employee%s@example.com', i)) THEN
-            u_id := gen_random_uuid();
-            INSERT INTO auth.users (
-                id, email, encrypted_password, email_confirmed_at, 
-                raw_user_meta_data, aud, role, created_at, updated_at, 
-                last_sign_in_at, raw_app_meta_data
-            )
-            VALUES (
-                u_id, format('employee%s@example.com', i), 
-                crypt('Employee12345', gen_salt('bf')), now(), 
-                jsonb_build_object('full_name', f_name), 'authenticated', 'authenticated', 
-                now(), now(), now(), '{"provider":"email","providers":["email"]}'
-            );
+        DELETE FROM auth.users WHERE email = format('employee%s@example.com', i);
+        
+        u_id := gen_random_uuid();
+        INSERT INTO auth.users (
+            id, instance_id, email, encrypted_password, email_confirmed_at, 
+            raw_user_meta_data, aud, role, created_at, updated_at, 
+            last_sign_in_at, raw_app_meta_data
+        )
+        VALUES (
+            u_id, '00000000-0000-0000-0000-000000000000', format('employee%s@example.com', i), 
+            crypt('Employee12345', gen_salt('bf', 10)), now(), 
+            jsonb_build_object('full_name', f_name, 'role', 'employee'), 'authenticated', 'authenticated', 
+            now(), now(), now(), '{"provider":"email","providers":["email"]}'
+        );
 
-            INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)
-            VALUES (
-                gen_random_uuid(), u_id, format('{"sub":"%s","email":"%s"}', u_id, format('employee%s@example.com', i))::jsonb, 
-                'email', u_id::text, now(), now(), now()
-            );
-            
-            INSERT INTO public.profiles (id, role, full_name)
-            VALUES (u_id, 'employee', f_name)
-            ON CONFLICT (id) DO UPDATE SET role = 'employee', full_name = f_name;
-        END IF;
+        INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)
+        VALUES (
+            u_id, u_id, jsonb_build_object('sub', u_id, 'email', format('employee%s@example.com', i), 'email_verified', true, 'phone_verified', false), 
+            'email', u_id::text, now(), now(), now()
+        );
+        
+        INSERT INTO public.profiles (id, role, full_name)
+        VALUES (u_id, 'employee', f_name)
+        ON CONFLICT (id) DO UPDATE SET role = 'employee', full_name = f_name;
     END LOOP;
 
     -- 2. CREATE 50 AUTHENTIC APPLICATIONS
@@ -142,20 +142,20 @@ BEGIN
         f_name := format('%s %s', male_names[floor(random() * array_length(male_names, 1)) + 1], surnames[random_surname_idx]);
         
         INSERT INTO auth.users (
-            id, email, encrypted_password, email_confirmed_at, 
+            id, instance_id, email, encrypted_password, email_confirmed_at, 
             raw_user_meta_data, aud, role, created_at, updated_at, 
             last_sign_in_at, raw_app_meta_data
         )
         VALUES (
-            u_id, format('user%s@example.com', i), 
-            crypt('User12345', gen_salt('bf')), created_ts, 
-            jsonb_build_object('full_name', f_name), 'authenticated', 'authenticated', 
+            u_id, '00000000-0000-0000-0000-000000000000', format('user%s@example.com', i), 
+            crypt('User12345', gen_salt('bf', 10)), created_ts, 
+            jsonb_build_object('full_name', f_name, 'role', 'user'), 'authenticated', 'authenticated', 
             created_ts, created_ts, created_ts, '{"provider":"email","providers":["email"]}'
         );
 
         INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)
         VALUES (
-            gen_random_uuid(), u_id, format('{"sub":"%s","email":"%s"}', u_id, format('user%s@example.com', i))::jsonb, 
+            u_id, u_id, jsonb_build_object('sub', u_id, 'email', format('user%s@example.com', i), 'email_verified', true, 'phone_verified', false), 
             'email', u_id::text, created_ts, created_ts, created_ts
         );
         
@@ -250,5 +250,8 @@ BEGIN
         END IF;
 
     END LOOP;
+
+    -- Refresh the PostgREST schema cache to ensure columns like created_by are recognized
+    NOTIFY pgrst, 'reload schema';
 END;
 $$;

@@ -5,13 +5,13 @@
 -- 1. FUNCTIONS & EXTENSIONS
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
+-- Optimized check to avoid infinite RLS recursion
 CREATE OR REPLACE FUNCTION public.is_admin_or_employee()
 RETURNS boolean AS $$
 BEGIN
-  RETURN EXISTS (
-    SELECT 1 FROM public.profiles
-    WHERE id = auth.uid()
-    AND role IN ('admin', 'employee')
+  -- We check the role from JWT metadata to avoid querying the profiles table (which triggers RLS)
+  RETURN (
+    COALESCE(auth.jwt() -> 'user_metadata' ->> 'role', '') IN ('admin', 'employee')
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS public.addresses (
     updated_at timestamptz NULL DEFAULT now(),
     country text NULL DEFAULT 'Philippines'::text,
     is_foreigner bool NULL DEFAULT false,
+    created_by uuid NULL, -- Added to match potential UI expectations
     CONSTRAINT addresses_pkey PRIMARY KEY (id)
 );
 
@@ -49,7 +50,7 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
   INSERT INTO public.profiles (id, full_name, role)
-  VALUES (new.id, new.raw_user_meta_data->>'full_name', 'user')
+  VALUES (new.id, new.raw_user_meta_data->>'full_name', COALESCE(new.raw_user_meta_data->>'role', 'user'))
   ON CONFLICT (id) DO NOTHING;
   RETURN new;
 END;
@@ -118,6 +119,7 @@ CREATE TABLE IF NOT EXISTS public.applicants (
     dissolved_country text NULL DEFAULT 'Philippines'::text,
     dissolved_date date NULL,
     relationship_degree text NULL,
+    created_by uuid NULL, -- Added to match potential UI expectations
     CONSTRAINT applicants_pkey PRIMARY KEY (id)
 );
 
