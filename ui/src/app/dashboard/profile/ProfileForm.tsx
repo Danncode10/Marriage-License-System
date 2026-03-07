@@ -3,9 +3,9 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
-import { User, Mail, Shield, CheckCircle2 } from "lucide-react";
-import { updateProfilePhoneNumber } from "./actions";
-import { useState } from "react";
+import { User, Mail, Shield, CheckCircle2, Lock, Eye, EyeOff } from "lucide-react";
+import { updateProfilePhoneNumber, updatePassword } from "./actions";
+import { useState, useRef } from "react";
 
 interface ProfileFormProps {
     profile: any;
@@ -16,7 +16,10 @@ interface ProfileFormProps {
 export function ProfileForm({ profile, application, userEmail }: ProfileFormProps) {
     const [loading, setLoading] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const passwordFormRef = useRef<HTMLFormElement>(null);
 
     const currentPhone = application?.contact_number || profile?.phone_number || "Not set";
 
@@ -29,6 +32,23 @@ export function ProfileForm({ profile, application, userEmail }: ProfileFormProp
         if (result.success) {
             setMessage({ type: 'success', text: 'Phone number updated successfully!' });
             setIsEditing(false);
+        } else if (result.error) {
+            setMessage({ type: 'error', text: result.error });
+        }
+
+        setLoading(false);
+    }
+
+    async function handlePasswordSubmit(formData: FormData) {
+        setLoading(true);
+        setMessage(null);
+
+        const result = await updatePassword(formData);
+
+        if (result.success) {
+            setMessage({ type: 'success', text: 'Password updated successfully!' });
+            setIsChangingPassword(false);
+            passwordFormRef.current?.reset();
         } else if (result.error) {
             setMessage({ type: 'error', text: result.error });
         }
@@ -98,6 +118,89 @@ export function ProfileForm({ profile, application, userEmail }: ProfileFormProp
                                         {currentPhone}
                                     </p>
                                     <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-tight">Active for official coordination</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="h-px bg-zinc-100" />
+
+                    {/* PASSWORD SECTION */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-1">Security</label>
+                            {!isChangingPassword && (
+                                <button
+                                    onClick={() => setIsChangingPassword(true)}
+                                    className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-primary/80 transition-colors"
+                                >
+                                    Change Password
+                                </button>
+                            )}
+                        </div>
+
+                        {isChangingPassword ? (
+                            <form ref={passwordFormRef} action={handlePasswordSubmit} className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                <div className="space-y-4">
+                                    <div className="relative">
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400">
+                                            <Lock className="h-4 w-4" />
+                                        </div>
+                                        <Input
+                                            name="password"
+                                            type={showPassword ? "text" : "password"}
+                                            className="pl-12 h-14 bg-white border-primary/20 focus:border-primary rounded-2xl font-bold text-zinc-900 transition-all shadow-sm"
+                                            placeholder="New Password"
+                                            required
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                                        >
+                                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                        </button>
+                                    </div>
+                                    <div className="relative">
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400">
+                                            <Lock className="h-4 w-4" />
+                                        </div>
+                                        <Input
+                                            name="confirmPassword"
+                                            type={showPassword ? "text" : "password"}
+                                            className="pl-12 h-14 bg-white border-primary/20 focus:border-primary rounded-2xl font-bold text-zinc-900 transition-all shadow-sm"
+                                            placeholder="Confirm New Password"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex gap-3">
+                                    <Button
+                                        disabled={loading}
+                                        className="flex-1 h-12 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-lg shadow-primary/20"
+                                    >
+                                        {loading ? "Updating..." : "Update Password"}
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        onClick={() => setIsChangingPassword(false)}
+                                        className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] text-zinc-400"
+                                    >
+                                        Cancel
+                                    </Button>
+                                </div>
+                            </form>
+                        ) : (
+                            <div className="pl-1 py-1 flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-2xl bg-zinc-50 flex items-center justify-center text-zinc-400">
+                                    <Lock className="h-4 w-4" />
+                                </div>
+                                <div className="space-y-0.5">
+                                    <p className="text-lg font-black text-zinc-900 tracking-tight">
+                                        ••••••••••••
+                                    </p>
+                                    <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-tight">Last changed recently</p>
                                 </div>
                             </div>
                         )}

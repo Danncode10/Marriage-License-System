@@ -47,3 +47,40 @@ export async function updateProfilePhoneNumber(formData: FormData) {
     revalidatePath("/dashboard/profile");
     return { success: true };
 }
+
+export async function updatePassword(formData: FormData) {
+    const supabase = await createClient();
+
+    if (!supabase) {
+        console.error("Failed to create Supabase client");
+        return { error: "Database connection failed" };
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return { error: "Not authenticated" };
+    }
+
+    const password = formData.get("password") as string;
+    const confirmPassword = formData.get("confirmPassword") as string;
+
+    if (!password || password.length < 6) {
+        return { error: "Password must be at least 6 characters long" };
+    }
+
+    if (password !== confirmPassword) {
+        return { error: "Passwords do not match" };
+    }
+
+    const { error } = await supabase.auth.updateUser({
+        password: password
+    });
+
+    if (error) {
+        console.error("Password update error:", error);
+        return { error: error.message };
+    }
+
+    return { success: true };
+}
