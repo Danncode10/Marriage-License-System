@@ -86,13 +86,13 @@ BEGIN
 
             -- Create Groom Address
             groom_addr_id := gen_random_uuid();
-            INSERT INTO public.addresses (id, province, municipality, barangay, street_address, country)
-            VALUES (groom_addr_id, 'Nueva Vizcaya', 'Solano', 'Poblacion', format('%s Apple St', i), 'Philippines');
+            INSERT INTO public.addresses (id, province, municipality, barangay, street_address, country, created_by)
+            VALUES (groom_addr_id, 'Nueva Vizcaya', 'Solano', 'Poblacion', format('%s Apple St', i), 'Philippines', user_id);
 
             -- Create Bride Address
             bride_addr_id := gen_random_uuid();
-            INSERT INTO public.addresses (id, province, municipality, barangay, street_address, country)
-            VALUES (bride_addr_id, 'Nueva Vizcaya', 'Solano', 'Quirino', format('%s Mango Ave', i), 'Philippines');
+            INSERT INTO public.addresses (id, province, municipality, barangay, street_address, country, created_by)
+            VALUES (bride_addr_id, 'Nueva Vizcaya', 'Solano', 'Quirino', format('%s Mango Ave', i), 'Philippines', user_id);
 
             -- Create Groom Applicant
             INSERT INTO public.applicants (
