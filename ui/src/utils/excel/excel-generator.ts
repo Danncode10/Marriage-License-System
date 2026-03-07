@@ -237,7 +237,7 @@ export class ExcelGenerator {
             // Previous Marriage Dissolved Logic (Bride)
             if (data.bStatus !== "Single") {
                 appSheet.getCell('U18').value = this.sanitize(data.bDissolvedHow);
-                appSheet.getCell('B19').value = this.sanitize(data.bDissolvedPlace); // User said B19 for female too
+                appSheet.getCell('U19').value = this.sanitize(data.bDissolvedPlace); // User said B19 for female too
                 appSheet.getCell('AE19').value = this.sanitize(data.bDissolvedCountry);
                 appSheet.getCell('U20').value = this.formatBirthday(data.bDissolvedDate || "");
                 appSheet.getCell('U21').value = this.sanitize(data.bRelationshipDegree);

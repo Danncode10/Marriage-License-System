@@ -251,6 +251,7 @@ export default function AdminMarriageForm({ isOpen, onClose, onSuccess }: AdminM
                                                 handleDissolvedProvinceChange={handleDissolvedProvinceChange}
                                                 handleDissolvedTownChange={handleDissolvedTownChange}
                                             />
+                                            <AddressSection prefix="g" provincesList={provincesList} gTownOptions={gTownOptions} bTownOptions={bTownOptions} brgyOptions={gBrgyOptions} formData={formData} setFormData={setFormData} handleProvinceChange={handleProvinceChange} handleTownChange={handleTownChange} handleBrgyChange={handleBrgyChange} countryOptions={COUNTRY_OPTIONS} />
                                             <BirthPlaceSection prefix="g" sameAsAddress={gSameAsAddress} setSameAsAddress={setGSameAsAddress} formData={formData} setFormData={setFormData} provincesList={provincesList} birthTownOptions={gBirthTownOptions} countryOptions={COUNTRY_OPTIONS} handleBirthProvinceChange={handleBirthProvinceChange} handleBirthTownChange={handleBirthTownChange} />
                                             <FamilySubSection prefix="g" person="Groom" data={formData} setData={setFormData} toTitleCase={toTitleCase} />
                                             <ValidIDSection prefix="g" data={formData} setData={setFormData} type="Main" />
@@ -372,6 +373,7 @@ export default function AdminMarriageForm({ isOpen, onClose, onSuccess }: AdminM
                                                 handleDissolvedProvinceChange={handleDissolvedProvinceChange}
                                                 handleDissolvedTownChange={handleDissolvedTownChange}
                                             />
+                                            <AddressSection prefix="b" provincesList={provincesList} gTownOptions={gTownOptions} bTownOptions={bTownOptions} brgyOptions={bBrgyOptions} formData={formData} setFormData={setFormData} handleProvinceChange={handleProvinceChange} handleTownChange={handleTownChange} handleBrgyChange={handleBrgyChange} countryOptions={COUNTRY_OPTIONS} />
                                             <BirthPlaceSection prefix="b" sameAsAddress={bSameAsAddress} setSameAsAddress={setBSameAsAddress} formData={formData} setFormData={setFormData} provincesList={provincesList} birthTownOptions={bBirthTownOptions} countryOptions={COUNTRY_OPTIONS} handleBirthProvinceChange={handleBirthProvinceChange} handleBirthTownChange={handleBirthTownChange} />
                                             <FamilySubSection prefix="b" person="Bride" data={formData} setData={setFormData} toTitleCase={toTitleCase} />
                                             <ValidIDSection prefix="b" data={formData} setData={setFormData} type="Main" />
