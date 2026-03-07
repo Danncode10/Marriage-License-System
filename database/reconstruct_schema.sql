@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS public.addresses (
 -- Table: profiles
 CREATE TABLE IF NOT EXISTS public.profiles (
     id uuid NOT NULL,
-    role varchar NOT NULL,
+    role varchar NOT NULL DEFAULT 'user',
     full_name text NULL,
     employee_id varchar NULL,
     created_at timestamptz NULL DEFAULT now(),
@@ -42,6 +42,24 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     phone_number text NULL,
     CONSTRAINT profiles_pkey PRIMARY KEY (id)
 );
+
+-- Trigger Function: handle_new_user
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.profiles (id, full_name, role)
+  VALUES (new.id, new.raw_user_meta_data->>'full_name', 'user')
+  ON CONFLICT (id) DO NOTHING;
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger: on_auth_user_created
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
 
 -- Table: marriage_applications
 CREATE TABLE IF NOT EXISTS public.marriage_applications (
