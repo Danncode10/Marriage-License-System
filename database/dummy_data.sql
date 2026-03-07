@@ -1,6 +1,7 @@
 -- ==========================================================
 -- HIGH-FIDELITY FILIPINO DUMMY DATA (PROD-READY REFERENCE)
 -- 50 Marriage Applications with authentic Solano/NV patterns
+-- FIXED: Added provider_id to auth.identities
 -- ==========================================================
 
 DO $$
@@ -10,7 +11,7 @@ DECLARE
     groom_addr_id UUID;
     bride_addr_id UUID;
     
-    -- AUTHENTIC FILIPINO SURNAMES (FROM PROD REF)
+    -- AUTHENTIC FILIPINO SURNAMES
     surnames TEXT[] := ARRAY[
         'Loreto', 'Dugyon', 'Lopez', 'Catahina', 'Corpuz', 'Villanueva', 'Guilaran', 'Peralta', 'Taclan', 'Ferianiza',
         'Baniel', 'Bahiwal', 'Puguon', 'Barbieti', 'Valentino', 'Santos', 'Reyes', 'Cruz', 'Bautista', 'Ocampo',
@@ -40,7 +41,7 @@ DECLARE
         'Hazel', 'Isabella', 'Janice', 'Kristine', 'Maricel', 'Nanette', 'Olive', 'Patricia'
     ];
 
-    -- NUEVA VIZCAYA TOWNS & BARANGAYS (FROM PROD REFS)
+    -- NUEVA VIZCAYA TOWNS & BARANGAYS
     nv_towns TEXT[] := ARRAY['Solano', 'Bayombong (Capital)', 'Bambang', 'Aritao', 'Bagabag', 'Quezon', 'Villaverde', 'Dupax Del Sur', 'Dupax Del Norte', 'Kasibu', 'Santa Fe', 'Diadi', 'Ambaguio'];
     
     barangays TEXT[] := ARRAY[
@@ -72,9 +73,25 @@ BEGIN
     -- Admin
     IF NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'lester.admin@example.com') THEN
         u_id := gen_random_uuid();
-        INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, raw_user_meta_data, aud, role)
-        VALUES (u_id, 'lester.admin@example.com', crypt('Admin12345', gen_salt('bf')), now(), jsonb_build_object('full_name', 'Lester Admin'), 'authenticated', 'authenticated');
+        INSERT INTO auth.users (
+            id, email, encrypted_password, email_confirmed_at, 
+            raw_user_meta_data, aud, role, created_at, updated_at, 
+            last_sign_in_at, raw_app_meta_data
+        )
+        VALUES (
+            u_id, 'lester.admin@example.com', 
+            crypt('Admin12345', gen_salt('bf')), now(), 
+            jsonb_build_object('full_name', 'Lester Admin'), 'authenticated', 'authenticated', 
+            now(), now(), now(), '{"provider":"email","providers":["email"]}'
+        );
         
+        -- Link to Identity (Fixed with provider_id)
+        INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)
+        VALUES (
+            gen_random_uuid(), u_id, format('{"sub":"%s","email":"%s"}', u_id, 'lester.admin@example.com')::jsonb, 
+            'email', u_id::text, now(), now(), now()
+        );
+
         INSERT INTO public.profiles (id, role, full_name)
         VALUES (u_id, 'admin', 'Lester Admin')
         ON CONFLICT (id) DO UPDATE SET role = 'admin', full_name = 'Lester Admin';
@@ -85,8 +102,23 @@ BEGIN
         f_name := CASE WHEN i=1 THEN 'Employee One' ELSE 'Dann Employee' END;
         IF NOT EXISTS (SELECT 1 FROM auth.users WHERE email = format('employee%s@example.com', i)) THEN
             u_id := gen_random_uuid();
-            INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, raw_user_meta_data, aud, role)
-            VALUES (u_id, format('employee%s@example.com', i), crypt('Employee12345', gen_salt('bf')), now(), jsonb_build_object('full_name', f_name), 'authenticated', 'authenticated');
+            INSERT INTO auth.users (
+                id, email, encrypted_password, email_confirmed_at, 
+                raw_user_meta_data, aud, role, created_at, updated_at, 
+                last_sign_in_at, raw_app_meta_data
+            )
+            VALUES (
+                u_id, format('employee%s@example.com', i), 
+                crypt('Employee12345', gen_salt('bf')), now(), 
+                jsonb_build_object('full_name', f_name), 'authenticated', 'authenticated', 
+                now(), now(), now(), '{"provider":"email","providers":["email"]}'
+            );
+
+            INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)
+            VALUES (
+                gen_random_uuid(), u_id, format('{"sub":"%s","email":"%s"}', u_id, format('employee%s@example.com', i))::jsonb, 
+                'email', u_id::text, now(), now(), now()
+            );
             
             INSERT INTO public.profiles (id, role, full_name)
             VALUES (u_id, 'employee', f_name)
@@ -96,7 +128,7 @@ BEGIN
 
     -- 2. CREATE 50 AUTHENTIC APPLICATIONS
     FOR i IN 1..50 LOOP
-        created_ts := now() - (random() * interval '90 days'); -- More spread out
+        created_ts := now() - (random() * interval '90 days'); 
         app_status := CASE 
             WHEN random() < 0.15 THEN 'draft' 
             WHEN random() < 0.45 THEN 'pending' 
@@ -109,8 +141,23 @@ BEGIN
         random_surname_idx := floor(random() * array_length(surnames, 1)) + 1;
         f_name := format('%s %s', male_names[floor(random() * array_length(male_names, 1)) + 1], surnames[random_surname_idx]);
         
-        INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, raw_user_meta_data, aud, role, created_at)
-        VALUES (u_id, format('user%s@example.com', i), crypt('User12345', gen_salt('bf')), created_ts, jsonb_build_object('full_name', f_name), 'authenticated', 'authenticated', created_ts);
+        INSERT INTO auth.users (
+            id, email, encrypted_password, email_confirmed_at, 
+            raw_user_meta_data, aud, role, created_at, updated_at, 
+            last_sign_in_at, raw_app_meta_data
+        )
+        VALUES (
+            u_id, format('user%s@example.com', i), 
+            crypt('User12345', gen_salt('bf')), created_ts, 
+            jsonb_build_object('full_name', f_name), 'authenticated', 'authenticated', 
+            created_ts, created_ts, created_ts, '{"provider":"email","providers":["email"]}'
+        );
+
+        INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)
+        VALUES (
+            gen_random_uuid(), u_id, format('{"sub":"%s","email":"%s"}', u_id, format('user%s@example.com', i))::jsonb, 
+            'email', u_id::text, created_ts, created_ts, created_ts
+        );
         
         INSERT INTO public.profiles (id, role, full_name, created_at)
         VALUES (u_id, 'user', f_name, created_ts)
@@ -131,21 +178,20 @@ BEGIN
             CASE WHEN app_status = 'completed' THEN format('2026-%s', 1000 + i) ELSE NULL END
         );
 
-        -- Groom Address
+        -- Addresses
         groom_addr_id := gen_random_uuid();
         random_town_idx := floor(random() * array_length(nv_towns, 1)) + 1;
         random_brgy_idx := floor(random() * array_length(barangays, 1)) + 1;
         INSERT INTO public.addresses (id, province, municipality, barangay, street_address, country, created_at, is_foreigner)
         VALUES (groom_addr_id, 'Nueva Vizcaya', nv_towns[random_town_idx], barangays[random_brgy_idx], '', 'Philippines', created_ts, false);
 
-        -- Bride Address
         bride_addr_id := gen_random_uuid();
         random_town_idx := floor(random() * array_length(nv_towns, 1)) + 1;
         random_brgy_idx := floor(random() * array_length(barangays, 1)) + 1;
         INSERT INTO public.addresses (id, province, municipality, barangay, street_address, country, created_at, is_foreigner)
         VALUES (bride_addr_id, 'Nueva Vizcaya', nv_towns[random_town_idx], barangays[random_brgy_idx], '', 'Philippines', created_ts, false);
 
-        -- Applicants details
+        -- Details calculation
         g_age := 20 + floor(random()*40);
         b_age := 18 + floor(random()*40);
         g_bday := (created_ts - (format('%s years', g_age)::interval) - (random() * interval '365 days'))::date;

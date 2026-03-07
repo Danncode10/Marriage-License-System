@@ -204,7 +204,7 @@ export default function MarriageForm() {
                 <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 md:h-20 flex items-center justify-between">
                     <Link href="/dashboard" className="flex items-center gap-2 text-slate-600 hover:text-primary transition-colors font-medium">
                         <ChevronLeft className="w-4 h-4" />
-                        <span>Back</span>
+                        <span>Sign In</span>
                     </Link>
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-primary/10 rounded-lg text-primary"><Heart className="w-5 h-5 fill-current" /></div>
