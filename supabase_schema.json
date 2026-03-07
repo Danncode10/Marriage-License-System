@@ -1,918 +1,1133 @@
 [
   {
-    "table_name": "addresses",
-    "columns": [
-      {
-        "column": "id",
-        "type": "uuid",
-        "nullable": "NO"
-      },
-      {
-        "column": "country",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "street_address",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "barangay",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "municipality",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "province",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "is_foreigner",
-        "type": "bool",
-        "nullable": "YES"
-      },
-      {
-        "column": "updated_at",
-        "type": "timestamptz",
-        "nullable": "YES"
-      },
-      {
-        "column": "created_at",
-        "type": "timestamptz",
-        "nullable": "YES"
-      }
-    ],
-    "policies": [
-      {
-        "name": "addresses_secure_select",
-        "command": "SELECT",
-        "roles": [
-          "public"
-        ],
-        "using": "(EXISTS ( SELECT 1\n   FROM (applicants a\n     JOIN marriage_applications ma ON ((ma.id = a.application_id)))\n  WHERE ((a.address_id = addresses.id) AND ((ma.created_by = auth.uid()) OR is_admin_or_employee()))))",
-        "check": null
-      },
-      {
-        "name": "addresses_insert_authenticated_only",
-        "command": "INSERT",
-        "roles": [
-          "authenticated"
-        ],
-        "using": null,
-        "check": "true"
-      }
-    ],
-    "foreign_keys": []
-  },
-  {
-    "table_name": "applicants",
-    "columns": [
-      {
-        "column": "dissolved_country",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "id",
-        "type": "uuid",
-        "nullable": "NO"
-      },
-      {
-        "column": "application_id",
-        "type": "uuid",
-        "nullable": "NO"
-      },
-      {
-        "column": "birth_date",
-        "type": "date",
-        "nullable": "YES"
-      },
-      {
-        "column": "age",
-        "type": "int4",
-        "nullable": "YES"
-      },
-      {
-        "column": "address_id",
-        "type": "uuid",
-        "nullable": "YES"
-      },
-      {
-        "column": "created_at",
-        "type": "timestamptz",
-        "nullable": "YES"
-      },
-      {
-        "column": "updated_at",
-        "type": "timestamptz",
-        "nullable": "YES"
-      },
-      {
-        "column": "include_id",
-        "type": "bool",
-        "nullable": "YES"
-      },
-      {
-        "column": "giver_include_id",
-        "type": "bool",
-        "nullable": "YES"
-      },
-      {
-        "column": "is_not_born_in_ph",
-        "type": "bool",
-        "nullable": "YES"
-      },
-      {
-        "column": "dissolved_date",
-        "type": "date",
-        "nullable": "YES"
-      },
-      {
-        "column": "id_type",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "id_no",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "giver_id_no",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "birth_place",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "giver_suffix",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "type",
-        "type": "varchar",
-        "nullable": "YES"
-      },
-      {
-        "column": "first_name",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "middle_name",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "last_name",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "relationship_degree",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "birth_country",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "religion",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "citizenship",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "phone_number",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "civil_status",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "father_name",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "father_citizenship",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "mother_name",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "mother_citizenship",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "dissolved_how",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "dissolved_place",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "suffix",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "giver_name",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "giver_relationship",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "valid_id_type",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "valid_id_number",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "giver_id_type",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "giver_id_number",
-        "type": "text",
-        "nullable": "YES"
-      }
-    ],
-    "policies": [
-      {
-        "name": "applicants_insert_authenticated_only",
-        "command": "INSERT",
-        "roles": [
-          "authenticated"
-        ],
-        "using": null,
-        "check": "true"
-      },
-      {
-        "name": "applicants_secure_select",
-        "command": "SELECT",
-        "roles": [
-          "public"
-        ],
-        "using": "(EXISTS ( SELECT 1\n   FROM marriage_applications ma\n  WHERE ((ma.id = applicants.application_id) AND ((ma.created_by = auth.uid()) OR is_admin_or_employee()))))",
-        "check": null
-      }
-    ],
-    "foreign_keys": [
-      {
-        "column": "address_id",
-        "references_table": "addresses",
-        "references_column": "id"
-      },
-      {
-        "column": "application_id",
-        "references_table": "marriage_applications",
-        "references_column": "id"
-      }
-    ]
-  },
-  {
-    "table_name": "application_photos",
-    "columns": [
-      {
-        "column": "uploaded_by",
-        "type": "uuid",
-        "nullable": "YES"
-      },
-      {
-        "column": "file_size",
-        "type": "int4",
-        "nullable": "NO"
-      },
-      {
-        "column": "application_id",
-        "type": "uuid",
-        "nullable": "NO"
-      },
-      {
-        "column": "id",
-        "type": "uuid",
-        "nullable": "NO"
-      },
-      {
-        "column": "photo_type",
-        "type": "varchar",
-        "nullable": "NO"
-      },
-      {
-        "column": "file_path",
-        "type": "text",
-        "nullable": "NO"
-      },
-      {
-        "column": "uploaded_at",
-        "type": "timestamptz",
-        "nullable": "YES"
-      }
-    ],
-    "policies": [
-      {
-        "name": "employees_manage_application_photos",
-        "command": "ALL",
-        "roles": [
-          "authenticated"
-        ],
-        "using": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND ((profiles.role)::text = ANY ((ARRAY['employee'::character varying, 'admin'::character varying])::text[])))))",
-        "check": null
-      }
-    ],
-    "foreign_keys": [
-      {
-        "column": "uploaded_by",
-        "references_table": "profiles",
-        "references_column": "id"
-      },
-      {
-        "column": "application_id",
-        "references_table": "marriage_applications",
-        "references_column": "id"
-      }
-    ]
-  },
-  {
-    "table_name": "audit_logs",
-    "columns": [
-      {
-        "column": "id",
-        "type": "uuid",
-        "nullable": "NO"
-      },
-      {
-        "column": "user_id",
-        "type": "uuid",
-        "nullable": "YES"
-      },
-      {
-        "column": "application_id",
-        "type": "uuid",
-        "nullable": "YES"
-      },
-      {
-        "column": "details",
-        "type": "jsonb",
-        "nullable": "YES"
-      },
-      {
-        "column": "created_at",
-        "type": "timestamptz",
-        "nullable": "YES"
-      },
-      {
-        "column": "action",
-        "type": "text",
-        "nullable": "NO"
-      }
-    ],
-    "policies": [
-      {
-        "name": "admins_view_audit_logs",
-        "command": "SELECT",
-        "roles": [
-          "authenticated"
-        ],
-        "using": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND ((profiles.role)::text = 'admin'::text))))",
-        "check": null
-      },
-      {
-        "name": "authenticated_insert_audit_logs",
-        "command": "INSERT",
-        "roles": [
-          "authenticated"
-        ],
-        "using": null,
-        "check": "true"
-      }
-    ],
-    "foreign_keys": [
-      {
-        "column": "application_id",
-        "references_table": "marriage_applications",
-        "references_column": "id"
-      },
-      {
-        "column": "user_id",
-        "references_table": "profiles",
-        "references_column": "id"
-      }
-    ]
-  },
-  {
-    "table_name": "generated_documents",
-    "columns": [
-      {
-        "column": "file_size",
-        "type": "int4",
-        "nullable": "NO"
-      },
-      {
-        "column": "generated_by",
-        "type": "uuid",
-        "nullable": "YES"
-      },
-      {
-        "column": "generated_at",
-        "type": "timestamptz",
-        "nullable": "YES"
-      },
-      {
-        "column": "file_path",
-        "type": "text",
-        "nullable": "NO"
-      },
-      {
-        "column": "id",
-        "type": "uuid",
-        "nullable": "NO"
-      },
-      {
-        "column": "application_id",
-        "type": "uuid",
-        "nullable": "NO"
-      }
-    ],
-    "policies": [
-      {
-        "name": "employees_manage_documents",
-        "command": "ALL",
-        "roles": [
-          "authenticated"
-        ],
-        "using": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND ((profiles.role)::text = ANY ((ARRAY['employee'::character varying, 'admin'::character varying])::text[])))))",
-        "check": null
-      }
-    ],
-    "foreign_keys": [
-      {
-        "column": "application_id",
-        "references_table": "marriage_applications",
-        "references_column": "id"
-      },
-      {
-        "column": "generated_by",
-        "references_table": "profiles",
-        "references_column": "id"
-      }
-    ]
-  },
-  {
-    "table_name": "marriage_applications",
-    "columns": [
-      {
-        "column": "processed_by",
-        "type": "uuid",
-        "nullable": "YES"
-      },
-      {
-        "column": "created_at",
-        "type": "timestamptz",
-        "nullable": "YES"
-      },
-      {
-        "column": "updated_at",
-        "type": "timestamptz",
-        "nullable": "YES"
-      },
-      {
-        "column": "contact_number",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "registry_number",
-        "type": "varchar",
-        "nullable": "YES"
-      },
-      {
-        "column": "status",
-        "type": "varchar",
-        "nullable": "YES"
-      },
-      {
-        "column": "application_code",
-        "type": "varchar",
-        "nullable": "NO"
-      },
-      {
-        "column": "id",
-        "type": "uuid",
-        "nullable": "NO"
-      },
-      {
-        "column": "document_number",
-        "type": "int4",
-        "nullable": "YES"
-      },
-      {
-        "column": "created_by",
-        "type": "uuid",
-        "nullable": "YES"
-      }
-    ],
-    "policies": [
-      {
-        "name": "staff_update_access",
-        "command": "UPDATE",
-        "roles": [
-          "public"
-        ],
-        "using": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND ((profiles.role)::text = ANY ((ARRAY['admin'::character varying, 'employee'::character varying])::text[])))))",
-        "check": null
-      },
-      {
-        "name": "staff_only_view_unclaimed",
-        "command": "SELECT",
-        "roles": [
-          "public"
-        ],
-        "using": "(((created_by IS NULL) AND is_admin_or_employee()) OR (created_by = auth.uid()))",
-        "check": null
-      },
-      {
-        "name": "users_view_own_applications",
-        "command": "SELECT",
-        "roles": [
-          "authenticated"
-        ],
-        "using": "(created_by = auth.uid())",
-        "check": null
-      },
-      {
-        "name": "users_update_own_application_contact",
-        "command": "UPDATE",
-        "roles": [
-          "authenticated"
-        ],
-        "using": "(created_by = auth.uid())",
-        "check": "(created_by = auth.uid())"
-      },
-      {
-        "name": "service_role_full_access",
-        "command": "ALL",
-        "roles": [
-          "public"
-        ],
-        "using": "(auth.role() = 'service_role'::text)",
-        "check": null
-      },
-      {
-        "name": "Staff can view all marriage applications",
-        "command": "SELECT",
-        "roles": [
-          "authenticated"
-        ],
-        "using": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND ((profiles.role)::text = ANY ((ARRAY['admin'::character varying, 'employee'::character varying])::text[])))))",
-        "check": null
-      },
-      {
-        "name": "service_role_unrestricted",
-        "command": "ALL",
-        "roles": [
-          "public"
-        ],
-        "using": "(auth.role() = 'service_role'::text)",
-        "check": null
-      },
-      {
-        "name": "admin_employee_update",
-        "command": "UPDATE",
-        "roles": [
-          "public"
-        ],
-        "using": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND ((profiles.role)::text = ANY ((ARRAY['admin'::character varying, 'employee'::character varying])::text[])))))",
-        "check": null
-      },
-      {
-        "name": "admin_employee_insert_office_applications",
-        "command": "INSERT",
-        "roles": [
-          "authenticated"
-        ],
-        "using": null,
-        "check": "((created_by IS NULL) AND (processed_by = auth.uid()) AND (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND ((profiles.role)::text = ANY ((ARRAY['admin'::character varying, 'employee'::character varying])::text[]))))))"
-      },
-      {
-        "name": "enforce_one_app_claim",
-        "command": "UPDATE",
-        "roles": [
-          "authenticated"
-        ],
-        "using": "(created_by IS NULL)",
-        "check": "((created_by = auth.uid()) AND (NOT (EXISTS ( SELECT 1\n   FROM marriage_applications marriage_applications_1\n  WHERE (marriage_applications_1.created_by = auth.uid())))))"
-      },
-      {
-        "name": "app_insert_authenticated",
-        "command": "INSERT",
-        "roles": [
-          "authenticated"
-        ],
-        "using": null,
-        "check": "(created_by = auth.uid())"
-      }
-    ],
-    "foreign_keys": [
-      {
-        "column": "created_by",
-        "references_table": "profiles",
-        "references_column": "id"
-      },
-      {
-        "column": "processed_by",
-        "references_table": "profiles",
-        "references_column": "id"
-      }
-    ]
-  },
-  {
-    "table_name": "notifications",
-    "columns": [
-      {
-        "column": "metadata",
-        "type": "jsonb",
-        "nullable": "YES"
-      },
-      {
-        "column": "related_user_id",
-        "type": "uuid",
-        "nullable": "YES"
-      },
-      {
-        "column": "related_application_id",
-        "type": "uuid",
-        "nullable": "YES"
-      },
-      {
-        "column": "user_id",
-        "type": "uuid",
-        "nullable": "NO"
-      },
-      {
-        "column": "created_at",
-        "type": "timestamptz",
-        "nullable": "YES"
-      },
-      {
-        "column": "type",
-        "type": "text",
-        "nullable": "NO"
-      },
-      {
-        "column": "message",
-        "type": "text",
-        "nullable": "NO"
-      },
-      {
-        "column": "id",
-        "type": "uuid",
-        "nullable": "NO"
-      },
-      {
-        "column": "title",
-        "type": "text",
-        "nullable": "NO"
-      },
-      {
-        "column": "read_at",
-        "type": "timestamptz",
-        "nullable": "YES"
-      },
-      {
-        "column": "created_by",
-        "type": "uuid",
-        "nullable": "YES"
-      }
-    ],
-    "policies": [
-      {
-        "name": "authenticated_insert_notifications",
-        "command": "INSERT",
-        "roles": [
-          "public"
-        ],
-        "using": null,
-        "check": "(auth.uid() IS NOT NULL)"
-      },
-      {
-        "name": "users_view_own_notifications",
-        "command": "SELECT",
-        "roles": [
-          "public"
-        ],
-        "using": "(auth.uid() = user_id)",
-        "check": null
-      },
-      {
-        "name": "staff_view_created_notifications",
-        "command": "SELECT",
-        "roles": [
-          "public"
-        ],
-        "using": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND ((profiles.role)::text = ANY ((ARRAY['admin'::character varying, 'employee'::character varying])::text[])))))",
-        "check": null
-      },
-      {
-        "name": "users_update_own_notifications",
-        "command": "UPDATE",
-        "roles": [
-          "public"
-        ],
-        "using": "(auth.uid() = user_id)",
-        "check": null
-      }
-    ],
-    "foreign_keys": [
-      {
-        "column": "related_application_id",
-        "references_table": "marriage_applications",
-        "references_column": "id"
-      }
-    ]
-  },
-  {
-    "table_name": "profiles",
-    "columns": [
-      {
-        "column": "full_name",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "phone_number",
-        "type": "text",
-        "nullable": "YES"
-      },
-      {
-        "column": "updated_at",
-        "type": "timestamptz",
-        "nullable": "YES"
-      },
-      {
-        "column": "created_at",
-        "type": "timestamptz",
-        "nullable": "YES"
-      },
-      {
-        "column": "id",
-        "type": "uuid",
-        "nullable": "NO"
-      },
-      {
-        "column": "employee_id",
-        "type": "varchar",
-        "nullable": "YES"
-      },
-      {
-        "column": "role",
-        "type": "varchar",
-        "nullable": "NO"
-      }
-    ],
-    "policies": [
-      {
-        "name": "profiles_select_policy",
-        "command": "SELECT",
-        "roles": [
-          "public"
-        ],
-        "using": "((auth.uid() = id) OR is_admin_or_employee())",
-        "check": null
-      },
-      {
-        "name": "profiles_update_policy",
-        "command": "UPDATE",
-        "roles": [
-          "public"
-        ],
-        "using": "((auth.uid() = id) OR is_admin_or_employee())",
-        "check": null
-      },
-      {
-        "name": "profiles_insert_policy",
-        "command": "INSERT",
-        "roles": [
-          "public"
-        ],
-        "using": null,
-        "check": "(auth.uid() = id)"
-      }
-    ],
-    "foreign_keys": []
-  },
-  {
-    "table_name": "user_document_uploads",
-    "columns": [
-      {
-        "column": "uploaded_at",
-        "type": "timestamptz",
-        "nullable": "YES"
-      },
-      {
-        "column": "application_id",
-        "type": "uuid",
-        "nullable": "NO"
-      },
-      {
-        "column": "file_name",
-        "type": "text",
-        "nullable": "NO"
-      },
-      {
-        "column": "document_type",
-        "type": "varchar",
-        "nullable": "NO"
-      },
-      {
-        "column": "file_path",
-        "type": "text",
-        "nullable": "NO"
-      },
-      {
-        "column": "file_size",
-        "type": "int4",
-        "nullable": "NO"
-      },
-      {
-        "column": "id",
-        "type": "uuid",
-        "nullable": "NO"
-      },
-      {
-        "column": "uploaded_by",
-        "type": "uuid",
-        "nullable": "YES"
-      }
-    ],
-    "policies": [
-      {
-        "name": "users_manage_own_documents",
-        "command": "ALL",
-        "roles": [
-          "authenticated"
-        ],
-        "using": "(uploaded_by = auth.uid())",
-        "check": null
-      },
-      {
-        "name": "employees_view_all_documents",
-        "command": "SELECT",
-        "roles": [
-          "authenticated"
-        ],
-        "using": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND ((profiles.role)::text = ANY ((ARRAY['employee'::character varying, 'admin'::character varying])::text[])))))",
-        "check": null
-      }
-    ],
-    "foreign_keys": [
-      {
-        "column": "uploaded_by",
-        "references_table": "profiles",
-        "references_column": "id"
-      },
-      {
-        "column": "application_id",
-        "references_table": "marriage_applications",
-        "references_column": "id"
-      }
-    ]
+    "final_schema": {
+      "tables": [
+        {
+          "table_name": "addresses",
+          "columns": [
+            {
+              "column": "id",
+              "type": "uuid",
+              "nullable": "NO",
+              "default": "gen_random_uuid()",
+              "is_primary": true
+            },
+            {
+              "column": "province",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "municipality",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "barangay",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "street_address",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "created_at",
+              "type": "timestamptz",
+              "nullable": "YES",
+              "default": "now()",
+              "is_primary": false
+            },
+            {
+              "column": "updated_at",
+              "type": "timestamptz",
+              "nullable": "YES",
+              "default": "now()",
+              "is_primary": false
+            },
+            {
+              "column": "country",
+              "type": "text",
+              "nullable": "YES",
+              "default": "'Philippines'::text",
+              "is_primary": false
+            },
+            {
+              "column": "is_foreigner",
+              "type": "bool",
+              "nullable": "YES",
+              "default": "false",
+              "is_primary": false
+            }
+          ],
+          "policies": [
+            {
+              "name": "addresses_secure_select",
+              "command": "SELECT",
+              "roles": [
+                "public"
+              ],
+              "using": "(EXISTS ( SELECT 1\n   FROM (applicants a\n     JOIN marriage_applications ma ON ((ma.id = a.application_id)))\n  WHERE ((a.address_id = addresses.id) AND ((ma.created_by = auth.uid()) OR is_admin_or_employee()))))",
+              "check": null
+            },
+            {
+              "name": "addresses_insert_authenticated_only",
+              "command": "INSERT",
+              "roles": [
+                "authenticated"
+              ],
+              "using": null,
+              "check": "true"
+            }
+          ],
+          "foreign_keys": []
+        },
+        {
+          "table_name": "applicants",
+          "columns": [
+            {
+              "column": "id",
+              "type": "uuid",
+              "nullable": "NO",
+              "default": "gen_random_uuid()",
+              "is_primary": true
+            },
+            {
+              "column": "application_id",
+              "type": "uuid",
+              "nullable": "NO",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "type",
+              "type": "varchar",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "first_name",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "middle_name",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "last_name",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "birth_date",
+              "type": "date",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "age",
+              "type": "int4",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "religion",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "citizenship",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "phone_number",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "address_id",
+              "type": "uuid",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "father_name",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "father_citizenship",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "mother_name",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "mother_citizenship",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "created_at",
+              "type": "timestamptz",
+              "nullable": "YES",
+              "default": "now()",
+              "is_primary": false
+            },
+            {
+              "column": "updated_at",
+              "type": "timestamptz",
+              "nullable": "YES",
+              "default": "now()",
+              "is_primary": false
+            },
+            {
+              "column": "suffix",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "giver_name",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "giver_relationship",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "valid_id_type",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "valid_id_number",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "giver_id_type",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "giver_id_number",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "include_id",
+              "type": "bool",
+              "nullable": "YES",
+              "default": "false",
+              "is_primary": false
+            },
+            {
+              "column": "id_type",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "id_no",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "giver_include_id",
+              "type": "bool",
+              "nullable": "YES",
+              "default": "false",
+              "is_primary": false
+            },
+            {
+              "column": "giver_id_no",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "birth_place",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "giver_suffix",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "is_not_born_in_ph",
+              "type": "bool",
+              "nullable": "YES",
+              "default": "false",
+              "is_primary": false
+            },
+            {
+              "column": "birth_country",
+              "type": "text",
+              "nullable": "YES",
+              "default": "'Philippines'::text",
+              "is_primary": false
+            },
+            {
+              "column": "civil_status",
+              "type": "text",
+              "nullable": "YES",
+              "default": "'Single'::text",
+              "is_primary": false
+            },
+            {
+              "column": "dissolved_how",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "dissolved_place",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "dissolved_country",
+              "type": "text",
+              "nullable": "YES",
+              "default": "'Philippines'::text",
+              "is_primary": false
+            },
+            {
+              "column": "dissolved_date",
+              "type": "date",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "relationship_degree",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            }
+          ],
+          "policies": [
+            {
+              "name": "applicants_insert_authenticated_only",
+              "command": "INSERT",
+              "roles": [
+                "authenticated"
+              ],
+              "using": null,
+              "check": "true"
+            },
+            {
+              "name": "applicants_secure_select",
+              "command": "SELECT",
+              "roles": [
+                "public"
+              ],
+              "using": "(EXISTS ( SELECT 1\n   FROM marriage_applications ma\n  WHERE ((ma.id = applicants.application_id) AND ((ma.created_by = auth.uid()) OR is_admin_or_employee()))))",
+              "check": null
+            }
+          ],
+          "foreign_keys": [
+            {
+              "column": "address_id",
+              "references_table": "addresses",
+              "references_column": "id"
+            },
+            {
+              "column": "application_id",
+              "references_table": "marriage_applications",
+              "references_column": "id"
+            }
+          ]
+        },
+        {
+          "table_name": "application_photos",
+          "columns": [
+            {
+              "column": "id",
+              "type": "uuid",
+              "nullable": "NO",
+              "default": "gen_random_uuid()",
+              "is_primary": true
+            },
+            {
+              "column": "application_id",
+              "type": "uuid",
+              "nullable": "NO",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "photo_type",
+              "type": "varchar",
+              "nullable": "NO",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "file_path",
+              "type": "text",
+              "nullable": "NO",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "file_size",
+              "type": "int4",
+              "nullable": "NO",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "uploaded_by",
+              "type": "uuid",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "uploaded_at",
+              "type": "timestamptz",
+              "nullable": "YES",
+              "default": "now()",
+              "is_primary": false
+            }
+          ],
+          "policies": [
+            {
+              "name": "employees_manage_application_photos",
+              "command": "ALL",
+              "roles": [
+                "authenticated"
+              ],
+              "using": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND ((profiles.role)::text = ANY ((ARRAY['employee'::character varying, 'admin'::character varying])::text[])))))",
+              "check": null
+            }
+          ],
+          "foreign_keys": [
+            {
+              "column": "uploaded_by",
+              "references_table": "profiles",
+              "references_column": "id"
+            },
+            {
+              "column": "application_id",
+              "references_table": "marriage_applications",
+              "references_column": "id"
+            }
+          ]
+        },
+        {
+          "table_name": "audit_logs",
+          "columns": [
+            {
+              "column": "id",
+              "type": "uuid",
+              "nullable": "NO",
+              "default": "gen_random_uuid()",
+              "is_primary": true
+            },
+            {
+              "column": "user_id",
+              "type": "uuid",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "application_id",
+              "type": "uuid",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "action",
+              "type": "text",
+              "nullable": "NO",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "details",
+              "type": "jsonb",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "created_at",
+              "type": "timestamptz",
+              "nullable": "YES",
+              "default": "now()",
+              "is_primary": false
+            }
+          ],
+          "policies": [
+            {
+              "name": "admins_view_audit_logs",
+              "command": "SELECT",
+              "roles": [
+                "authenticated"
+              ],
+              "using": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND ((profiles.role)::text = 'admin'::text))))",
+              "check": null
+            },
+            {
+              "name": "authenticated_insert_audit_logs",
+              "command": "INSERT",
+              "roles": [
+                "authenticated"
+              ],
+              "using": null,
+              "check": "true"
+            }
+          ],
+          "foreign_keys": [
+            {
+              "column": "application_id",
+              "references_table": "marriage_applications",
+              "references_column": "id"
+            },
+            {
+              "column": "user_id",
+              "references_table": "profiles",
+              "references_column": "id"
+            }
+          ]
+        },
+        {
+          "table_name": "generated_documents",
+          "columns": [
+            {
+              "column": "id",
+              "type": "uuid",
+              "nullable": "NO",
+              "default": "gen_random_uuid()",
+              "is_primary": true
+            },
+            {
+              "column": "application_id",
+              "type": "uuid",
+              "nullable": "NO",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "file_path",
+              "type": "text",
+              "nullable": "NO",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "file_size",
+              "type": "int4",
+              "nullable": "NO",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "generated_by",
+              "type": "uuid",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "generated_at",
+              "type": "timestamptz",
+              "nullable": "YES",
+              "default": "now()",
+              "is_primary": false
+            }
+          ],
+          "policies": [
+            {
+              "name": "employees_manage_documents",
+              "command": "ALL",
+              "roles": [
+                "authenticated"
+              ],
+              "using": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND ((profiles.role)::text = ANY ((ARRAY['employee'::character varying, 'admin'::character varying])::text[])))))",
+              "check": null
+            }
+          ],
+          "foreign_keys": [
+            {
+              "column": "application_id",
+              "references_table": "marriage_applications",
+              "references_column": "id"
+            },
+            {
+              "column": "generated_by",
+              "references_table": "profiles",
+              "references_column": "id"
+            }
+          ]
+        },
+        {
+          "table_name": "marriage_applications",
+          "columns": [
+            {
+              "column": "id",
+              "type": "uuid",
+              "nullable": "NO",
+              "default": "gen_random_uuid()",
+              "is_primary": true
+            },
+            {
+              "column": "application_code",
+              "type": "varchar",
+              "nullable": "NO",
+              "default": "\"substring\"(md5((random())::text), 1, 6)",
+              "is_primary": false
+            },
+            {
+              "column": "status",
+              "type": "varchar",
+              "nullable": "YES",
+              "default": "'draft'::character varying",
+              "is_primary": false
+            },
+            {
+              "column": "document_number",
+              "type": "int4",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "created_by",
+              "type": "uuid",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "processed_by",
+              "type": "uuid",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "created_at",
+              "type": "timestamptz",
+              "nullable": "YES",
+              "default": "now()",
+              "is_primary": false
+            },
+            {
+              "column": "updated_at",
+              "type": "timestamptz",
+              "nullable": "YES",
+              "default": "now()",
+              "is_primary": false
+            },
+            {
+              "column": "contact_number",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "registry_number",
+              "type": "varchar",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            }
+          ],
+          "policies": [
+            {
+              "name": "staff_update_access",
+              "command": "UPDATE",
+              "roles": [
+                "public"
+              ],
+              "using": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND ((profiles.role)::text = ANY ((ARRAY['admin'::character varying, 'employee'::character varying])::text[])))))",
+              "check": null
+            },
+            {
+              "name": "staff_only_view_unclaimed",
+              "command": "SELECT",
+              "roles": [
+                "public"
+              ],
+              "using": "(((created_by IS NULL) AND is_admin_or_employee()) OR (created_by = auth.uid()))",
+              "check": null
+            },
+            {
+              "name": "users_view_own_applications",
+              "command": "SELECT",
+              "roles": [
+                "authenticated"
+              ],
+              "using": "(created_by = auth.uid())",
+              "check": null
+            },
+            {
+              "name": "users_update_own_application_contact",
+              "command": "UPDATE",
+              "roles": [
+                "authenticated"
+              ],
+              "using": "(created_by = auth.uid())",
+              "check": "(created_by = auth.uid())"
+            },
+            {
+              "name": "service_role_full_access",
+              "command": "ALL",
+              "roles": [
+                "public"
+              ],
+              "using": "(auth.role() = 'service_role'::text)",
+              "check": null
+            },
+            {
+              "name": "Staff can view all marriage applications",
+              "command": "SELECT",
+              "roles": [
+                "authenticated"
+              ],
+              "using": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND ((profiles.role)::text = ANY ((ARRAY['admin'::character varying, 'employee'::character varying])::text[])))))",
+              "check": null
+            },
+            {
+              "name": "service_role_unrestricted",
+              "command": "ALL",
+              "roles": [
+                "public"
+              ],
+              "using": "(auth.role() = 'service_role'::text)",
+              "check": null
+            },
+            {
+              "name": "admin_employee_update",
+              "command": "UPDATE",
+              "roles": [
+                "public"
+              ],
+              "using": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND ((profiles.role)::text = ANY ((ARRAY['admin'::character varying, 'employee'::character varying])::text[])))))",
+              "check": null
+            },
+            {
+              "name": "admin_employee_insert_office_applications",
+              "command": "INSERT",
+              "roles": [
+                "authenticated"
+              ],
+              "using": null,
+              "check": "((created_by IS NULL) AND (processed_by = auth.uid()) AND (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND ((profiles.role)::text = ANY ((ARRAY['admin'::character varying, 'employee'::character varying])::text[]))))))"
+            },
+            {
+              "name": "enforce_one_app_claim",
+              "command": "UPDATE",
+              "roles": [
+                "authenticated"
+              ],
+              "using": "(created_by IS NULL)",
+              "check": "((created_by = auth.uid()) AND (NOT (EXISTS ( SELECT 1\n   FROM marriage_applications marriage_applications_1\n  WHERE (marriage_applications_1.created_by = auth.uid())))))"
+            },
+            {
+              "name": "app_insert_authenticated",
+              "command": "INSERT",
+              "roles": [
+                "authenticated"
+              ],
+              "using": null,
+              "check": "(created_by = auth.uid())"
+            }
+          ],
+          "foreign_keys": [
+            {
+              "column": "created_by",
+              "references_table": "profiles",
+              "references_column": "id"
+            },
+            {
+              "column": "processed_by",
+              "references_table": "profiles",
+              "references_column": "id"
+            }
+          ]
+        },
+        {
+          "table_name": "notifications",
+          "columns": [
+            {
+              "column": "id",
+              "type": "uuid",
+              "nullable": "NO",
+              "default": "gen_random_uuid()",
+              "is_primary": true
+            },
+            {
+              "column": "user_id",
+              "type": "uuid",
+              "nullable": "NO",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "title",
+              "type": "text",
+              "nullable": "NO",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "message",
+              "type": "text",
+              "nullable": "NO",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "type",
+              "type": "text",
+              "nullable": "NO",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "related_application_id",
+              "type": "uuid",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "related_user_id",
+              "type": "uuid",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "created_by",
+              "type": "uuid",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "created_at",
+              "type": "timestamptz",
+              "nullable": "YES",
+              "default": "now()",
+              "is_primary": false
+            },
+            {
+              "column": "read_at",
+              "type": "timestamptz",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "metadata",
+              "type": "jsonb",
+              "nullable": "YES",
+              "default": "'{}'::jsonb",
+              "is_primary": false
+            }
+          ],
+          "policies": [
+            {
+              "name": "authenticated_insert_notifications",
+              "command": "INSERT",
+              "roles": [
+                "public"
+              ],
+              "using": null,
+              "check": "(auth.uid() IS NOT NULL)"
+            },
+            {
+              "name": "users_view_own_notifications",
+              "command": "SELECT",
+              "roles": [
+                "public"
+              ],
+              "using": "(auth.uid() = user_id)",
+              "check": null
+            },
+            {
+              "name": "staff_view_created_notifications",
+              "command": "SELECT",
+              "roles": [
+                "public"
+              ],
+              "using": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND ((profiles.role)::text = ANY ((ARRAY['admin'::character varying, 'employee'::character varying])::text[])))))",
+              "check": null
+            },
+            {
+              "name": "users_update_own_notifications",
+              "command": "UPDATE",
+              "roles": [
+                "public"
+              ],
+              "using": "(auth.uid() = user_id)",
+              "check": null
+            }
+          ],
+          "foreign_keys": [
+            {
+              "column": "related_application_id",
+              "references_table": "marriage_applications",
+              "references_column": "id"
+            }
+          ]
+        },
+        {
+          "table_name": "profiles",
+          "columns": [
+            {
+              "column": "id",
+              "type": "uuid",
+              "nullable": "NO",
+              "default": null,
+              "is_primary": true
+            },
+            {
+              "column": "role",
+              "type": "varchar",
+              "nullable": "NO",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "full_name",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "employee_id",
+              "type": "varchar",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "created_at",
+              "type": "timestamptz",
+              "nullable": "YES",
+              "default": "now()",
+              "is_primary": false
+            },
+            {
+              "column": "updated_at",
+              "type": "timestamptz",
+              "nullable": "YES",
+              "default": "now()",
+              "is_primary": false
+            },
+            {
+              "column": "phone_number",
+              "type": "text",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            }
+          ],
+          "policies": [
+            {
+              "name": "profiles_select_policy",
+              "command": "SELECT",
+              "roles": [
+                "public"
+              ],
+              "using": "((auth.uid() = id) OR is_admin_or_employee())",
+              "check": null
+            },
+            {
+              "name": "profiles_update_policy",
+              "command": "UPDATE",
+              "roles": [
+                "public"
+              ],
+              "using": "((auth.uid() = id) OR is_admin_or_employee())",
+              "check": null
+            },
+            {
+              "name": "profiles_insert_policy",
+              "command": "INSERT",
+              "roles": [
+                "public"
+              ],
+              "using": null,
+              "check": "(auth.uid() = id)"
+            }
+          ],
+          "foreign_keys": []
+        },
+        {
+          "table_name": "user_document_uploads",
+          "columns": [
+            {
+              "column": "id",
+              "type": "uuid",
+              "nullable": "NO",
+              "default": "gen_random_uuid()",
+              "is_primary": true
+            },
+            {
+              "column": "application_id",
+              "type": "uuid",
+              "nullable": "NO",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "document_type",
+              "type": "varchar",
+              "nullable": "NO",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "file_path",
+              "type": "text",
+              "nullable": "NO",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "file_size",
+              "type": "int4",
+              "nullable": "NO",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "file_name",
+              "type": "text",
+              "nullable": "NO",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "uploaded_by",
+              "type": "uuid",
+              "nullable": "YES",
+              "default": null,
+              "is_primary": false
+            },
+            {
+              "column": "uploaded_at",
+              "type": "timestamptz",
+              "nullable": "YES",
+              "default": "now()",
+              "is_primary": false
+            }
+          ],
+          "policies": [
+            {
+              "name": "users_manage_own_documents",
+              "command": "ALL",
+              "roles": [
+                "authenticated"
+              ],
+              "using": "(uploaded_by = auth.uid())",
+              "check": null
+            },
+            {
+              "name": "employees_view_all_documents",
+              "command": "SELECT",
+              "roles": [
+                "authenticated"
+              ],
+              "using": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND ((profiles.role)::text = ANY ((ARRAY['employee'::character varying, 'admin'::character varying])::text[])))))",
+              "check": null
+            }
+          ],
+          "foreign_keys": [
+            {
+              "column": "uploaded_by",
+              "references_table": "profiles",
+              "references_column": "id"
+            },
+            {
+              "column": "application_id",
+              "references_table": "marriage_applications",
+              "references_column": "id"
+            }
+          ]
+        }
+      ],
+      "enums": []
+    }
   }
 ]
