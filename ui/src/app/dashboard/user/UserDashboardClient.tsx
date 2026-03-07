@@ -10,7 +10,6 @@ import {
     Clock,
     CheckCircle,
     AlertCircle,
-    Download,
     Calendar,
     MapPin,
     PenSquare,
@@ -336,11 +335,6 @@ export default function UserDashboard() {
                                 </CardContent>
                                 <CardFooter className="bg-zinc-50/30 border-t border-zinc-100 flex justify-end gap-3 py-4">
                                     <Button variant="ghost" size="sm" onClick={() => setSelectedApp(app)}>View Details</Button>
-                                    {app.status === 'completed' && (
-                                        <Button size="sm" className="gap-2">
-                                            <Download className="h-4 w-4" /> Download Documents
-                                        </Button>
-                                    )}
                                 </CardFooter>
                             </Card>
                         ))

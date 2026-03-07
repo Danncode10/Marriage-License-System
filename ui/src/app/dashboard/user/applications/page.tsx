@@ -9,7 +9,6 @@ import {
     Calendar,
     MapPin,
     Clock,
-    Download,
     PenSquare
 } from "lucide-react";
 
@@ -87,11 +86,6 @@ export default async function ApplicationsPage() {
 
                                     <div className="flex items-center gap-3">
                                         <Button variant="outline">View Details</Button>
-                                        {app.status === 'completed' && (
-                                            <Button variant="secondary" className="gap-2">
-                                                <Download className="h-4 w-4" /> Download
-                                            </Button>
-                                        )}
                                     </div>
                                 </div>
                             </div>

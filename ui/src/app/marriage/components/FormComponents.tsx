@@ -20,7 +20,7 @@ export function Field({ label, children, className, required }: FieldProps) {
             {children}
         </div>
     );
-}
+}       
 
 export function ValidationFeedback({ data, prefix }: { data: any, prefix: 'g' | 'b' }) {
     const missingFields: string[] = [];
@@ -450,9 +450,6 @@ export function GiverSubSection({ prefix, age, data, setData, toTitleCase }: Giv
                     </motion.div>
                 )}
             </AnimatePresence>
-
-            {/* Groom/Bride Main ID Section */}
-            <ValidIDSection prefix={prefix} data={data} setData={setData} type="Main" />
 
             {/* Missing Info Feedback */}
             <ValidationFeedback data={data} prefix={prefix} />

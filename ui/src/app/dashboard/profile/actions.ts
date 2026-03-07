@@ -47,3 +47,56 @@ export async function updateProfilePhoneNumber(formData: FormData) {
     revalidatePath("/dashboard/profile");
     return { success: true };
 }
+
+export async function updatePassword(formData: FormData) {
+    const supabase = await createClient();
+
+    if (!supabase) {
+        console.error("Failed to create Supabase client");
+        return { error: "Database connection failed" };
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return { error: "Not authenticated" };
+    }
+
+    const password = formData.get("password") as string;
+    const confirmPassword = formData.get("confirmPassword") as string;
+    const currentPassword = formData.get("currentPassword") as string;
+
+    if (!currentPassword) {
+        return { error: "Current password is required" };
+    }
+
+    if (!password || password.length < 6) {
+        return { error: "New password must be at least 6 characters long" };
+    }
+
+    if (password !== confirmPassword) {
+        return { error: "Passwords do not match" };
+    }
+
+    // Verify current password by attempting to sign in
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email!,
+        password: currentPassword,
+    });
+
+    if (signInError) {
+        console.error("Current password verification failed:", signInError);
+        return { error: "Incorrect current password" };
+    }
+
+    const { error } = await supabase.auth.updateUser({
+        password: password
+    });
+
+    if (error) {
+        console.error("Password update error:", error);
+        return { error: error.message };
+    }
+
+    return { success: true };
+}

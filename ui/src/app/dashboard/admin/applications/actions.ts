@@ -306,8 +306,41 @@ export async function updateRegistryNumber(applicationId: string, registryCode: 
         return { success: false, error: error.message };
     }
 
+    // Create notification for admin/employee who assigned the registry number
+    if (data && data.length > 0) {
+        const application = data[0];
+        const supabase = await createClient();
+        
+        if (supabase) {
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
+            
+            if (!userError && user) {
+                // Create notification for the staff member
+                await supabase.rpc('create_notification', {
+                    p_user_id: user.id,
+                    p_title: 'Registry Number Assigned',
+                    p_message: `You successfully added a registry number (${fullRegistryNumber}) for application (${application.application_code}). The application status has been updated to completed.`,
+                    p_type: 'registry_assigned',
+                    p_related_application_id: applicationId
+                });
+
+                // Create notification for the applicant (user who owns the application)
+                if (application.user_id && application.user_id !== user.id) {
+                    await supabase.rpc('create_notification', {
+                        p_user_id: application.user_id,
+                        p_title: 'Application Ready for Pickup',
+                        p_message: `Your application (${application.application_code}) is ready for pickup. Please visit the Solano Municipal Office to claim your documents. Registry number: ${fullRegistryNumber}`,
+                        p_type: 'ready_for_pickup',
+                        p_related_application_id: applicationId
+                    });
+                }
+            }
+        }
+    }
+
     revalidatePath("/dashboard/admin/applications");
     revalidatePath("/dashboard/admin");
+    revalidatePath("/dashboard/notifications");
     return { success: true, registryNumber: fullRegistryNumber };
 }
 
