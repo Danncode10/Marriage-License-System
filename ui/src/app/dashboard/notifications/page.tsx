@@ -1,9 +1,10 @@
 import { createClient } from "@/utils/supabase/server-utils";
 import { redirect } from "next/navigation";
-import { Bell, Clock, User, FileText, Camera, ShieldCheck } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { getUserRole } from "@/utils/roles";
+import NotificationClient from "@/components/dashboard/NotificationClient";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Bell } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -246,148 +247,12 @@ $$ language plpgsql security definer;`}
         }
     }
 
-    const getNotificationIcon = (type: string) => {
-        switch (type) {
-            case 'status_change':
-                return <FileText className="h-4 w-4" />;
-            case 'photo_captured':
-                return <Camera className="h-4 w-4" />;
-            case 'staff_action':
-                return <ShieldCheck className="h-4 w-4" />;
-            default:
-                return <Bell className="h-4 w-4" />;
-        }
-    };
-
-    const getNotificationColor = (type: string) => {
-        switch (type) {
-            case 'status_change':
-                return 'text-blue-600 bg-blue-50';
-            case 'photo_captured':
-                return 'text-green-600 bg-green-50';
-            case 'staff_action':
-                return 'text-purple-600 bg-purple-50';
-            default:
-                return 'text-zinc-600 bg-zinc-50';
-        }
-    };
-
     return (
-        <div className="max-w-7xl mx-auto space-y-8">
-            <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">Notifications</h1>
-                <Badge variant="secondary" className="text-sm">
-                    {unreadCount || 0} unread
-                </Badge>
-            </div>
-
-            <div className="space-y-4">
-                {enrichedNotifications && enrichedNotifications.length > 0 ? (
-                    <>
-                        <div className="space-y-4">
-                            {enrichedNotifications.map((notification: Notification) => (
-                                <Card key={notification.id} className={`transition-all ${!notification.read_at ? 'border-l-4 border-l-blue-500 bg-blue-50/30' : ''}`}>
-                                    <CardContent className="p-6">
-                                        <div className="flex items-start gap-4">
-                                            <div className={`p-2 rounded-full ${getNotificationColor(notification.type)}`}>
-                                                {getNotificationIcon(notification.type)}
-                                            </div>
-                                            <div className="flex-1 space-y-2">
-                                                <div className="flex items-center justify-between">
-                                                    <h3 className="font-semibold text-zinc-900">{notification.title}</h3>
-                                                    <div className="flex items-center gap-2 text-sm text-zinc-500">
-                                                        <Clock className="h-3 w-3" />
-                                                        {new Date(notification.created_at).toLocaleDateString()} at {new Date(notification.created_at).toLocaleTimeString()}
-                                                    </div>
-                                                </div>
-                                                <p className="text-zinc-700">{notification.message}</p>
-                                                {notification.created_by_profile && notification.user_id !== notification.created_by && (
-                                                    <div className="flex items-center gap-2 text-sm text-zinc-500">
-                                                        <User className="h-3 w-3" />
-                                                        <span>By {notification.created_by_profile.full_name} ({notification.created_by_profile.role})</span>
-                                                    </div>
-                                                )}
-                                                {notification.related_application && (
-                                                    <div className="flex items-center gap-2 text-sm text-zinc-500">
-                                                        <FileText className="h-3 w-3" />
-                                                        <span>Application: {notification.related_application.application_code}</span>
-                                                    </div>
-                                                )}
-                                                {!notification.read_at && (
-                                                    <Badge variant="outline" className="text-xs">Unread</Badge>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
-
-                        {/* Pagination UI */}
-                        {totalPages > 1 && (
-                            <div className="flex items-center justify-center gap-2 pt-6">
-                                <a
-                                    href={`/dashboard/notifications?page=${Math.max(1, currentPage - 1)}`}
-                                    className={`h-10 px-4 flex items-center justify-center rounded-xl font-bold text-sm transition-all shadow-sm ${currentPage === 1 ? 'bg-zinc-50 text-zinc-300 pointer-events-none' : 'bg-white text-zinc-600 hover:bg-zinc-50'
-                                        }`}
-                                >
-                                    &lt;
-                                </a>
-
-                                <div className="flex items-center gap-1.5">
-                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
-                                        // Simple logic to show current, first, last, and neighbors
-                                        if (
-                                            pageNum === 1 ||
-                                            pageNum === totalPages ||
-                                            (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
-                                        ) {
-                                            return (
-                                                <a
-                                                    key={pageNum}
-                                                    href={`/dashboard/notifications?page=${pageNum}`}
-                                                    className={`h-10 w-10 flex items-center justify-center rounded-xl font-bold text-sm transition-all shadow-sm ${pageNum === currentPage
-                                                        ? 'bg-zinc-900 text-white'
-                                                        : 'bg-white text-zinc-600 hover:bg-zinc-50'
-                                                        }`}
-                                                >
-                                                    {pageNum}
-                                                </a>
-                                            );
-                                        } else if (
-                                            (pageNum === currentPage - 2 && pageNum > 1) ||
-                                            (pageNum === currentPage + 2 && pageNum < totalPages)
-                                        ) {
-                                            return <span key={pageNum} className="px-1 text-zinc-400 font-bold">...</span>;
-                                        }
-                                        return null;
-                                    })}
-                                </div>
-
-                                <a
-                                    href={`/dashboard/notifications?page=${Math.min(totalPages, currentPage + 1)}`}
-                                    className={`h-10 px-4 flex items-center justify-center rounded-xl font-bold text-sm transition-all shadow-sm ${currentPage === totalPages ? 'bg-zinc-50 text-zinc-300 pointer-events-none' : 'bg-white text-zinc-600 hover:bg-zinc-50'
-                                        }`}
-                                >
-                                    &gt;
-                                </a>
-                            </div>
-                        )}
-                    </>
-                ) : (
-                    <Card>
-                        <CardContent className="p-12">
-                            <div className="text-center text-zinc-500">
-                                <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <Bell className="h-8 w-8 text-zinc-400" />
-                                </div>
-                                <h3 className="text-lg font-semibold text-zinc-900">No Notifications</h3>
-                                <p>Updates about your applications and activities will appear here.</p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
-            </div>
+        <div className="max-w-7xl mx-auto">
+            <NotificationClient 
+                notifications={enrichedNotifications || []} 
+                unreadCount={unreadCount || 0} 
+            />
         </div>
     );
 }

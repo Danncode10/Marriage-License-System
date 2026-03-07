@@ -4,7 +4,7 @@ create table if not exists public.notifications (
   user_id uuid references auth.users not null,
   title text not null,
   message text not null,
-  type text not null check (type in ('status_change', 'photo_captured', 'staff_action', 'system')),
+  type text not null check (type in ('status_change', 'photo_captured', 'staff_action', 'system', 'registry_assigned', 'ready_for_pickup')),
   related_application_id uuid references marriage_applications(id),
   related_user_id uuid references auth.users(id),
   created_by uuid references auth.users(id),
