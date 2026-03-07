@@ -8,7 +8,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { X, FileText, Heart, Trash2, ArrowRight, Clock } from 'lucide-react';
 import { AddressSection } from "../../../marriage/components/AddressSection";
 import { BirthPlaceSection } from "../../../marriage/components/BirthPlaceSection";
-import { FamilySubSection, Field, GiverSubSection, DissolutionFields } from "../../../marriage/components/FormComponents";
+import { FamilySubSection, Field, GiverSubSection, DissolutionFields, ValidIDSection } from "../../../marriage/components/FormComponents";
 import { SectionCard } from "../../../marriage/components/SectionCard";
 import { RELIGIONS, SUFFIX_OPTIONS } from "../../../marriage/constants";
 import { useMarriageForm } from "../../../marriage/hooks/useMarriageForm";
@@ -253,6 +253,7 @@ export default function AdminMarriageForm({ isOpen, onClose, onSuccess }: AdminM
                                             />
                                             <BirthPlaceSection prefix="g" sameAsAddress={gSameAsAddress} setSameAsAddress={setGSameAsAddress} formData={formData} setFormData={setFormData} provincesList={provincesList} birthTownOptions={gBirthTownOptions} countryOptions={COUNTRY_OPTIONS} handleBirthProvinceChange={handleBirthProvinceChange} handleBirthTownChange={handleBirthTownChange} />
                                             <FamilySubSection prefix="g" person="Groom" data={formData} setData={setFormData} toTitleCase={toTitleCase} />
+                                            <ValidIDSection prefix="g" data={formData} setData={setFormData} type="Main" />
                                             <GiverSubSection prefix="g" age={formData.gAge} data={formData} setData={setFormData} toTitleCase={toTitleCase} />
                                         </SectionCard>
 
@@ -373,6 +374,7 @@ export default function AdminMarriageForm({ isOpen, onClose, onSuccess }: AdminM
                                             />
                                             <BirthPlaceSection prefix="b" sameAsAddress={bSameAsAddress} setSameAsAddress={setBSameAsAddress} formData={formData} setFormData={setFormData} provincesList={provincesList} birthTownOptions={bBirthTownOptions} countryOptions={COUNTRY_OPTIONS} handleBirthProvinceChange={handleBirthProvinceChange} handleBirthTownChange={handleBirthTownChange} />
                                             <FamilySubSection prefix="b" person="Bride" data={formData} setData={setFormData} toTitleCase={toTitleCase} />
+                                            <ValidIDSection prefix="b" data={formData} setData={setFormData} type="Main" />
                                             <GiverSubSection prefix="b" age={formData.bAge} data={formData} setData={setFormData} toTitleCase={toTitleCase} />
                                         </SectionCard>
                                     </div>

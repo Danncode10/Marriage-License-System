@@ -12,7 +12,7 @@ import { mapAppToFormData } from "../mapping-utils";
 import { toTitleCase } from "../utils";
 import { AddressSection } from "./AddressSection";
 import { BirthPlaceSection } from "./BirthPlaceSection";
-import { FamilySubSection, Field, GiverSubSection, DissolutionFields } from "./FormComponents";
+import { FamilySubSection, Field, GiverSubSection, DissolutionFields, ValidIDSection } from "./FormComponents";
 import { SectionCard } from "./SectionCard";
 import { COUNTRY_OPTIONS } from "@/utils/countries";
 
@@ -242,6 +242,7 @@ export default function EditApplicationModal({ isOpen, onClose, onSuccess, selec
                                 <AddressSection prefix="g" provincesList={provincesList} gTownOptions={gTownOptions} bTownOptions={bTownOptions} brgyOptions={gBrgyOptions} formData={formData} setFormData={setFormData} handleProvinceChange={handleProvinceChange} handleTownChange={handleTownChange} handleBrgyChange={handleBrgyChange} countryOptions={COUNTRY_OPTIONS} />
                                 <BirthPlaceSection prefix="g" sameAsAddress={gSameAsAddress} setSameAsAddress={setGSameAsAddress} formData={formData} setFormData={setFormData} provincesList={provincesList} birthTownOptions={gBirthTownOptions} countryOptions={COUNTRY_OPTIONS} handleBirthProvinceChange={handleBirthProvinceChange} handleBirthTownChange={handleBirthTownChange} />
                                 <FamilySubSection prefix="g" person="Groom" data={formData} setData={setFormData} toTitleCase={toTitleCase} />
+                                <ValidIDSection prefix="g" data={formData} setData={setFormData} type="Main" />
                                 <GiverSubSection prefix="g" age={formData.gAge} data={formData} setData={setFormData} toTitleCase={toTitleCase} />
                             </SectionCard>
 
@@ -363,6 +364,7 @@ export default function EditApplicationModal({ isOpen, onClose, onSuccess, selec
                                 <AddressSection prefix="b" provincesList={provincesList} gTownOptions={gTownOptions} bTownOptions={bTownOptions} brgyOptions={bBrgyOptions} formData={formData} setFormData={setFormData} handleProvinceChange={handleProvinceChange} handleTownChange={handleTownChange} handleBrgyChange={handleBrgyChange} countryOptions={COUNTRY_OPTIONS} />
                                 <BirthPlaceSection prefix="b" sameAsAddress={bSameAsAddress} setSameAsAddress={setBSameAsAddress} formData={formData} setFormData={setFormData} provincesList={provincesList} birthTownOptions={bBirthTownOptions} countryOptions={COUNTRY_OPTIONS} handleBirthProvinceChange={handleBirthProvinceChange} handleBirthTownChange={handleBirthTownChange} />
                                 <FamilySubSection prefix="b" person="Bride" data={formData} setData={setFormData} toTitleCase={toTitleCase} />
+                                <ValidIDSection prefix="b" data={formData} setData={setFormData} type="Main" />
                                 <GiverSubSection prefix="b" age={formData.bAge} data={formData} setData={setFormData} toTitleCase={toTitleCase} />
                             </SectionCard>
                         </div>
