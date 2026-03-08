@@ -10,6 +10,10 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "LGU Solano Marriage Portal",
   description: "Official Marriage Application Portal for LGU Solano",
+  icons: {
+    icon: "/favicon.ico?v=2",
+    apple: "/favicon.ico?v=2",
+  },
 };
 
 export default function RootLayout({
