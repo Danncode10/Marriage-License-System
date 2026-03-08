@@ -100,3 +100,50 @@ The ADMIN has the full control and access in the global oversight of the system.
 
 **what can admin access?**  
 One of our highlight feature in ADMIN role is that he/she can download the reports and analytics in the specific time range he/she want. This includes all the data of applicants oldest to latest (FILO), analytics (data based on addresses, religion, age distribution and others), and last are the Completed Applications with their registry number sorted in ascending number (FIFO).
+
+---
+
+# Slide 10:
+DATA PRIVACY & COMPLIANCE
+(Republic Act 10173)
+
+**PROTECTING CITIZEN DATA**
+* Our system is designed with the Data Privacy Act of 2012 in mind.
+* **Data Privacy Notice:** Before filling up the form, applicants are greeted with a clear privacy notice to ensure they consent to the collection of their information.
+* All sensitive information (Names, Addresses, Marriage Details) is stored securely.
+* **Role-Based Access Control (RBAC):** Only authorized personnel can see specific details. Applicants can only see their own data, and employees cannot access administrative records.
+
+---
+
+# Slide 11:
+BACKEND TECHNOLOGY
+
+**THE ENGINE UNDER THE HOOD**
+* **Centralized Database:** Uses Supabase for real-time data storage and instant updates across all devices.
+* **Cloud Hosting:** Hosted on Vercel to ensure the website is fast, reliable, and accessible 24/7.
+* **Automated Logic:** The system automatically calculates age distributions and address-based analytics, removing manual computation for reports.
+
+---
+
+# Slide 12:
+SECURITY MEASURES
+
+**KEEPING THE SYSTEM SAFE**
+* **Secure Authentication:** Users must log in with verified accounts to access any part of the system.
+* **Database Security:** Protected by Row Level Security (RLS), meaning no one can "hack" or accidentally see data they don't have permission for.
+* **Input Validation:** Every form field is checked to prevent errors or malicious "SQL injection" attempts, ensuring only clean and valid data entered the system.
+
+---
+
+# Slide 13:
+REAL TIME DEMO AND Q & A
+
+**LIVE WALKTHROUGH**
+* Let’s see how an applicant fills up the form.
+* How an employee reviews and updates the status.
+* How an admin generates a monthly report in seconds.
+
+**OPEN FLOOR FOR QUESTIONS**
+* Do you have any suggestions?
+* Are there specific features the IT department or staff would like to see?
+
