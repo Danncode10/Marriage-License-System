@@ -116,12 +116,14 @@ DATA PRIVACY & COMPLIANCE
 ---
 
 # Slide 11:
-BACKEND TECHNOLOGY
+BACKEND & DATABASE
 
 **THE ENGINE UNDER THE HOOD**
-* **Centralized Database:** Uses Supabase for real-time data storage and instant updates across all devices.
-* **Cloud Hosting:** Hosted on Vercel to ensure the website is fast, reliable, and accessible 24/7.
-* **Automated Logic:** The system automatically calculates age distributions and address-based analytics, removing manual computation for reports.
+* **Backend as a Service (BaaS):** We utilized Supabase as our backend, which handles server management, database scaling, and authentication automatically.
+* **PostgreSQL Database:** The system is powered by a robust PostgreSQL relational database, ensuring data integrity, complex queries for analytics, and high reliability.
+* **Integrated Email Service:** The system uses Supabase's built-in email service to handle account confirmations and notifications.
+* **Real-time & Centralized:** Any changes made are reflected instantly across the system. All municipal records are stored in one central, scalable location.
+* **Secure Hosting:** Hosted on Vercel to ensure the website is fast, reliable, and accessible 24/7.
 
 ---
 
@@ -129,7 +131,7 @@ BACKEND TECHNOLOGY
 SECURITY MEASURES
 
 **KEEPING THE SYSTEM SAFE**
-* **Secure Authentication:** Users must log in with verified accounts to access any part of the system.
+* **Supabase Authentication:** All user accounts and logins are managed by Supabase, including secure password hashing and email confirmation to verify identity.
 * **Database Security:** Protected by Row Level Security (RLS), meaning no one can "hack" or accidentally see data they don't have permission for.
 * **Input Validation:** Every form field is checked to prevent errors or malicious "SQL injection" attempts, ensuring only clean and valid data entered the system.
 
