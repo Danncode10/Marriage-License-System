@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
-import { Bell, Clock, User, FileText, Camera, ShieldCheck, Eye, EyeOff } from "lucide-react";
+import { Bell, Clock, User, FileText, Camera, ShieldCheck, Eye, EyeOff, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface Notification {
     id: string;
@@ -43,6 +45,8 @@ export default function NotificationClient({
     const [localUnreadCount, setLocalUnreadCount] = useState(unreadCount);
     const [pressedNotificationId, setPressedNotificationId] = useState<string | null>(null);
     const [pressTimer, setPressTimer] = useState<NodeJS.Timeout | null>(null);
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const supabase = createClient();
 
     useEffect(() => {
@@ -193,6 +197,12 @@ export default function NotificationClient({
         setPressedNotificationId(null);
     };
 
+    const handlePageChange = (page: number) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('page', page.toString());
+        router.push(`?${params.toString()}`);
+    };
+
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -301,13 +311,33 @@ export default function NotificationClient({
 
                         {/* Simple Pagination */}
                         {totalPages > 1 && (
-                            <div className="flex items-center justify-between text-sm text-zinc-600">
-                                <span>
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-zinc-600">
                                     Showing {((currentPage - 1) * 10) + 1} to {Math.min(currentPage * 10, totalCount)} of {totalCount} notifications
                                 </span>
-                                <span>
-                                    Page {currentPage} of {totalPages}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handlePageChange(currentPage - 1)}
+                                        disabled={currentPage === 1}
+                                        className="h-8 w-8 p-0"
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
+                                    </Button>
+                                    <span className="text-sm text-zinc-600">
+                                        Page {currentPage} of {totalPages}
+                                    </span>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handlePageChange(currentPage + 1)}
+                                        disabled={currentPage === totalPages}
+                                        className="h-8 w-8 p-0"
+                                    >
+                                        <ChevronRight className="h-4 w-4" />
+                                    </Button>
+                                </div>
                             </div>
                         )}
                     </>
