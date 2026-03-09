@@ -236,19 +236,20 @@ export default function NotificationClient({
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">Notifications</h1>
-                <div className="flex items-center gap-3">
+                <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 tracking-tight">Notifications</h1>
+                <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                     {localUnreadCount > 0 && (
                         <Button
                             variant="outline"
                             size="sm"
                             onClick={markAllAsRead}
-                            className="text-xs"
+                            className="text-xs px-2 sm:px-3 whitespace-nowrap"
                         >
-                            Mark All as Read
+                            <span className="hidden sm:inline">Mark All as Read</span>
+                            <span className="sm:hidden">All Read</span>
                         </Button>
                     )}
-                    <Badge variant="secondary" className="text-sm">
+                    <Badge variant="secondary" className="text-xs sm:text-sm whitespace-nowrap">
                         {localUnreadCount} unread
                     </Badge>
                 </div>
